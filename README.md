@@ -1,5 +1,7 @@
 # Cloudera Impala
 
+commit 1
+
 Cloudera Impala is a distributed query execution engine that runs against data stored natively in Apache HDFS and Apache HBase. This public repository is a snapshot of our internal development repository that will be updated periodically as we prepare new releases. 
 
 The rest of this README describes how to build Cloudera Impala from this repository. Further documentation about Cloudera Impala can be found [here](https://ccp.cloudera.com/display/IMPALA10BETADOC/Cloudera+Impala+1.0+Beta+Documentation). 

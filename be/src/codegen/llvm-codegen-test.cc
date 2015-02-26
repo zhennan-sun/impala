@@ -17,9 +17,15 @@
 #include <boost/thread/thread.hpp>
 
 #include "codegen/llvm-codegen.h"
+<<<<<<< HEAD
 #include "runtime/raw-value.h"
 #include "util/cpu-info.h"
 #include "util/disk-info.h"
+=======
+#include "common/init.h"
+#include "runtime/raw-value.h"
+#include "util/cpu-info.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "util/hash-util.h"
 #include "util/path-builder.h"
 
@@ -68,6 +74,14 @@ class LlvmCodeGenTest : public testing:: Test {
   static void ClearHashFns(LlvmCodeGen* codegen) {
     codegen->ClearHashFns();
   }
+<<<<<<< HEAD
+=======
+
+  static void* JitFunction(
+      LlvmCodeGen* codegen, Function* function) {
+    return codegen->JitFunction(function);
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 // Simple test to just make and destroy llvmcodegen objects.  LLVM 
@@ -166,9 +180,13 @@ TEST_F(LlvmCodeGenTest, ReplaceFnCall) {
   EXPECT_TRUE(loop->getName().find(loop_name) != string::npos);
   EXPECT_EQ(loop->arg_size(), 1);
 
+<<<<<<< HEAD
   int scratch_size;
   void* original_loop = codegen->JitFunction(loop, &scratch_size);
   EXPECT_EQ(scratch_size, 0);
+=======
+  void* original_loop = LlvmCodeGenTest::JitFunction(codegen.get(), loop);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   EXPECT_TRUE(original_loop != NULL);
   
   TestLoopFn original_loop_fn = reinterpret_cast<TestLoopFn>(original_loop); 
@@ -195,8 +213,12 @@ TEST_F(LlvmCodeGenTest, ReplaceFnCall) {
   EXPECT_TRUE(codegen->VerifyFunction(jitted_loop));
 
   // Part4: Call the new loop and verify results
+<<<<<<< HEAD
   void* new_loop = codegen->JitFunction(jitted_loop, &scratch_size);
   EXPECT_EQ(scratch_size, 0);
+=======
+  void* new_loop = LlvmCodeGenTest::JitFunction(codegen.get(), jitted_loop);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   EXPECT_TRUE(new_loop != NULL);
 
   TestLoopFn new_loop_fn = reinterpret_cast<TestLoopFn>(new_loop);
@@ -214,8 +236,13 @@ TEST_F(LlvmCodeGenTest, ReplaceFnCall) {
   EXPECT_TRUE(codegen->VerifyFunction(jitted_loop2));
 
   // Part6: Call new loop
+<<<<<<< HEAD
   void* new_loop2 = codegen->JitFunction(jitted_loop2, &scratch_size);
   EXPECT_EQ(scratch_size, 0);
+=======
+  void* new_loop2 =
+      LlvmCodeGenTest::JitFunction(codegen.get(), jitted_loop2);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   EXPECT_TRUE(new_loop2 != NULL);
 
   TestLoopFn new_loop_fn2 = reinterpret_cast<TestLoopFn>(new_loop2);
@@ -293,7 +320,11 @@ TEST_F(LlvmCodeGenTest, StringValue) {
   EXPECT_TRUE(codegen->VerifyFunction(string_test_fn));
 
   // Jit compile function
+<<<<<<< HEAD
   void* jitted_fn = codegen->JitFunction(string_test_fn);
+=======
+  void* jitted_fn = LlvmCodeGenTest::JitFunction(codegen.get(), string_test_fn);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   EXPECT_TRUE(jitted_fn != NULL);
 
   // Call IR function
@@ -340,7 +371,11 @@ TEST_F(LlvmCodeGenTest, MemcpyTest) {
   fn = codegen->FinalizeFunction(fn);
   ASSERT_TRUE(fn != NULL);
 
+<<<<<<< HEAD
   void* jitted_fn = codegen->JitFunction(fn);
+=======
+  void* jitted_fn = LlvmCodeGenTest::JitFunction(codegen.get(), fn);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ASSERT_TRUE(jitted_fn != NULL);
   
   typedef void (*TestMemcpyFn)(char*, char*, int64_t);
@@ -405,7 +440,11 @@ TEST_F(LlvmCodeGenTest, HashTest) {
     fn_fixed = codegen->FinalizeFunction(fn_fixed);
     ASSERT_TRUE(fn_fixed != NULL);
 
+<<<<<<< HEAD
     void* jitted_fn = codegen->JitFunction(fn_fixed);
+=======
+    void* jitted_fn = LlvmCodeGenTest::JitFunction(codegen.get(), fn_fixed);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     ASSERT_TRUE(jitted_fn != NULL);
 
     typedef uint32_t (*TestHashFn)();
@@ -414,7 +453,11 @@ TEST_F(LlvmCodeGenTest, HashTest) {
     uint32_t result = test_fn();
 
     // Validate that the hashes are identical
+<<<<<<< HEAD
     EXPECT_EQ(result, expected_hash);
+=======
+    EXPECT_EQ(result, expected_hash) << CpuInfo::IsSupported(CpuInfo::SSE4_2);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
     if (i == 0 && CpuInfo::IsSupported(CpuInfo::SSE4_2)) {
       CpuInfo::EnableFeature(CpuInfo::SSE4_2, false);
@@ -433,8 +476,12 @@ TEST_F(LlvmCodeGenTest, HashTest) {
 }
 
 int main(int argc, char **argv) {
+<<<<<<< HEAD
   impala::CpuInfo::Init();
   impala::DiskInfo::Init();
+=======
+  impala::InitCommonRuntime(argc, argv, false);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ::testing::InitGoogleTest(&argc, argv);
   impala::LlvmCodeGen::InitializeLlvm();
   return RUN_ALL_TESTS();

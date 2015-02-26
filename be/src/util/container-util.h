@@ -22,6 +22,7 @@
 #include "util/hash-util.h"
 #include "gen-cpp/Types_types.h"
 
+<<<<<<< HEAD
 using namespace std;
 
 namespace impala {
@@ -42,6 +43,26 @@ struct THostPortPtrEquals : public std::unary_function<THostPort*, bool> {
   bool operator()(const THostPort* const& p1, const THostPort* const& p2) const {
     return p1->hostname == p2->hostname && p1->ipaddress == p2->ipaddress
         && p1->port == p2->port;
+=======
+namespace impala {
+
+// Hash function for TNetworkAddress. This function must be called hash_value to be picked
+// up properly by boost.
+inline std::size_t hash_value(const TNetworkAddress& host_port) {
+  uint32_t hash =
+      HashUtil::Hash(host_port.hostname.c_str(), host_port.hostname.length(), 0);
+  return HashUtil::Hash(&host_port.port, sizeof(host_port.port), hash);
+}
+
+struct HashTNetworkAddressPtr : public std::unary_function<TNetworkAddress*, size_t> {
+  size_t operator()(const TNetworkAddress* const& p) const { return hash_value(*p); }
+};
+
+struct TNetworkAddressPtrEquals : public std::unary_function<TNetworkAddress*, bool> {
+  bool operator()(const TNetworkAddress* const& p1,
+                  const TNetworkAddress* const& p2) const {
+    return p1->hostname == p2->hostname && p1->port == p2->port;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 };
 
@@ -53,7 +74,11 @@ template <typename K, typename V>
 V* FindOrInsert(std::map<K,V>* m, const K& key, const V& default_val) {
   typename std::map<K,V>::iterator it = m->find(key);
   if (it == m->end()) {
+<<<<<<< HEAD
     it = m->insert(make_pair(key, default_val)).first;
+=======
+    it = m->insert(std::make_pair(key, default_val)).first;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   return &it->second;
 }
@@ -62,7 +87,11 @@ template <typename K, typename V>
 V* FindOrInsert(boost::unordered_map<K,V>* m, const K& key, const V& default_val) {
   typename boost::unordered_map<K,V>::iterator it = m->find(key);
   if (it == m->end()) {
+<<<<<<< HEAD
     it = m->insert(make_pair(key, default_val)).first;
+=======
+    it = m->insert(std::make_pair(key, default_val)).first;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   return &it->second;
 }
@@ -86,6 +115,24 @@ const V& FindWithDefault(const boost::unordered_map<K, V>& m, const K& key,
   return it->second;
 }
 
+<<<<<<< HEAD
+=======
+// Merges (by summing) the values from two maps of values. The values must be
+// native types or support operator +=.
+template<typename K, typename V>
+void MergeMapValues(const std::map<K, V>& src, std::map<K, V>* dst) {
+  for (typename std::map<K, V>::const_iterator src_it = src.begin();
+      src_it != src.end(); ++src_it) {
+    typename std::map<K, V>::iterator dst_it = dst->find(src_it->first);
+    if (dst_it == dst->end()) {
+      (*dst)[src_it->first] = src_it->second;
+    } else {
+      dst_it->second += src_it->second;
+    }
+  }
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 #endif

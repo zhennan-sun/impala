@@ -14,11 +14,17 @@
 
 package com.cloudera.impala.catalog;
 
+<<<<<<< HEAD
+=======
+import com.cloudera.impala.thrift.TColumn;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // Describes an HBase column mapped to a Hive column (as described in the metastore).
 // this.name describes the column name in Hive.
 // This class adds the HBase columnFamily and columnQualifier,
 // so we can read the column from HBase directly.
 public class HBaseColumn extends Column implements Comparable<HBaseColumn> {
+<<<<<<< HEAD
   protected String columnFamily;
   protected String columnQualifier;
 
@@ -36,11 +42,29 @@ public class HBaseColumn extends Column implements Comparable<HBaseColumn> {
   public String getColumnQualifier() {
     return columnQualifier;
   }
+=======
+  private final String columnFamily_;
+  private final String columnQualifier_;
+  private final boolean binaryEncoded_;
+
+  public HBaseColumn(String name, String columnFamily, String columnQualifier,
+      boolean binaryEncoded, Type type, String comment, int position) {
+    super(name, type, comment, position);
+    columnFamily_ = columnFamily;
+    columnQualifier_ = columnQualifier;
+    binaryEncoded_ = binaryEncoded;
+  }
+
+  public String getColumnFamily() { return columnFamily_; }
+  public String getColumnQualifier() { return columnQualifier_; }
+  public boolean isBinaryEncoded() { return binaryEncoded_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   @Override
   // We order the HBase columns in the matadata based on columnFamily,columnQualifier,
   // to more easily map slots from HBase's Result.raw() to target slots in the backend.
   public int compareTo(HBaseColumn o) {
+<<<<<<< HEAD
     int familyCmp = columnFamily.compareTo(o.columnFamily);
     if (familyCmp != 0) {
       return familyCmp;
@@ -48,4 +72,26 @@ public class HBaseColumn extends Column implements Comparable<HBaseColumn> {
     int qualifierCmp = columnQualifier.compareTo(o.columnQualifier);
     return qualifierCmp;
   }
+=======
+    int familyCmp = columnFamily_.compareTo(o.columnFamily_);
+    if (familyCmp != 0) {
+      return familyCmp;
+    }
+    int qualifierCmp = columnQualifier_.compareTo(o.columnQualifier_);
+    return qualifierCmp;
+  }
+
+  @Override
+  public TColumn toThrift() {
+    TColumn colDesc = new TColumn(name_, type_.toThrift());
+    if (comment_ != null) colDesc.setComment(comment_);
+    colDesc.setCol_stats(getStats().toThrift());
+    colDesc.setPosition(position_);
+    colDesc.setIs_hbase_column(true);
+    colDesc.setColumn_family(columnFamily_);
+    colDesc.setColumn_qualifier(columnQualifier_);
+    colDesc.setIs_binary(binaryEncoded_);
+    return colDesc;
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

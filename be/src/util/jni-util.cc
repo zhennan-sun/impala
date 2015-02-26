@@ -13,14 +13,24 @@
 // limitations under the License.
 
 #include "util/jni-util.h"
+<<<<<<< HEAD
 #include <hdfs.h>
 #include "common/status.h"
+=======
+
+#include <hdfs.h>
+#include <sstream>
+
+#include "common/status.h"
+#include "rpc/thrift-util.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace std;
 
 namespace impala {
 
 jclass JniUtil::jni_util_cl_ = NULL;
+<<<<<<< HEAD
 jmethodID JniUtil::throwable_to_string_id_ = NULL;
 vector<jobject> JniUtil::global_refs_;
 
@@ -32,12 +42,54 @@ Status JniUtil::GetGlobalClassRef(JNIEnv* env, const char* class_str, jclass* cl
       reinterpret_cast<jobject*>(class_ref)));
   env->DeleteLocalRef(local_cl);
   RETURN_ERROR_IF_EXC(env, throwable_to_string_id_);
+=======
+jclass JniUtil::internal_exc_cl_ = NULL;
+jmethodID JniUtil::get_jvm_metrics_id_ = NULL;
+jmethodID JniUtil::throwable_to_string_id_ = NULL;
+jmethodID JniUtil::throwable_to_stack_trace_id_ = NULL;
+vector<jobject> JniUtil::global_refs_;
+
+Status JniLocalFrame::push(JNIEnv* env, int max_local_ref) {
+  DCHECK(env_ == NULL);
+  DCHECK_GT(max_local_ref, 0);
+  if (env->PushLocalFrame(max_local_ref) < 0) {
+    env->ExceptionClear();
+    return Status("failed to push frame");
+  }
+  env_ = env;
+  return Status::OK;
+}
+
+bool JniUtil::ClassExists(JNIEnv* env, const char* class_str) {
+  jclass local_cl = env->FindClass(class_str);
+  jthrowable exc = env->ExceptionOccurred();
+  if (exc != NULL) {
+    env->ExceptionClear();
+    return false;
+  }
+  env->DeleteLocalRef(local_cl);
+  return true;
+}
+
+Status JniUtil::GetGlobalClassRef(JNIEnv* env, const char* class_str, jclass* class_ref) {
+  *class_ref = NULL;
+  jclass local_cl = env->FindClass(class_str);
+  RETURN_ERROR_IF_EXC(env);
+  RETURN_IF_ERROR(LocalToGlobalRef(env, reinterpret_cast<jobject>(local_cl),
+      reinterpret_cast<jobject*>(class_ref)));
+  env->DeleteLocalRef(local_cl);
+  RETURN_ERROR_IF_EXC(env);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return Status::OK;
 }
 
 Status JniUtil::LocalToGlobalRef(JNIEnv* env, jobject local_ref, jobject* global_ref) {
   *global_ref = env->NewGlobalRef(local_ref);
+<<<<<<< HEAD
   RETURN_ERROR_IF_EXC(env, throwable_to_string_id_);
+=======
+  RETURN_ERROR_IF_EXC(env);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   global_refs_.push_back(*global_ref);
   return Status::OK;
 }
@@ -45,11 +97,16 @@ Status JniUtil::LocalToGlobalRef(JNIEnv* env, jobject local_ref, jobject* global
 Status JniUtil::Init() {
   // Get the JNIEnv* corresponding to current thread.
   JNIEnv* env = getJNIEnv();
+<<<<<<< HEAD
   if (env == NULL) {
     return Status("Failed to get/create JVM");
   }
 
   // Throwable
+=======
+  if (env == NULL) return Status("Failed to get/create JVM");
+  // Find JniUtil class and create a global ref.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   jclass local_jni_util_cl = env->FindClass("com/cloudera/impala/common/JniUtil");
   if (local_jni_util_cl == NULL) {
     if (env->ExceptionOccurred()) env->ExceptionDescribe();
@@ -65,15 +122,58 @@ Status JniUtil::Init() {
     return Status("Failed to delete local reference to JniUtil class.");
   }
 
+<<<<<<< HEAD
   // Throwable toString()
   throwable_to_string_id_ =
       env->GetStaticMethodID(jni_util_cl_, "throwableToString", 
+=======
+  // Find InternalException class and create a global ref.
+  jclass local_internal_exc_cl =
+      env->FindClass("com/cloudera/impala/common/InternalException");
+  if (local_internal_exc_cl == NULL) {
+    if (env->ExceptionOccurred()) env->ExceptionDescribe();
+    return Status("Failed to find JniUtil class.");
+  }
+  internal_exc_cl_ = reinterpret_cast<jclass>(env->NewGlobalRef(local_internal_exc_cl));
+  if (internal_exc_cl_ == NULL) {
+    if (env->ExceptionOccurred()) env->ExceptionDescribe();
+    return Status("Failed to create global reference to JniUtil class.");
+  }
+  env->DeleteLocalRef(local_internal_exc_cl);
+  if (env->ExceptionOccurred()) {
+    return Status("Failed to delete local reference to JniUtil class.");
+  }
+
+  // Throwable toString()
+  throwable_to_string_id_ =
+      env->GetStaticMethodID(jni_util_cl_, "throwableToString",
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
           "(Ljava/lang/Throwable;)Ljava/lang/String;");
   if (throwable_to_string_id_ == NULL) {
     if (env->ExceptionOccurred()) env->ExceptionDescribe();
     return Status("Failed to find JniUtil.throwableToString method.");
   }
 
+<<<<<<< HEAD
+=======
+  // throwableToStackTrace()
+  throwable_to_stack_trace_id_ =
+      env->GetStaticMethodID(jni_util_cl_, "throwableToStackTrace",
+          "(Ljava/lang/Throwable;)Ljava/lang/String;");
+  if (throwable_to_stack_trace_id_ == NULL) {
+    if (env->ExceptionOccurred()) env->ExceptionDescribe();
+    return Status("Failed to find JniUtil.throwableToFullStackTrace method.");
+  }
+
+  get_jvm_metrics_id_ =
+      env->GetStaticMethodID(jni_util_cl_, "getJvmMetrics", "([B)[B");
+  if (get_jvm_metrics_id_ == NULL) {
+    if (env->ExceptionOccurred()) env->ExceptionDescribe();
+    return Status("Failed to find JniUtil.getJvmMetrics method.");
+  }
+
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return Status::OK;
 }
 
@@ -98,4 +198,47 @@ Status JniUtil::Cleanup() {
   return Status::OK;
 }
 
+<<<<<<< HEAD
+=======
+Status JniUtil::GetJniExceptionMsg(JNIEnv* env, bool log_stack, const string& prefix) {
+  jthrowable exc = (env)->ExceptionOccurred();
+  if (exc == NULL) return Status::OK;
+  env->ExceptionClear();
+  DCHECK(throwable_to_string_id() != NULL);
+  jstring msg = (jstring) env->CallStaticObjectMethod(jni_util_class(),
+      throwable_to_string_id(), exc);
+  jboolean is_copy;
+  string error_msg =
+      (reinterpret_cast<const char*>(env->GetStringUTFChars(msg, &is_copy)));
+
+  if (log_stack) {
+    jstring stack = (jstring) env->CallStaticObjectMethod(jni_util_class(),
+        throwable_to_stack_trace_id(), exc);
+    const char* c_stack =
+      reinterpret_cast<const char*>(env->GetStringUTFChars(stack, &is_copy));
+    VLOG(1) << string(c_stack);
+  }
+
+  env->ExceptionClear();
+  env->DeleteLocalRef(exc);
+
+  stringstream ss;
+  ss << prefix << error_msg;
+  return Status(ss.str());
+}
+
+Status JniUtil::GetJvmMetrics(const TGetJvmMetricsRequest& request,
+    TGetJvmMetricsResponse* result) {
+  return JniUtil::CallJniMethod(jni_util_class(), get_jvm_metrics_id_, request, result);
+}
+
+Status JniUtil::LoadJniMethod(JNIEnv* env, const jclass& jni_class,
+    JniMethodDescriptor* descriptor) {
+  (*descriptor->method_id) = env->GetMethodID(jni_class,
+      descriptor->name.c_str(), descriptor->signature.c_str());
+  RETURN_ERROR_IF_EXC(env);
+  return Status::OK;
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

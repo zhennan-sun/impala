@@ -18,15 +18,30 @@
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include <fstream>
+<<<<<<< HEAD
 #include <sstream>
 #include <stdlib.h>
 #include <string.h>
 
+=======
+#include <mmintrin.h>
+#include <sstream>
+#include <stdlib.h>
+#include <string.h>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include <unistd.h>
 
 using namespace boost;
 using namespace std;
 
+<<<<<<< HEAD
+=======
+DECLARE_bool(abort_on_config_error);
+DEFINE_int32(num_cores, 0, "(Advanced) If > 0, it sets the number of cores available to"
+    " Impala. Setting it to 0 means Impala will use all available cores on the machine"
+    " according to /proc/cpuinfo.");
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 namespace impala {
 
 bool CpuInfo::initialized_ = false;
@@ -35,15 +50,26 @@ int64_t CpuInfo::original_hardware_flags_;
 long CpuInfo::cache_sizes_[L3_CACHE + 1];
 int64_t CpuInfo::cycles_per_ms_;
 int CpuInfo::num_cores_ = 1;
+<<<<<<< HEAD
+=======
+string CpuInfo::model_name_ = "unknown";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 static struct {
   string name;
   int64_t flag;
 } flag_mappings[] =
 {
+<<<<<<< HEAD
   { "ssse3",  CpuInfo::SSE3 },
   { "sse4_1", CpuInfo::SSE4_1 },
   { "sse4_2", CpuInfo::SSE4_2 },
+=======
+  { "ssse3",  CpuInfo::SSSE3 },
+  { "sse4_1", CpuInfo::SSE4_1 },
+  { "sse4_2", CpuInfo::SSE4_2 },
+  { "popcnt", CpuInfo::POPCNT },
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 static const long num_flags = sizeof(flag_mappings) / sizeof(flag_mappings[0]);
 
@@ -80,11 +106,18 @@ void CpuInfo::Init() {
       name = line.substr(0, colon - 1);
       value = line.substr(colon + 1, string::npos);
       trim(name);
+<<<<<<< HEAD
       if (name.compare("flags") == 0) {
         trim(value);
         hardware_flags_ |= ParseCPUFlags(value);
       } else if (name.compare("cpu MHz") == 0) {
         trim(value);
+=======
+      trim(value);
+      if (name.compare("flags") == 0) {
+        hardware_flags_ |= ParseCPUFlags(value);
+      } else if (name.compare("cpu MHz") == 0) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         // Every core will report a different speed.  We'll take the max, assuming
         // that when impala is running, the core will not be in a lower power state.
         // TODO: is there a more robust way to do this, such as
@@ -93,6 +126,11 @@ void CpuInfo::Init() {
         max_mhz = max(mhz, max_mhz);
       } else if (name.compare("processor") == 0) {
         ++num_cores;
+<<<<<<< HEAD
+=======
+      } else if (name.compare("model name") == 0) {
+        model_name_ = value;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       }
     }
   }
@@ -117,8 +155,21 @@ void CpuInfo::Init() {
     num_cores_ = 1;
   }
   
+<<<<<<< HEAD
   initialized_ = true;
   LOG(INFO) << DebugString();
+=======
+  if (FLAGS_num_cores > 0) num_cores_ = FLAGS_num_cores;
+
+  initialized_ = true;
+}
+
+void CpuInfo::VerifyCpuRequirements() {
+  if (!CpuInfo::IsSupported(CpuInfo::SSSE3)) {
+    LOG(ERROR) << "CPU does not support the Supplemental SSE3 (SSSE3) instruction set, "
+               << "which is required. Exiting if Supplemental SSE3 is not functional...";
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 void CpuInfo::EnableFeature(long flag, bool enable) {
@@ -139,6 +190,10 @@ string CpuInfo::DebugString() {
   int64_t L2 = CacheSize(L2_CACHE);
   int64_t L3 = CacheSize(L3_CACHE);
   stream << "Cpu Info:" << endl
+<<<<<<< HEAD
+=======
+         << "  Model: " << model_name_ << endl
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
          << "  Cores: " << num_cores_ << endl
          << "  L1 Cache: " << PrettyPrinter::Print(L1, TCounterType::BYTES) << endl
          << "  L2 Cache: " << PrettyPrinter::Print(L2, TCounterType::BYTES) << endl

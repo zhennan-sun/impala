@@ -7,8 +7,32 @@
 #  LLVM_MODULE_LIBS - list of llvm libs for working with modules.
 #  LLVM_FOUND       - True if llvm found.
 
+<<<<<<< HEAD
 find_program(LLVM_CONFIG_EXECUTABLE llvm-config)
 find_program(LLVM_CLANG_EXECUTABLE clang++)
+=======
+
+# First look in ENV{LLVM_HOME} then system path.
+find_program(LLVM_CONFIG_EXECUTABLE llvm-config
+  PATHS
+  $ENV{LLVM_HOME}
+  NO_DEFAULT_PATH
+)
+find_program(LLVM_CONFIG_EXECUTABLE llvm-config)
+
+find_program(LLVM_CLANG_EXECUTABLE clang++
+  PATHS
+  $ENV{LLVM_HOME}
+  NO_DEFAULT_PATH
+)
+find_program(LLVM_CLANG_EXECUTABLE clang++)
+
+find_program(LLVM_OPT_EXECUTABLE opt
+  PATHS
+  $ENV{LLVM_HOME}
+  NO_DEFAULT_PATH
+)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 find_program(LLVM_OPT_EXECUTABLE opt)
 
 if (NOT LLVM_CONFIG_EXECUTABLE)
@@ -24,10 +48,28 @@ if (NOT LLVM_OPT_EXECUTABLE)
 endif (NOT LLVM_OPT_EXECUTABLE)
 
 message(STATUS "LLVM llvm-config found at: ${LLVM_CONFIG_EXECUTABLE}")
+<<<<<<< HEAD
 message(STATUS "LLVM clang++ found at: ${CLANG_EXECUTABLE}")
 message(STATUS "LLVM opt found at: ${LLVM_OPT_EXECUTABLE}")
 
 execute_process(
+=======
+message(STATUS "LLVM clang++ found at: ${LLVM_CLANG_EXECUTABLE}")
+message(STATUS "LLVM opt found at: ${LLVM_OPT_EXECUTABLE}")
+
+execute_process(
+  COMMAND ${LLVM_CONFIG_EXECUTABLE} --version
+  OUTPUT_VARIABLE LLVM_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+if (NOT "${LLVM_VERSION}" STREQUAL "$ENV{IMPALA_LLVM_VERSION}") 
+  message(FATAL_ERROR 
+      "LLVM version must be $ENV{IMPALA_LLVM_VERSION}. Found version: ${LLVM_VERSION}")
+endif()
+
+execute_process(
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   COMMAND ${LLVM_CONFIG_EXECUTABLE} --includedir
   OUTPUT_VARIABLE LLVM_INCLUDE_DIR
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -60,7 +102,11 @@ execute_process(
 # Get the link libs we need.  llvm has many and we don't want to link all of the libs
 # if we don't need them.   
 execute_process(
+<<<<<<< HEAD
   COMMAND ${LLVM_CONFIG_EXECUTABLE} --libnames core jit native ipo bitreader
+=======
+  COMMAND ${LLVM_CONFIG_EXECUTABLE} --libnames core jit native ipo bitreader target linker
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   OUTPUT_VARIABLE LLVM_MODULE_LIBS
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )

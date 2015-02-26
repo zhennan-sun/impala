@@ -20,6 +20,7 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/codegen")
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/codegen")
 
 add_library(CodeGen
+<<<<<<< HEAD
   llvm-codegen.cc
   subexpr-elimination.cc
 )
@@ -37,18 +38,74 @@ add_custom_command(
   VERBATIM
 )
 add_custom_target(gen_ir_functions ALL DEPENDS ${IR_DESC_GEN_OUTPUT})
+=======
+  codegen-anyval.cc
+  llvm-codegen.cc
+  subexpr-elimination.cc
+  instruction-counter.cc
+)
+
+# output cross compile to ir metadata
+# TODO: this doesn't track dependences right.  We need to specify that
+# the files in impala-ir must exist before building.
+#set(IR_DESC_GEN_OUTPUT
+#  ${CMAKE_SOURCE_DIR}/be/generated-sources/impala-ir/impala-ir-names.h
+#  ${CMAKE_SOURCE_DIR}/be/generated-sources/impala-ir/impala-ir-functions.h
+#)
+#add_custom_command(
+#  OUTPUT ${IR_DESC_GEN_OUTPUT}
+#  COMMAND ./gen_ir_descriptions.py
+#  DEPENDS ./gen_ir_descriptions.py
+#  COMMENT "Generating ir cross compile metadata."
+#  VERBATIM
+#)
+#add_custom_target(gen_ir_functions ALL DEPENDS ${IR_DESC_GEN_OUTPUT})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 
 # impala-ir.cc is the central place for all cross-compiled code.  All of
 # this code gets cross compiled to a single IR module, impala.ll.  
 # Custom build commands don't seem to propagate dependencies correctly
 # list all the ir files 
+<<<<<<< HEAD
 set(IR_DEPENDENT_FILES
   impala-ir.cc
   ../exec/aggregation-node-ir.cc
   ../exec/hash-join-node-ir.cc
   ../exec/hdfs-scanner-ir.cc
   ../runtime/string-value-ir.cc
+=======
+# Don't include any .cc files that contain the initialize for complex (i.e. boost)
+# static objects. These cannot be trimmed for the module and greatly increases
+# our runtime compile time.
+set(IR_DEPENDENT_FILES
+  impala-ir.cc
+  codegen-anyval-ir.cc
+  ../exec/aggregation-node-ir.cc
+  ../exec/hash-join-node-ir.cc
+  ../exec/hash-table-ir.cc
+  ../exec/hdfs-avro-scanner-ir.cc
+  ../exec/hdfs-scanner-ir.cc
+  ../exec/partitioned-aggregation-node-ir.cc
+  ../exec/partitioned-hash-join-node-ir.cc
+  ../exprs/aggregate-functions.cc
+  ../exprs/cast-functions.cc
+  ../exprs/compound-predicates-ir.cc
+  ../exprs/conditional-functions-ir.cc
+  ../exprs/decimal-functions.cc
+  ../exprs/decimal-operators.cc
+  ../exprs/expr-ir.cc
+  ../exprs/in-predicate-ir.cc
+  ../exprs/is-null-predicate.cc
+  ../exprs/like-predicate.cc
+  ../exprs/math-functions.cc
+  ../exprs/operators.cc
+  ../exprs/string-functions.cc
+  ../exprs/timestamp-functions.cc
+  ../exprs/udf-builtins.cc
+  ../exprs/utility-functions.cc
+  ../udf/udf-ir.cc
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ../util/hash-util-ir.cc
 )
 
@@ -82,7 +139,12 @@ add_custom_command(
 add_custom_target(compile_to_ir_sse ALL DEPENDS ${IR_SSE_OUTPUT_FILE})
 add_custom_target(compile_to_ir_no_sse ALL DEPENDS ${IR_NO_SSE_OUTPUT_FILE})
 
+<<<<<<< HEAD
 add_executable(llvm-codegen-test llvm-codegen-test.cc)
 target_link_libraries(llvm-codegen-test ${IMPALA_TEST_LINK_LIBS})
 add_test(llvm-codegen-test ${BUILD_OUTPUT_ROOT_DIRECTORY}/codegen/llvm-codegen-test)
+=======
+ADD_BE_TEST(llvm-codegen-test)
+ADD_BE_TEST(instruction-counter-test)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 

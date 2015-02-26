@@ -19,13 +19,21 @@
 #include <sstream>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+<<<<<<< HEAD
 #include <llvm/Target/TargetData.h>
+=======
+#include <llvm/IR/DataLayout.h>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 #include "codegen/llvm-codegen.h"
 #include "common/object-pool.h"
 #include "gen-cpp/Descriptors_types.h"
 #include "gen-cpp/PlanNodes_types.h"
 #include "exprs/expr.h"
+<<<<<<< HEAD
+=======
+#include "runtime/runtime-state.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace llvm;
 using namespace std;
@@ -47,12 +55,20 @@ ostream& operator<<(ostream& os, const NullIndicatorOffset& null_indicator) {
 
 SlotDescriptor::SlotDescriptor(const TSlotDescriptor& tdesc)
   : id_(tdesc.id),
+<<<<<<< HEAD
     type_(ThriftToType(tdesc.slotType)),
+=======
+    type_(tdesc.slotType),
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     parent_(tdesc.parent),
     col_pos_(tdesc.columnPos),
     tuple_offset_(tdesc.byteOffset),
     null_indicator_offset_(tdesc.nullIndicatorByte, tdesc.nullIndicatorBit),
     slot_idx_(tdesc.slotIdx),
+<<<<<<< HEAD
+=======
+    slot_size_(type_.GetByteSize()),
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     field_idx_(-1),
     is_materialized_(tdesc.isMaterialized),
     is_null_fn_(NULL),
@@ -60,11 +76,21 @@ SlotDescriptor::SlotDescriptor(const TSlotDescriptor& tdesc)
     set_null_fn_(NULL) {
 }
 
+<<<<<<< HEAD
 std::string SlotDescriptor::DebugString() const {
   stringstream out;
   out << "Slot(id=" << id_ << " type=" << TypeToString(type_)
       << " col=" << col_pos_ << " offset=" << tuple_offset_
       << " null=" << null_indicator_offset_.DebugString() << ")";
+=======
+string SlotDescriptor::DebugString() const {
+  stringstream out;
+  out << "Slot(id=" << id_ << " type=" << type_.DebugString()
+      << " col=" << col_pos_ << " offset=" << tuple_offset_
+      << " null=" << null_indicator_offset_.DebugString()
+      << " slot_idx=" << slot_idx_ << " field_idx=" << field_idx_
+      << ")";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return out.str();
 }
 
@@ -73,12 +99,23 @@ TableDescriptor::TableDescriptor(const TTableDescriptor& tdesc)
     database_(tdesc.dbName),
     id_(tdesc.id),
     num_cols_(tdesc.numCols),
+<<<<<<< HEAD
     num_clustering_cols_(tdesc.numClusteringCols) {
+=======
+    num_clustering_cols_(tdesc.numClusteringCols),
+    col_names_(tdesc.colNames) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 string TableDescriptor::DebugString() const {
   stringstream out;
   out << "#cols=" << num_cols_ << " #clustering_cols=" << num_clustering_cols_;
+<<<<<<< HEAD
+=======
+  out << " col_names=[";
+  out << join(col_names_, ":");
+  out << "]";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return out.str();
 }
 
@@ -89,6 +126,7 @@ HdfsPartitionDescriptor::HdfsPartitionDescriptor(const THdfsPartition& thrift_pa
     collection_delim_(thrift_partition.collectionDelim),
     escape_char_(thrift_partition.escapeChar),
     block_size_(thrift_partition.blockSize),
+<<<<<<< HEAD
     compression_(thrift_partition.compression),
     exprs_prepared_(false),
     file_format_(thrift_partition.fileFormat),
@@ -101,19 +139,60 @@ HdfsPartitionDescriptor::HdfsPartitionDescriptor(const THdfsPartition& thrift_pa
         thrift_partition.partitionKeyExprs[i], &expr);
     DCHECK(status.ok());
     partition_key_values_.push_back(expr);
+=======
+    location_(thrift_partition.location),
+    id_(thrift_partition.id),
+    exprs_prepared_(false),
+    exprs_opened_(false),
+    exprs_closed_(false),
+    file_format_(thrift_partition.fileFormat),
+    object_pool_(pool) {
+
+  for (int i = 0; i < thrift_partition.partitionKeyExprs.size(); ++i) {
+    ExprContext* ctx;
+    // TODO: Move to dedicated Init method and treat Status return correctly
+    Status status = Expr::CreateExprTree(object_pool_,
+        thrift_partition.partitionKeyExprs[i], &ctx);
+    DCHECK(status.ok());
+    partition_key_value_ctxs_.push_back(ctx);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }
 
 Status HdfsPartitionDescriptor::PrepareExprs(RuntimeState* state) {
+<<<<<<< HEAD
   if (exprs_prepared_ == false) {
     // TODO: RowDescriptor should arguably be optional in Prepare for known literals
     exprs_prepared_ = true;
     // Partition exprs are not used in the codegen case.  Don't codegen them.
     RETURN_IF_ERROR(Expr::Prepare(partition_key_values_, state, RowDescriptor(), true));
+=======
+  if (!exprs_prepared_) {
+    // TODO: RowDescriptor should arguably be optional in Prepare for known literals
+    exprs_prepared_ = true;
+    // Partition exprs are not used in the codegen case.  Don't codegen them.
+    RETURN_IF_ERROR(Expr::Prepare(partition_key_value_ctxs_, state, RowDescriptor(),
+                                  state->instance_mem_tracker()));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   return Status::OK;
 }
 
+<<<<<<< HEAD
+=======
+Status HdfsPartitionDescriptor::OpenExprs(RuntimeState* state) {
+  if (exprs_opened_) return Status::OK;
+  exprs_opened_ = true;
+  return Expr::Open(partition_key_value_ctxs_, state);
+}
+
+void HdfsPartitionDescriptor::CloseExprs(RuntimeState* state) {
+  if (exprs_closed_) return;
+  exprs_closed_ = true;
+  Expr::Close(partition_key_value_ctxs_, state);
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 string HdfsPartitionDescriptor::DebugString() const {
   stringstream out;
   out << " file_format=" << file_format_ << "'"
@@ -124,32 +203,56 @@ string HdfsPartitionDescriptor::DebugString() const {
   return out.str();
 }
 
+<<<<<<< HEAD
+=======
+string DataSourceTableDescriptor::DebugString() const {
+  stringstream out;
+  out << "DataSourceTable(" << TableDescriptor::DebugString() << ")";
+  return out.str();
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 HdfsTableDescriptor::HdfsTableDescriptor(const TTableDescriptor& tdesc,
     ObjectPool* pool)
   : TableDescriptor(tdesc),
     hdfs_base_dir_(tdesc.hdfsTable.hdfsBaseDir),
+<<<<<<< HEAD
     partition_key_names_(tdesc.hdfsTable.partitionKeyNames),
     null_partition_key_value_(tdesc.hdfsTable.nullPartitionKeyValue),
+=======
+    null_partition_key_value_(tdesc.hdfsTable.nullPartitionKeyValue),
+    null_column_value_(tdesc.hdfsTable.nullColumnValue),
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     object_pool_(pool) {
   map<int64_t, THdfsPartition>::const_iterator it;
   for (it = tdesc.hdfsTable.partitions.begin(); it != tdesc.hdfsTable.partitions.end();
        ++it) {
     HdfsPartitionDescriptor* partition = new HdfsPartitionDescriptor(it->second, pool);
     object_pool_->Add(partition);
+<<<<<<< HEAD
     partition_descriptors_[it->first] =  partition;
   }
 
+=======
+    partition_descriptors_[it->first] = partition;
+  }
+  avro_schema_ = tdesc.hdfsTable.__isset.avroSchema ? tdesc.hdfsTable.avroSchema : "";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 string HdfsTableDescriptor::DebugString() const {
   stringstream out;
   out << "HdfsTable(" << TableDescriptor::DebugString()
+<<<<<<< HEAD
       << " hdfs_base_dir='" << hdfs_base_dir_ << "'"
       << " partition_key_names=[";
 
   out << join(partition_key_names_, ":");
 
   out << "]";
+=======
+      << " hdfs_base_dir='" << hdfs_base_dir_ << "'";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   out << " partitions=[";
   vector<string> partition_strings;
   map<int64_t, HdfsPartitionDescriptor*>::const_iterator it;
@@ -160,7 +263,12 @@ string HdfsTableDescriptor::DebugString() const {
   }
   out << join(partition_strings, ",") << "]";
 
+<<<<<<< HEAD
   out << "null_partition_key_value='" << null_partition_key_value_ << "'";
+=======
+  out << " null_partition_key_value='" << null_partition_key_value_ << "'";
+  out << " null_column_value='" << null_column_value_ << "'";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return out.str();
 }
 
@@ -168,8 +276,15 @@ HBaseTableDescriptor::HBaseTableDescriptor(const TTableDescriptor& tdesc)
   : TableDescriptor(tdesc),
     table_name_(tdesc.hbaseTable.tableName) {
   for (int i = 0; i < tdesc.hbaseTable.families.size(); ++i) {
+<<<<<<< HEAD
     cols_.push_back(make_pair(tdesc.hbaseTable.families[i],
         tdesc.hbaseTable.qualifiers[i]));
+=======
+    bool is_binary_encoded = tdesc.hbaseTable.__isset.binary_encoded &&
+        tdesc.hbaseTable.binary_encoded[i];
+    cols_.push_back(HBaseTableDescriptor::HBaseColumnDescriptor(
+        tdesc.hbaseTable.families[i], tdesc.hbaseTable.qualifiers[i], is_binary_encoded));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }
 
@@ -178,7 +293,12 @@ string HBaseTableDescriptor::DebugString() const {
   out << "HBaseTable(" << TableDescriptor::DebugString() << " table=" << table_name_;
   out << " cols=[";
   for (int i = 0; i < cols_.size(); ++i) {
+<<<<<<< HEAD
     out << (i > 0 ? " " : "") << cols_[i].first << ":" << cols_[i].second;
+=======
+    out << (i > 0 ? " " : "") << cols_[i].family << ":" << cols_[i].qualifier << ":"
+        << cols_[i].binary_encoded;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   out << "])";
   return out.str();
@@ -196,7 +316,11 @@ TupleDescriptor::TupleDescriptor(const TTupleDescriptor& tdesc)
 
 void TupleDescriptor::AddSlot(SlotDescriptor* slot) {
   slots_.push_back(slot);
+<<<<<<< HEAD
   if (slot->type() == TYPE_STRING && slot->is_materialized()) {
+=======
+  if (slot->type().IsVarLen() && slot->is_materialized()) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     string_slots_.push_back(slot);
   }
   if (slot->is_materialized()) ++num_materialized_slots_;
@@ -219,6 +343,7 @@ string TupleDescriptor::DebugString() const {
 }
 
 RowDescriptor::RowDescriptor(const DescriptorTbl& desc_tbl,
+<<<<<<< HEAD
                              const std::vector<TTupleId>& row_tuples,
                              const std::vector<bool>& nullable_tuples) {
   DCHECK(nullable_tuples.size() == row_tuples.size());
@@ -228,6 +353,49 @@ RowDescriptor::RowDescriptor(const DescriptorTbl& desc_tbl,
     tuple_idx_nullable_map_.push_back(nullable_tuples[i]);
   }
 
+=======
+                             const vector<TTupleId>& row_tuples,
+                             const vector<bool>& nullable_tuples)
+  : tuple_idx_nullable_map_(nullable_tuples) {
+  DCHECK_EQ(nullable_tuples.size(), row_tuples.size());
+  for (int i = 0; i < row_tuples.size(); ++i) {
+    tuple_desc_map_.push_back(desc_tbl.GetTupleDescriptor(row_tuples[i]));
+    DCHECK(tuple_desc_map_.back() != NULL);
+  }
+  InitTupleIdxMap();
+}
+
+RowDescriptor::RowDescriptor(const RowDescriptor& lhs_row_desc,
+    const RowDescriptor& rhs_row_desc) {
+  tuple_desc_map_.insert(tuple_desc_map_.end(), lhs_row_desc.tuple_desc_map_.begin(),
+      lhs_row_desc.tuple_desc_map_.end());
+  tuple_desc_map_.insert(tuple_desc_map_.end(), rhs_row_desc.tuple_desc_map_.begin(),
+      rhs_row_desc.tuple_desc_map_.end());
+  tuple_idx_nullable_map_.insert(tuple_idx_nullable_map_.end(),
+      lhs_row_desc.tuple_idx_nullable_map_.begin(),
+      lhs_row_desc.tuple_idx_nullable_map_.end());
+  tuple_idx_nullable_map_.insert(tuple_idx_nullable_map_.end(),
+      rhs_row_desc.tuple_idx_nullable_map_.begin(),
+      rhs_row_desc.tuple_idx_nullable_map_.end());
+  InitTupleIdxMap();
+}
+
+RowDescriptor::RowDescriptor(const vector<TupleDescriptor*>& tuple_descs,
+                             const vector<bool>& nullable_tuples)
+  : tuple_desc_map_(tuple_descs),
+    tuple_idx_nullable_map_(nullable_tuples) {
+  DCHECK_EQ(nullable_tuples.size(), tuple_descs.size());
+  InitTupleIdxMap();
+}
+
+RowDescriptor::RowDescriptor(TupleDescriptor* tuple_desc, bool is_nullable)
+  : tuple_desc_map_(1, tuple_desc),
+    tuple_idx_nullable_map_(1, is_nullable) {
+  InitTupleIdxMap();
+}
+
+void RowDescriptor::InitTupleIdxMap() {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // find max id
   TupleId max_id = 0;
   for (int i = 0; i < tuple_desc_map_.size(); ++i) {
@@ -249,7 +417,11 @@ int RowDescriptor::GetRowSize() const {
 }
 
 int RowDescriptor::GetTupleIdx(TupleId id) const {
+<<<<<<< HEAD
   DCHECK_LT(id, tuple_idx_map_.size());
+=======
+  DCHECK_LT(id, tuple_idx_map_.size()) << "RowDescriptor: " << DebugString();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return tuple_idx_map_[id];
 }
 
@@ -258,7 +430,18 @@ bool RowDescriptor::TupleIsNullable(int tuple_idx) const {
   return tuple_idx_nullable_map_[tuple_idx];
 }
 
+<<<<<<< HEAD
 void RowDescriptor::ToThrift(std::vector<TTupleId>* row_tuple_ids) {
+=======
+bool RowDescriptor::IsAnyTupleNullable() const {
+  for (int i = 0; i < tuple_idx_nullable_map_.size(); ++i) {
+    if (tuple_idx_nullable_map_[i]) return true;
+  }
+  return false;
+}
+
+void RowDescriptor::ToThrift(vector<TTupleId>* row_tuple_ids) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   row_tuple_ids->clear();
   for (int i = 0; i < tuple_desc_map_.size(); ++i) {
     row_tuple_ids->push_back(tuple_desc_map_[i]->id());
@@ -305,6 +488,12 @@ Status DescriptorTbl::Create(ObjectPool* pool, const TDescriptorTable& thrift_tb
       case TTableType::HBASE_TABLE:
         desc = pool->Add(new HBaseTableDescriptor(tdesc));
         break;
+<<<<<<< HEAD
+=======
+      case TTableType::DATA_SOURCE_TABLE:
+        desc = pool->Add(new DataSourceTableDescriptor(tdesc));
+        break;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       default:
         DCHECK(false) << "invalid table type: " << tdesc.tableType;
     }
@@ -480,6 +669,10 @@ StructType* TupleDescriptor::GenerateLlvmStruct(LlvmCodeGen* codegen) {
   // Add the slot types to the struct description.
   for (int i = 0; i < slots().size(); ++i) {
     SlotDescriptor* slot_desc = slots()[i];
+<<<<<<< HEAD
+=======
+    if (slot_desc->type().type == TYPE_CHAR) return NULL;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     if (slot_desc->is_materialized()) {
       slot_desc->field_idx_ = slot_desc->slot_idx_ + num_null_bytes_;
       DCHECK_LT(slot_desc->field_idx(), struct_fields.size());
@@ -495,8 +688,13 @@ StructType* TupleDescriptor::GenerateLlvmStruct(LlvmCodeGen* codegen) {
   // identically.  If the layout does not match, return NULL indicating the
   // struct could not be codegen'd.  This will trigger codegen for anything using
   // the tuple to be disabled.
+<<<<<<< HEAD
   const TargetData* target_data = codegen->execution_engine()->getTargetData();
   const StructLayout* layout = target_data->getStructLayout(tuple_struct);
+=======
+  const DataLayout* data_layout = codegen->execution_engine()->getDataLayout();
+  const StructLayout* layout = data_layout->getStructLayout(tuple_struct);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (layout->getSizeInBytes() != byte_size()) {
     DCHECK_EQ(layout->getSizeInBytes(), byte_size());
     return NULL;

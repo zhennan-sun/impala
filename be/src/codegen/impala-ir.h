@@ -19,7 +19,11 @@
 #ifdef IR_COMPILE
 // For cross compiling to IR, we need functions decorated in specific ways.  For
 // functions that we will replace with codegen, we need them not inlined (otherwise
+<<<<<<< HEAD
 // we can't find the function by name.  For functions where the non-codegen'd version
+=======
+// we can't find the function by name).  For functions where the non-codegen'd version
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // is too long for the compiler to inline, we might still want to inline it since
 // the codegen'd version is suitable for inling.
 // In the non-ir case (g++), we will just default to whatever the compiler thought

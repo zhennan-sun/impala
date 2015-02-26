@@ -24,6 +24,11 @@
 #include <boost/unordered_map.hpp>
 
 #include "runtime/disk-io-mgr.h"
+<<<<<<< HEAD
+=======
+#include "runtime/mem-tracker.h"
+#include "runtime/thread-resource-mgr.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
@@ -33,7 +38,11 @@ namespace impala {
 // a fixed duration.  The unit test runs this for a fixed duration.
 class DiskIoMgrStress {
  public:
+<<<<<<< HEAD
   DiskIoMgrStress(int num_disks, int num_threads_per_disk, int num_clients, 
+=======
+  DiskIoMgrStress(int num_disks, int num_threads_per_disk, int num_clients,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       bool includes_cancellation);
 
   // Run the test for 'sec'.  If 0, run forever
@@ -41,7 +50,11 @@ class DiskIoMgrStress {
 
  private:
   struct Client;
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   struct File {
     std::string filename;
     std::string data;  // the data in the file, used to validate
@@ -52,6 +65,12 @@ class DiskIoMgrStress {
   // during the test
   std::vector<File> files_;
 
+<<<<<<< HEAD
+=======
+  // Dummy mem tracker
+  MemTracker dummy_tracker_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // io manager
   boost::scoped_ptr<DiskIoMgr> io_mgr_;
 
@@ -61,13 +80,21 @@ class DiskIoMgrStress {
   // Array of clients
   int num_clients_;
   Client* clients_;
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // If true, tests cancelling readers
   bool includes_cancellation_;
 
   // Flag to signal that client reader threads should exit
   volatile bool shutdown_;
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Helper to initialize a new reader client, registering a new reader with the
   // io mgr and initializing the scan ranges
   void NewClient(int i);

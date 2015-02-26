@@ -15,14 +15,23 @@
 namespace cpp impala
 namespace java com.cloudera.impala.thrift
 
+<<<<<<< HEAD
 include "Status.thrift"
 include "beeswax.thrift"
+=======
+include "ExecStats.thrift"
+include "Status.thrift"
+include "Types.thrift"
+include "beeswax.thrift"
+include "TCLIService.thrift"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 // ImpalaService accepts query execution options through beeswax.Query.configuration in
 // key:value form. For example, the list of strings could be:
 //     "num_nodes:1", "abort_on_error:false"
 // The valid keys are listed in this enum. They map to TQueryOptions.
 // Note: If you add an option or change the default, you also need to update:
+<<<<<<< HEAD
 // - JavaConstants.DEFAULT_QUERY_OPTIONS
 // - ImpalaInternalService.thrift: TQueryOptions
 // - ImpaladClientExecutor.getBeeswaxQueryConfigurations()
@@ -42,6 +51,33 @@ enum TImpalaQueryOptions {
   // default
   BATCH_SIZE,
    
+=======
+// - ImpalaInternalService.thrift: TQueryOptions
+// - ImpaladClientExecutor.getBeeswaxQueryConfigurations()
+// - ImpalaServer::SetQueryOptions()
+// - ImpalaServer::TQueryOptionsToMap()
+enum TImpalaQueryOptions {
+  // if true, abort execution on the first error
+  ABORT_ON_ERROR,
+
+  // maximum # of errors to be reported; Unspecified or 0 indicates backend default
+  MAX_ERRORS,
+
+  // if true, disable llvm codegen
+  DISABLE_CODEGEN,
+
+  // batch size to be used by backend; Unspecified or a size of 0 indicates backend
+  // default
+  BATCH_SIZE,
+
+  // a per-machine approximate limit on the memory consumption of this query;
+  // unspecified or a limit of 0 means no limit;
+  // otherwise specified either as:
+  // a) an int (= number of bytes);
+  // b) a float followed by "M" (MB) or "G" (GB)
+  MEM_LIMIT,
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // specifies the degree of parallelism with which to execute the query;
   // 1: single-node execution
   // NUM_NODES_ALL: executes on all nodes that contain relevant data
@@ -51,17 +87,26 @@ enum TImpalaQueryOptions {
   //      numNodes would be active at any point in time)
   // Constants (NUM_NODES_ALL, NUM_NODES_ALL_RACKS) are defined in JavaConstants.thrift.
   NUM_NODES,
+<<<<<<< HEAD
   
   // maximum length of the scan range; only applicable to HDFS scan range; Unspecified or
   // a length of 0 indicates backend default;  
   MAX_SCAN_RANGE_LENGTH,
   
+=======
+
+  // maximum length of the scan range; only applicable to HDFS scan range; Unspecified or
+  // a length of 0 indicates backend default;
+  MAX_SCAN_RANGE_LENGTH,
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Maximum number of io buffers (per disk)
   MAX_IO_BUFFERS,
 
   // Number of scanner threads.
   NUM_SCANNER_THREADS,
 
+<<<<<<< HEAD
   // boolean; if true, do a distributed aggregation, which reduces the per-node memory
   // consumption, but may require an additional repartitioning step on the grouping
   // exprs; ignored if no grouping
@@ -75,10 +120,131 @@ enum TImpalaQueryOptions {
 struct TInsertResult {  
   // Number of appended rows per modified partition. Only applies to HDFS tables.
   // The keys represent partitions to create, coded as k1=v1/k2=v2/k3=v3..., with the 
+=======
+  // If true, Impala will try to execute on file formats that are not fully supported yet
+  ALLOW_UNSUPPORTED_FORMATS,
+
+  // if set and > -1, specifies the default limit applied to a top-level SELECT statement
+  // with an ORDER BY but without a LIMIT clause (ie, if the SELECT statement also has
+  // a LIMIT clause, this default is ignored)
+  DEFAULT_ORDER_BY_LIMIT,
+
+  // DEBUG ONLY:
+  // If set to
+  //   "[<backend number>:]<node id>:<TExecNodePhase>:<TDebugAction>",
+  // the exec node with the given id will perform the specified action in the given
+  // phase. If the optional backend number (starting from 0) is specified, only that
+  // backend instance will perform the debug action, otherwise all backends will behave
+  // in that way.
+  // If the string doesn't have the required format or if any of its components is
+  // invalid, the option is ignored.
+  DEBUG_ACTION,
+
+  // If true, raise an error when the DEFAULT_ORDER_BY_LIMIT has been reached.
+  ABORT_ON_DEFAULT_LIMIT_EXCEEDED,
+
+  // Compression codec when inserting into tables.
+  // Valid values are "snappy", "gzip", "bzip2" and "none"
+  // Leave blank to use default.
+  COMPRESSION_CODEC,
+
+  // Mode for compressing sequence files; either BLOCK, RECORD, or DEFAULT
+  SEQ_COMPRESSION_MODE,
+
+  // HBase scan query option. If set and > 0, HBASE_CACHING is the value for
+  // "hbase.client.Scan.setCaching()" when querying HBase table. Otherwise, use backend
+  // default.
+  // If the value is too high, then the hbase region server will have a hard time (GC
+  // pressure and long response times). If the value is too small, then there will be
+  // extra trips to the hbase region server.
+  HBASE_CACHING,
+
+  // HBase scan query option. If set, HBase scan will always set
+  // "hbase.client.setCacheBlocks" to CACHE_BLOCKS. Default is false.
+  // If the table is large and the query is doing big scan, set it to false to
+  // avoid polluting the cache in the hbase region server.
+  // If the table is small and the table is used several time, set it to true to improve
+  // performance.
+  HBASE_CACHE_BLOCKS,
+
+  // Target file size for inserts into parquet tables. 0 uses the default.
+  PARQUET_FILE_SIZE,
+
+  // Level of detail for explain output (NORMAL, VERBOSE).
+  EXPLAIN_LEVEL,
+
+  // If true, waits for the result of all catalog operations to be processed by all
+  // active impalad in the cluster before completing.
+  SYNC_DDL,
+
+  // Request pool this request should be submitted to. If not set
+  // the pool is determined based on the user.
+  REQUEST_POOL,
+
+  // Per-host virtual CPU cores required for query (only relevant with RM).
+  V_CPU_CORES,
+
+  // Max time in milliseconds the resource broker should wait for
+  // a resource request to be granted by Llama/Yarn (only relevant with RM).
+  RESERVATION_REQUEST_TIMEOUT,
+
+  // if true, disables cached reads
+  DISABLE_CACHED_READS,
+
+  // Temporary testing flag
+  DISABLE_OUTERMOST_TOPN,
+
+  // Size of initial memory reservation when RM is enabled
+  RM_INITIAL_MEM,
+
+  // Time, in s, before a query will be timed out if it is inactive. May not exceed
+  // --idle_query_timeout if that flag > 0.
+  QUERY_TIMEOUT_S
+
+  // Test hook for spill to disk operators
+  MAX_BLOCK_MGR_MEMORY,
+
+  // Transforms all count(distinct) aggregations into NDV()
+  APPX_COUNT_DISTINCT
+
+  // If true, allows Impala to internally disable spilling for potentially
+  // disastrous query plans. Impala will excercise this option if a query
+  // has no plan hints, and at least one table is missing relevant stats.
+  DISABLE_UNSAFE_SPILLS
+
+  // If the number of rows that are processed for a single query is below the
+  // threshold, it will be executed on the coordinator only with codegen disabled
+  EXEC_SINGLE_NODE_ROWS_THRESHOLD
+}
+
+// The summary of an insert.
+struct TInsertResult {
+  // Number of appended rows per modified partition. Only applies to HDFS tables.
+  // The keys represent partitions to create, coded as k1=v1/k2=v2/k3=v3..., with the
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // root in an unpartitioned table being the empty string.
   1: required map<string, i64> rows_appended
 }
 
+<<<<<<< HEAD
+=======
+// Response from a call to PingImpalaService
+struct TPingImpalaServiceResp {
+  // The Impala service's version string.
+  1: string version
+}
+
+// Parameters for a ResetTable request which will invalidate a table's metadata.
+// DEPRECATED.
+struct TResetTableReq {
+  // Name of the table's parent database.
+  1: required string db_name
+
+  // Name of the table.
+  2: required string table_name
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // For all rpc that return a TStatus as part of their result type,
 // if the status_code field is set to anything other than OK, the contents
 // of the remainder of the result type is undefined (typically not set)
@@ -91,6 +257,7 @@ service ImpalaService extends beeswax.BeeswaxService {
   // necessarily indicate an error: the query might have finished).
   Status.TStatus Cancel(1:beeswax.QueryHandle query_id)
       throws(1:beeswax.BeeswaxException error);
+<<<<<<< HEAD
         
   // Invalidates all catalog metadata, forcing a reload
   Status.TStatus ResetCatalog();
@@ -98,4 +265,65 @@ service ImpalaService extends beeswax.BeeswaxService {
   // Closes the query handle and return the result summary of the insert.
   TInsertResult CloseInsert(1:beeswax.QueryHandle handle)
       throws(1:beeswax.QueryNotFoundException error, 2:beeswax.BeeswaxException error2);
+=======
+
+  // Invalidates all catalog metadata, forcing a reload
+  // DEPRECATED; execute query "invalidate metadata" to refresh metadata
+  Status.TStatus ResetCatalog();
+
+  // Invalidates a specific table's catalog metadata, forcing a reload on the next access
+  // DEPRECATED; execute query "refresh <table>" to refresh metadata
+  Status.TStatus ResetTable(1:TResetTableReq request)
+
+  // Returns the runtime profile string for the given query handle.
+  string GetRuntimeProfile(1:beeswax.QueryHandle query_id)
+      throws(1:beeswax.BeeswaxException error);
+
+  // Closes the query handle and return the result summary of the insert.
+  TInsertResult CloseInsert(1:beeswax.QueryHandle handle)
+      throws(1:beeswax.QueryNotFoundException error, 2:beeswax.BeeswaxException error2);
+
+  // Client calls this RPC to verify that the server is an ImpalaService. Returns the
+  // server version.
+  TPingImpalaServiceResp PingImpalaService();
+
+  // Returns the summary of the current execution.
+  ExecStats.TExecSummary GetExecSummary(1:beeswax.QueryHandle handle)
+      throws(1:beeswax.QueryNotFoundException error, 2:beeswax.BeeswaxException error2);
+}
+
+// Impala HiveServer2 service
+
+struct TGetExecSummaryReq {
+  1: optional TCLIService.TOperationHandle operationHandle
+
+  2: optional TCLIService.TSessionHandle sessionHandle
+}
+
+struct TGetExecSummaryResp {
+  1: required TCLIService.TStatus status
+
+  2: optional ExecStats.TExecSummary summary
+}
+
+struct TGetRuntimeProfileReq {
+  1: optional TCLIService.TOperationHandle operationHandle
+
+  2: optional TCLIService.TSessionHandle sessionHandle
+}
+
+struct TGetRuntimeProfileResp {
+  1: required TCLIService.TStatus status
+
+  2: optional string profile
+}
+
+
+service ImpalaHiveServer2Service extends TCLIService.TCLIService {
+  // Returns the exec summary for the given query
+  TGetExecSummaryResp GetExecSummary(1:TGetExecSummaryReq req);
+
+  // Returns the runtime profile string for the given query
+  TGetRuntimeProfileResp GetRuntimeProfile(1:TGetRuntimeProfileReq req);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

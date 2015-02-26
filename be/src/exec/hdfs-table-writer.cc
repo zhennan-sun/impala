@@ -18,6 +18,7 @@ using namespace std;
 
 namespace impala {
 
+<<<<<<< HEAD
 HdfsTableWriter::HdfsTableWriter(RuntimeState* state, OutputPartition* output,
                                  const HdfsPartitionDescriptor* partition_desc,
                                  const HdfsTableDescriptor* table_desc,
@@ -36,6 +37,36 @@ Status HdfsTableWriter::Write(const uint8_t* data, int32_t len) {
         << " to Hdfs file: " << output_->current_file_name;
     return Status(AppendHdfsErrorMessage(msg.str()));
   }
+=======
+HdfsTableWriter::HdfsTableWriter(HdfsTableSink* parent,
+                                 RuntimeState* state, OutputPartition* output,
+                                 const HdfsPartitionDescriptor* partition_desc,
+                                 const HdfsTableDescriptor* table_desc,
+                                 const vector<ExprContext*>& output_expr_ctxs)
+  : parent_(parent),
+    state_(state),
+    output_(output),
+    table_desc_(table_desc),
+    output_expr_ctxs_(output_expr_ctxs) {
+  int num_non_partition_cols =
+      table_desc_->num_cols() - table_desc_->num_clustering_cols();
+  DCHECK_GE(output_expr_ctxs_.size(), num_non_partition_cols) << parent_->DebugString();
+}
+
+Status HdfsTableWriter::Write(const uint8_t* data, int32_t len) {
+  DCHECK_GE(len, 0);
+  int ret = hdfsWrite(output_->hdfs_connection, output_->tmp_hdfs_file, data, len);
+  if (ret == -1) {
+    string error_msg = GetHdfsErrorMsg("");
+    stringstream msg;
+    msg << "Failed to write data (length: " << len
+        << ") to Hdfs file: " << output_->current_file_name
+        << " " << error_msg;
+    return Status(msg.str());
+  }
+  COUNTER_ADD(parent_->bytes_written_counter(), len);
+  stats_.bytes_written += len;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return Status::OK;
 }
 }

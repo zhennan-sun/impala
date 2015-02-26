@@ -28,11 +28,25 @@ PROJECT(ASSEMBLER)
 # compiler flags that are common across debug/release builds
 #  - msse4.2: Enable sse4.2 compiler intrinsics.
 #  - Wall: Enable all warnings.
+<<<<<<< HEAD
 #  - Wno-sign-compare: suppress warnings for comparison between signed and unsigned 
 #    integers
 #  - pthread: enable multithreaded malloc
 #  - DBOOST_DATE_TIME_POSIX_TIME_STD_CONFIG: enable nanosecond precision for boost
 SET(CXX_COMMON_FLAGS "-msse4.2 -Wall -Wno-sign-compare -pthread")
+=======
+#  - Wno-sign-compare: suppress warnings for comparison between signed and unsigned
+#    integers
+#   -fno-strict-aliasing: disable optimizations that assume strict aliasing. This
+#       is unsafe to do if the code uses casts (which we obviously do).
+#  - Wno-unknown-pragmas: suppress warnings for unknown (compiler specific) pragmas
+#  - Wno-deprecated: gutil contains deprecated headers
+#  - pthread: enable multithreaded malloc
+#  - DBOOST_DATE_TIME_POSIX_TIME_STD_CONFIG: enable nanosecond precision for boost
+SET(CXX_COMMON_FLAGS "-msse4.2 -Wall -Wno-sign-compare -Wno-unknown-pragmas -pthread")
+SET(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} -fno-strict-aliasing")
+SET(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} -Wno-deprecated")
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 SET(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} -DBOOST_DATE_TIME_POSIX_TIME_STD_CONFIG")
 SET(CXX_COVERAGE_FLAGS "-fprofile-arcs -ftest-coverage")
 
@@ -42,6 +56,7 @@ SET(CXX_COVERAGE_FLAGS "-fprofile-arcs -ftest-coverage")
 #   -ggdb: Enable gdb debugging
 # For CMAKE_BUILD_TYPE=Release
 #   -O3: Enable all compiler optimizations
+<<<<<<< HEAD
 #   -g: Enable symbols for profiler tools (TODO: remove for shipping)
 #   -DNDEBUG: Turn off dchecks/asserts/debug only code.
 #   -Wno-strict-aliasing: Suppress warnings for potential issues with pointer aliasing.  Code
@@ -56,6 +71,14 @@ SET(CXX_FLAGS_DEBUG "-ggdb")
 SET(CXX_FLAGS_RELEASE "-O3 -g -DNDEBUG -Wno-strict-aliasing")
 SET(CXX_FLAGS_PROFILE_GEN "${CXX_FLAGS_RELEASE} -fprofile-generate")
 SET(CXX_FLAGS_PROFILE_BUILD "${CXX_FLAGS_RELEASE} -fprofile-use")
+=======
+#   -g: Enable symbols for profiler tools
+#   -DNDEBUG: Turn off dchecks/asserts/debug only code.
+SET(CXX_FLAGS_DEBUG "-g -ggdb")
+SET(CXX_FLAGS_RELEASE "-O3 -g -DNDEBUG")
+SET(CXX_FLAGS_ADDRESS_SANITIZER
+    "-O1 -g -fsanitize=address -fno-omit-frame-pointer -DADDRESS_SANITIZER")
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # if no build build type is specified, default to debug builds
 if (NOT CMAKE_BUILD_TYPE)
@@ -69,31 +92,57 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
   SET(CMAKE_CXX_FLAGS ${CXX_FLAGS_DEBUG})
 elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
   SET(CMAKE_CXX_FLAGS ${CXX_FLAGS_RELEASE})
+<<<<<<< HEAD
 elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "PROFILE_GEN")
   SET(CMAKE_CXX_FLAGS ${CXX_FLAGS_PROFILE_GEN})
 elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "PROFILE_BUILD")
   SET(CMAKE_CXX_FLAGS ${CXX_FLAGS_PROFILE_BUILD})
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "CODE_COVERAGE_DEBUG")
   SET(CMAKE_CXX_FLAGS "${CXX_FLAGS_DEBUG} ${CXX_COVERAGE_FLAGS}")
 elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "CODE_COVERAGE_RELEASE")
   SET(CMAKE_CXX_FLAGS "${CXX_FLAGS_RELEASE} ${CXX_COVERAGE_FLAGS}")
+<<<<<<< HEAD
+=======
+elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "ADDRESS_SANITIZER")
+  SET(CMAKE_CXX_COMPILER ${LLVM_CLANG_EXECUTABLE})
+  SET(CMAKE_CXX_FLAGS ${CXX_FLAGS_ADDRESS_SANITIZER})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 else()
   message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
 endif ()
 
 # Add flags that are common across build types
+<<<<<<< HEAD
 #  - fverboase-asm creates better annotated assembly.  This doesn't seem to affect 
+=======
+#  - fverboase-asm creates better annotated assembly.  This doesn't seem to affect
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #    when building the binary.
 # LLMV_CFLAGS - Adding llvm compile flags
 SET(CMAKE_CXX_FLAGS "${CXX_COMMON_FLAGS} ${CMAKE_CXX_FLAGS}")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fverbose-asm")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CFLAGS}")
 
+<<<<<<< HEAD
 Message(${CMAKE_CXX_FLAGS})
 
 # Set clang to IR cross compile flags
 # IR_COMPILE is #defined for the cross compile to remove code that bloats the IR
 set(CLANG_IR_CXX_FLAGS "-emit-llvm" "-O3" "-c" "-DIR_COMPILE" "-DNDEBUG")
+=======
+# Thrift requires these definitions for some types that we use
+add_definitions(-DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H -DHAVE_NETDB_H)
+
+# Set clang flags for cross-compiling to IR.
+# IR_COMPILE is #defined for the cross compile to remove code that bloats the IR.
+# Note that we don't enable any optimization. We want unoptimized IR since we will be
+# modifying it at runtime, then re-compiling (and optimizing) the modified code. The final
+# optimizations will be less effective if the initial code is also optimized.
+set(CLANG_IR_CXX_FLAGS "-emit-llvm" "-c" "-DIR_COMPILE" "-DNDEBUG"
+  "-DHAVE_INTTYPES_H" "-DHAVE_NETINET_IN_H" "-DBOOST_DATE_TIME_POSIX_TIME_STD_CONFIG")
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # setup doc generation with Doxygen
 find_package(Doxygen)
@@ -102,12 +151,24 @@ if (DOXYGEN_FOUND)
   # Possible to not input the subdirs one by one?
   set(CMAKE_DOXYGEN_INPUT
     ${CMAKE_SOURCE_DIR}/be/src
+<<<<<<< HEAD
     ${CMAKE_SOURCE_DIR}/be/src/common/
     ${CMAKE_SOURCE_DIR}/be/src/exec/
     ${CMAKE_SOURCE_DIR}/be/src/exprs/
     ${CMAKE_SOURCE_DIR}/be/src/runtime/
     ${CMAKE_SOURCE_DIR}/be/src/service/
     ${CMAKE_SOURCE_DIR}/be/src/sparrow/
+=======
+    ${CMAKE_SOURCE_DIR}/be/src/catalog/
+    ${CMAKE_SOURCE_DIR}/be/src/common/
+    ${CMAKE_SOURCE_DIR}/be/src/exec/
+    ${CMAKE_SOURCE_DIR}/be/src/exprs/
+    ${CMAKE_SOURCE_DIR}/be/src/resourcebroker/
+    ${CMAKE_SOURCE_DIR}/be/src/runtime/
+    ${CMAKE_SOURCE_DIR}/be/src/scheduling/
+    ${CMAKE_SOURCE_DIR}/be/src/service/
+    ${CMAKE_SOURCE_DIR}/be/src/statestore/
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     ${CMAKE_SOURCE_DIR}/be/src/testutil/
     ${CMAKE_SOURCE_DIR}/be/src/thrift/
     ${CMAKE_SOURCE_DIR}/be/src/util/
@@ -135,7 +196,20 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/generated-sources)
 set(CLANG_INCLUDE_FLAGS
   "-I${CMAKE_CURRENT_SOURCE_DIR}/src"
   "-I${CMAKE_CURRENT_SOURCE_DIR}/generated-sources"
+<<<<<<< HEAD
   "-I${Thrift_INCLUDE_DIR}"
+=======
+  "-I${THRIFT_INCLUDE_DIR}"
+  "-I${SQUEASEL_INCLUDE_DIR}"
+  "-I${GLOG_INCLUDE_DIR}"
+  "-I${GFLAGS_INCLUDE_DIR}"
+  "-I${RAPIDJSON_INCLUDE_DIR}"
+  "-I${AVRO_INCLUDE_DIR}"
+  # Required so that jni.h can be found during Clang compilation
+  "-I${JAVA_INCLUDE_PATH}"
+  "-I${JAVA_INCLUDE_PATH2}"
+  "-I${RE2_INCLUDE_DIR}"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 )
 
 # allow linking of static libs into dynamic lib
@@ -143,12 +217,18 @@ add_definitions(-fPIC)
 
 # set compile output directory
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG" OR
+<<<<<<< HEAD
     "${CMAKE_BUILD_TYPE}" STREQUAL "CODE_COVERAGE_DEBUG")
+=======
+    "${CMAKE_BUILD_TYPE}" STREQUAL "CODE_COVERAGE_DEBUG" OR
+    "${CMAKE_BUILD_TYPE}" STREQUAL "ADDRESS_SANITIZER")
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   set(BUILD_OUTPUT_ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/debug/")
 else()
   set(BUILD_OUTPUT_ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/release/")
 endif()
 
+<<<<<<< HEAD
 # Make sure to specify link libraries in reverse order of dependency
 # (ie, if libA uses symbols from libB, libA must precede libB), otherwise
 # when linking statically the linker won't look for the needed symbols.
@@ -203,19 +283,123 @@ set (IMPALA_LINK_LIBS
   -lz -lbz2 -lboost_date_time
 )
 MESSAGE(STATUS, "${IMPALA_LINK_LIBS}")
+=======
+# This is a list of impala library dependencies. Individual libraries
+# must not specify library dependencies in their own CMakeLists.txt file.
+# Enclose the impala libraries in -Wl,--start-group and -Wl,--end-group
+# to resolve cyclic dependencies. As long as those flags are given,
+# the order in which impala libraries are listed below does not matter.
+# Note: The ld documentation discourages auto-resolving cyclic dependencies
+# for performance reasons.
+set (IMPALA_LINK_LIBS
+  -Wl,--start-group
+  Catalog
+  CodeGen
+  Common
+  Exec
+  Exprs
+  GlobalFlags
+  ImpalaThrift
+  ResourceBroker
+  Rpc
+  Runtime
+  Scheduling
+  Service
+  Statestore
+  TestUtil
+  ThriftSaslTransport
+  # Udf or ImpalaUdf is added below to support the external udf library for tests
+  Util
+  Webserver
+  -Wl,--end-group
+)
+
+# If using dynamic linking, -Wl does not have any effect (it's only for .a files). So we
+# need to add these redundant dependencies to resolve the circular references in our
+# libraries when dynamic linking is enabled.
+if ("${BUILD_SHARED_LIBS}" STREQUAL "ON")
+  set (IMPALA_LINK_LIBS ${IMPALA_LINK_LIBS}
+    Runtime
+    Exec
+    CodeGen
+    Exprs
+    Rpc
+    Service
+    Statestore
+    Scheduling
+    Catalog
+    ResourceBroker
+    Webserver
+    ImpalaThrift
+    GlobalFlags
+    Common
+    )
+endif ()
+
+# Add all external dependencies. They should come after the impala libs.
+set (IMPALA_LINK_LIBS ${IMPALA_LINK_LIBS}
+  ${SNAPPY_STATIC_LIB}
+  ${LZ4_STATIC_LIB}
+  ${RE2_STATIC_LIB}
+  ${Boost_LIBRARIES}
+  ${LLVM_MODULE_LIBS}
+  thriftstatic
+  ${SASL_LIBRARY}
+  ${LDAP_LIBRARY}
+  ${LBER_LIBRARY}
+  ThriftSaslTransport
+  ${JAVA_JVM_LIBRARY}
+  ${HDFS_LIBS}
+  glogstatic
+  gflagsstatic
+  gutil
+  pprofstatic
+  ${LIBZ}
+  ${LIBBZ2}
+  ${AVRO_STATIC_LIB}
+  -lrt -lboost_date_time
+)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "CODE_COVERAGE")
   set (IMPALA_LINK_LIBS ${IMPALA_LINK_LIBS} -lgcov)
 endif ()
 
+<<<<<<< HEAD
 # Link libs for test executables.  Although not all tests need all libs,
 # the build time for the tests is rather small and not worth the trouble.
 set (IMPALA_TEST_LINK_LIBS ${IMPALA_LINK_LIBS} gtest)
+=======
+# The above link list does not include tcmalloc. This is because the Impala JVM support
+# libraries (libfesupport, libloggingsupport) cannot use tcmalloc in all cases. When they
+# are started up by the FE (for tests) the jvm has already made allocations before
+# tcmalloc can be loaded. In all other binaries, we can use tcmalloc except the address
+# sanitizer build. Address sanitizer is incompatible with tcmalloc (they both intercept
+# malloc/free)
+set (IMPALA_LINK_LIBS_NO_TCMALLOC ${IMPALA_LINK_LIBS})
+if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "ADDRESS_SANITIZER")
+  set (IMPALA_LINK_LIBS ${IMPALA_LINK_LIBS} tcmallocstatic)
+endif()
+
+# Add ImpalaUdf for $UDF_TEST_LINK_LIBS and Udf for everything else
+set (UDF_TEST_LINK_LIBS ${IMPALA_LINK_LIBS} ImpalaUdf)
+set (IMPALA_LINK_LIBS ${IMPALA_LINK_LIBS} Udf)
+set (IMPALA_LINK_LIBS_NO_TCMALLOC ${IMPALA_LINK_LIBS_NO_TCMALLOC} Udf)
+
+# Link libs for test executables.  Although not all tests need all libs,
+# the build time for the tests is rather small and not worth the trouble.
+set (IMPALA_TEST_LINK_LIBS ${IMPALA_LINK_LIBS} gtest)
+set (UDF_TEST_LINK_LIBS ${UDF_TEST_LINK_LIBS} gtest)
+
+MESSAGE(STATUS, "Compiler Flags: ${CMAKE_CXX_FLAGS}")
+MESSAGE(STATUS, "Linker Libs: ${IMPALA_LINK_LIBS}")
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 set(LLVM_IR_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/llvm-ir")
 file(MAKE_DIRECTORY ${LLVM_IR_OUTPUT_DIRECTORY})
 
+<<<<<<< HEAD
 # compile these subdirs using their own CMakeLists.txt
 add_subdirectory(src/codegen)
 add_subdirectory(src/common)
@@ -225,12 +409,61 @@ add_subdirectory(src/runtime)
 add_subdirectory(src/sparrow)
 add_subdirectory(src/service)
 add_subdirectory(src/testutil)
+=======
+# Utility CMake function to make specifying tests and benchmarks less verbose
+FUNCTION(ADD_BE_TEST TEST_NAME)
+  # This gets the directory where the test is from (e.g. 'exprs' or 'runtime')
+  get_filename_component(DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+  ADD_EXECUTABLE(${TEST_NAME} ${TEST_NAME}.cc)
+  TARGET_LINK_LIBRARIES(${TEST_NAME} ${IMPALA_TEST_LINK_LIBS})
+  set(CMAKE_EXE_LINKER_FLAGS "--start-group")
+  ADD_TEST(${TEST_NAME} "${BUILD_OUTPUT_ROOT_DIRECTORY}/${DIR_NAME}/${TEST_NAME}")
+ENDFUNCTION()
+
+FUNCTION(ADD_BE_BENCHMARK BENCHMARK_NAME)
+  ADD_EXECUTABLE(${BENCHMARK_NAME} ${BENCHMARK_NAME}.cc)
+  TARGET_LINK_LIBRARIES(${BENCHMARK_NAME} ${IMPALA_LINK_LIBS})
+ENDFUNCTION()
+
+# Function to generate rule to cross compile a source file to an IR module.
+# This should be called with the .cc src file and it will generate a
+# src-file-ir target that can be built.
+# e.g. COMPILE_TO_IR(test.cc) generates the "test-ir" make target.
+# Note: this is duplicated in udf_samples/CMakeLists.txt
+set(IR_COMPILE_FLAGS "-emit-llvm" "-O3" "-c" "-I../")
+function(COMPILE_TO_IR SRC_FILE)
+  get_filename_component(BASE_NAME ${SRC_FILE} NAME_WE)
+  set(OUTPUT_FILE "${LIBRARY_OUTPUT_PATH}/${BASE_NAME}.ll")
+  add_custom_command(
+    OUTPUT ${OUTPUT_FILE}
+    COMMAND ${LLVM_CLANG_EXECUTABLE} ${IR_COMPILE_FLAGS} ${SRC_FILE} -o ${OUTPUT_FILE}
+    DEPENDS ${SRC_FILE})
+  add_custom_target(${BASE_NAME}-ir ALL DEPENDS ${OUTPUT_FILE})
+endfunction(COMPILE_TO_IR)
+
+# compile these subdirs using their own CMakeLists.txt
+add_subdirectory(src/catalog)
+add_subdirectory(src/codegen)
+add_subdirectory(src/common)
+add_subdirectory(src/exec)
+add_subdirectory(src/resourcebroker)
+add_subdirectory(src/exprs)
+add_subdirectory(src/runtime)
+add_subdirectory(src/scheduling)
+add_subdirectory(src/statestore)
+add_subdirectory(src/service)
+add_subdirectory(src/testutil)
+add_subdirectory(src/rpc)
+add_subdirectory(src/udf)
+add_subdirectory(src/udf_samples)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 add_subdirectory(src/util)
 add_subdirectory(src/transport)
 
 add_subdirectory(src/benchmarks)
 add_subdirectory(src/experiments)
 
+<<<<<<< HEAD
 add_subdirectory(generated-sources/gen-cpp)
 add_subdirectory(generated-sources/opcode)
 
@@ -243,6 +476,24 @@ link_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/build/service
   ${CMAKE_CURRENT_SOURCE_DIR}/build/testutil
   ${CMAKE_CURRENT_SOURCE_DIR}/build/thrift
+=======
+# Thrift generated files have unused variables.  Ignore those compiler
+# warnings by adding this flag.  Note: impala subdirectories should be
+# added *before* this so we can fix our issues.
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
+add_subdirectory(generated-sources/gen-cpp)
+
+link_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/catalog
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/common
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/exec
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/exprs
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/rpc
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/runtime
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/statestore
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/service
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/testutil
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ${CMAKE_CURRENT_SOURCE_DIR}/build/util
   ${CMAKE_CURRENT_SOURCE_DIR}/build/transport
 )

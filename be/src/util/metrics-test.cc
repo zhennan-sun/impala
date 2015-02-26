@@ -14,9 +14,20 @@
 
 #include "util/metrics.h"
 #include "util/non-primitive-metrics.h"
+<<<<<<< HEAD
 #include <gtest/gtest.h>
 #include <boost/scoped_ptr.hpp>
 
+=======
+#include "util/memory-metrics.h"
+
+#include <gtest/gtest.h>
+#include <boost/scoped_ptr.hpp>
+
+#include "util/jni-util.h"
+#include "util/thread.h"
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 using namespace boost;
 using namespace std;
 
@@ -25,14 +36,25 @@ namespace impala {
 class MetricsTest : public testing::Test {
  public:
   Metrics* metrics() { return metrics_.get(); }
+<<<<<<< HEAD
   MetricsTest() : metrics_(new Metrics()) { 
+=======
+  MetricsTest() : metrics_(new Metrics()) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     bool_metric_ = metrics_->CreateAndRegisterPrimitiveMetric("bool",
         false);
     int_metric_ = metrics_->CreateAndRegisterPrimitiveMetric("int", 0L);
     double_metric_ = metrics_->CreateAndRegisterPrimitiveMetric("double",
         1.23);
+<<<<<<< HEAD
     string_metric_ = metrics_->CreateAndRegisterPrimitiveMetric("string", 
         string("hello world"));
+=======
+    string_metric_ = metrics_->CreateAndRegisterPrimitiveMetric("string",
+        string("hello world"));
+    inf_metric_ = metrics_->CreateAndRegisterPrimitiveMetric("inf_double", 0.0);
+    stats_metric_ = metrics_->RegisterMetric(new StatsMetric<double>("stats"));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
     vector<int> items;
     items.push_back(1); items.push_back(2); items.push_back(3);
@@ -40,14 +62,33 @@ class MetricsTest : public testing::Test {
     set<int> item_set;
     item_set.insert(4); item_set.insert(5); item_set.insert(6);
     set_metric_ = metrics_->RegisterMetric(new SetMetric<int>("set", item_set));
+<<<<<<< HEAD
+=======
+
+    set<string> string_set;
+    string_set.insert("one"); string_set.insert("two");
+    string_set_metric_ = metrics_->RegisterMetric(new SetMetric<string>("string_set",
+                                                                        string_set));
+
+    RegisterMemoryMetrics(metrics_.get(), true);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   Metrics::BooleanMetric* bool_metric_;
   Metrics::IntMetric* int_metric_;
   Metrics::DoubleMetric* double_metric_;
+<<<<<<< HEAD
+=======
+  Metrics::DoubleMetric* inf_metric_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   Metrics::StringMetric* string_metric_;
 
   ListMetric<int>* list_metric_;
   SetMetric<int>* set_metric_;
+<<<<<<< HEAD
+=======
+  SetMetric<string>* string_set_metric_; // For quote testing
+  StatsMetric<double>* stats_metric_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
  private:
   boost::scoped_ptr<Metrics> metrics_;
@@ -108,10 +149,105 @@ TEST_F(MetricsTest, Increment) {
   EXPECT_EQ(int_metric_->Increment(10), 11);
   EXPECT_EQ(int_metric_->value(), 11);
 }
+<<<<<<< HEAD
+=======
+
+TEST_F(MetricsTest, JsonQuoting) {
+  // Strings should be quoted in Json output
+  EXPECT_NE(metrics()->DebugStringJson().find("\"string\": \"hello world\""),
+            string::npos);
+
+  // Other types should not be quoted
+  EXPECT_NE(metrics()->DebugStringJson().find("\"bool\": 0"), string::npos);
+
+  // Strings in sets should be quoted
+  EXPECT_NE(metrics()->DebugStringJson().find("\"string_set\": [\"one\", \"two\"]"),
+            string::npos);
+
+  // Other types in sets should not be quoted
+  EXPECT_NE(metrics()->DebugStringJson().find("\"set\": [4, 5, 6]"), string::npos);
+}
+
+TEST_F(MetricsTest, NonfiniteDoubles) {
+  inf_metric_->Update(1.0 / 0.0);
+  EXPECT_NE(metrics()->DebugString().find("inf_double:inf"), string::npos);
+  EXPECT_NE(metrics()->DebugStringJson().find("\"inf_double\": null"), string::npos);
+
+  inf_metric_->Update(0.0 / 0.0);
+  // 0.0 / 0.0 can either be nan or -nan (compiler dependant)
+  EXPECT_TRUE(metrics()->DebugString().find("inf_double:-nan") != string::npos ||
+              metrics()->DebugString().find("inf_double:nan") != string::npos);
+  EXPECT_NE(metrics()->DebugStringJson().find("\"inf_double\": null"), string::npos);
+}
+
+TEST_F(MetricsTest, StatsMetric) {
+  // Uninitialised stats metrics don't print anything other than the count
+  EXPECT_NE(metrics()->DebugStringJson().find("\"stats\": { \"count\": 0 }"),
+            string::npos);
+
+  EXPECT_NE(metrics()->DebugString().find("stats: count: 0"), string::npos);
+  EXPECT_EQ(metrics()->DebugString().find("stats: count: 0, mean:"), string::npos);
+
+  stats_metric_->Update(0.0);
+  stats_metric_->Update(1.0);
+  stats_metric_->Update(2.0);
+
+  EXPECT_NE(metrics()->DebugString().find(
+      "stats: count: 3, last: 2, min: 0, max: 2, mean: 1, stddev: 0.816497"),
+      string::npos);
+}
+
+TEST_F(MetricsTest, MemMetric) {
+#ifndef ADDRESS_SANITIZER
+  // Smoke test to confirm that tcmalloc metrics are returning reasonable values.
+  Metrics::Metric<uint64_t>* bytes_in_use =
+      metrics()->GetMetric<Metrics::Metric<uint64_t> >("tcmalloc.bytes-in-use");
+  EXPECT_TRUE(bytes_in_use != NULL);
+
+  uint64_t cur_in_use = bytes_in_use->value();
+  scoped_ptr<uint64_t> chunk(new uint64_t);
+  EXPECT_GT(cur_in_use, 0);
+  EXPECT_GT(bytes_in_use->value(), cur_in_use);
+
+  Metrics::Metric<uint64_t>* total_bytes_reserved =
+      metrics()->GetMetric<Metrics::Metric<uint64_t> >("tcmalloc.total-bytes-reserved");
+  EXPECT_TRUE(total_bytes_reserved != NULL);
+  EXPECT_GT(total_bytes_reserved->value(), 0);
+
+  Metrics::Metric<uint64_t>* pageheap_free_bytes =
+      metrics()->GetMetric<Metrics::Metric<uint64_t> >("tcmalloc.pageheap-free-bytes");
+  EXPECT_TRUE(pageheap_free_bytes != NULL);
+
+  Metrics::Metric<uint64_t>* pageheap_unmapped_bytes =
+      metrics()->GetMetric<Metrics::Metric<uint64_t> >(
+          "tcmalloc.pageheap-unmapped-bytes");
+  EXPECT_TRUE(pageheap_unmapped_bytes != NULL);
+#endif
+}
+
+TEST_F(MetricsTest, JvmMetrics) {
+  Metrics::Metric<uint64_t>* jvm_total_used =
+      metrics()->GetMetric<Metrics::Metric<uint64_t> >("jvm.total.current-usage-bytes");
+  ASSERT_TRUE(jvm_total_used != NULL);
+  EXPECT_GT(jvm_total_used->value(), 0);
+  Metrics::Metric<uint64_t>* jvm_peak_total_used =
+      metrics()->GetMetric<Metrics::Metric<uint64_t> >(
+          "jvm.total.peak-current-usage-bytes");
+  ASSERT_TRUE(jvm_peak_total_used != NULL);
+  EXPECT_GT(jvm_peak_total_used->value(), 0);
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 int main(int argc, char **argv) {
   google::InitGoogleLogging(argv[0]);
   ::testing::InitGoogleTest(&argc, argv);
+<<<<<<< HEAD
+=======
+  impala::InitThreading();
+  impala::JniUtil::Init();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return RUN_ALL_TESTS();
 }

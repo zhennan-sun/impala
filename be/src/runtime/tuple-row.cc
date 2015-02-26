@@ -17,4 +17,7 @@
 using namespace impala;
 
 const char* TupleRow::LLVM_CLASS_NAME = "class.impala::TupleRow";
+<<<<<<< HEAD
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

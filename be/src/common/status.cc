@@ -22,8 +22,21 @@ using namespace boost::algorithm;
 
 namespace impala {
 
+<<<<<<< HEAD
 const Status Status::OK;
 const Status Status::CANCELLED(TStatusCode::CANCELLED);
+=======
+// NOTE: this is statically initialized and we must be very careful what
+// functions these constructors call.  In particular, we cannot call
+// glog functions which also rely on static initializations.
+// TODO: is there a more controlled way to do this.
+const Status Status::OK;
+const Status Status::CANCELLED(TStatusCode::CANCELLED, "Cancelled", true);
+const Status Status::MEM_LIMIT_EXCEEDED(
+    TStatusCode::MEM_LIMIT_EXCEEDED, "Memory limit exceeded", true);
+const Status Status::DEPRECATED_RPC(TStatusCode::NOT_IMPLEMENTED_ERROR,
+    "Deprecated RPC; please update your client", true);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 Status::ErrorDetail::ErrorDetail(const TStatus& status)
   : error_code(status.status_code),
@@ -31,9 +44,15 @@ Status::ErrorDetail::ErrorDetail(const TStatus& status)
   DCHECK_NE(error_code, TStatusCode::OK);
 }
 
+<<<<<<< HEAD
 Status::Status(const string& error_msg) 
   : error_detail_(new ErrorDetail(TStatusCode::INTERNAL_ERROR, error_msg)) {
   VLOG(1) << error_msg << endl << GetStackTrace();
+=======
+Status::Status(const string& error_msg, bool quiet)
+  : error_detail_(new ErrorDetail(TStatusCode::INTERNAL_ERROR, error_msg)) {
+  if (!quiet) VLOG(1) << error_msg << endl << GetStackTrace();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 Status::Status(const TStatus& status)
@@ -53,6 +72,31 @@ Status& Status::operator=(const TStatus& status) {
   return *this;
 }
 
+<<<<<<< HEAD
+=======
+Status::Status(const apache::hive::service::cli::thrift::TStatus& hs2_status)
+  : error_detail_(
+      hs2_status.statusCode
+        == apache::hive::service::cli::thrift::TStatusCode::SUCCESS_STATUS ? NULL
+          : new ErrorDetail(
+              static_cast<TStatusCode::type>(hs2_status.statusCode),
+              hs2_status.errorMessage)) {
+}
+
+Status& Status::operator=(
+    const apache::hive::service::cli::thrift::TStatus& hs2_status) {
+  delete error_detail_;
+  if (hs2_status.statusCode
+        == apache::hive::service::cli::thrift::TStatusCode::SUCCESS_STATUS) {
+    error_detail_ = NULL;
+  } else {
+    error_detail_ = new ErrorDetail(
+        static_cast<TStatusCode::type>(hs2_status.statusCode), hs2_status.errorMessage);
+  }
+  return *this;
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 void Status::AddErrorMsg(TStatusCode::type code, const std::string& msg) {
   if (error_detail_ == NULL) {
     error_detail_ = new ErrorDetail(code, msg);

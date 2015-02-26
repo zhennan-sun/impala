@@ -17,10 +17,20 @@
 #define IMPALA_EXEC_HASH_JOIN_NODE_H
 
 #include <boost/scoped_ptr.hpp>
+<<<<<<< HEAD
 #include <boost/unordered_set.hpp>
 
 #include "exec/exec-node.h"
 #include "exec/hash-table.h"
+=======
+#include <boost/thread.hpp>
+#include <string>
+
+#include "exec/exec-node.h"
+#include "exec/old-hash-table.h"
+#include "exec/blocking-join-node.h"
+#include "util/promise.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 #include "gen-cpp/PlanNodes_types.h"  // for TJoinOp
 
@@ -42,6 +52,7 @@ class TupleRow;
 //   multiple rows per left input row
 // - TODO: fix this, so in the case of 1x1/nx1 joins (for instance, fact to dimension tbl)
 //   we don't do these extra copies
+<<<<<<< HEAD
 class HashJoinNode : public ExecNode {
  public:
   HashJoinNode(ObjectPool* pool, const TPlanNode& tnode, const DescriptorTbl& descs);
@@ -52,10 +63,22 @@ class HashJoinNode : public ExecNode {
   virtual Status Open(RuntimeState* state);
   virtual Status GetNext(RuntimeState* state, RowBatch* row_batch, bool* eos);
   virtual Status Close(RuntimeState* state);
+=======
+class HashJoinNode : public BlockingJoinNode {
+ public:
+  HashJoinNode(ObjectPool* pool, const TPlanNode& tnode, const DescriptorTbl& descs);
+
+  virtual Status Init(const TPlanNode& tnode);
+  virtual Status Prepare(RuntimeState* state);
+  // Open() implemented in BlockingJoinNode
+  virtual Status GetNext(RuntimeState* state, RowBatch* row_batch, bool* eos);
+  virtual void Close(RuntimeState* state);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   static const char* LLVM_CLASS_NAME;
 
  protected:
+<<<<<<< HEAD
   void DebugString(int indentation_level, std::stringstream* out) const;
   
  private:
@@ -101,6 +124,36 @@ class HashJoinNode : public ExecNode {
   // This should be the same size as the probe tuple row.
   int result_tuple_row_size_;
   
+=======
+  virtual void AddToDebugString(int indentation_level, std::stringstream* out) const;
+  virtual Status InitGetNext(TupleRow* first_probe_row);
+  virtual Status ConstructBuildSide(RuntimeState* state);
+
+ private:
+  boost::scoped_ptr<OldHashTable> hash_tbl_;
+  OldHashTable::Iterator hash_tbl_iterator_;
+
+  // our equi-join predicates "<lhs> = <rhs>" are separated into
+  // build_exprs_ (over child(1)) and probe_exprs_ (over child(0))
+    std::vector<ExprContext*> probe_expr_ctxs_;
+    std::vector<ExprContext*> build_expr_ctxs_;
+
+  // non-equi-join conjuncts from the JOIN clause
+  std::vector<ExprContext*> other_join_conjunct_ctxs_;
+
+  // Derived from join_op_
+  // Output all rows coming from the probe input. Used in LEFT_OUTER_JOIN and
+  // FULL_OUTER_JOIN.
+  bool match_all_probe_;
+
+  // Match at most one build row to each probe row. Used in LEFT_SEMI_JOIN.
+  bool match_one_build_;
+
+  // Output all rows coming from the build input. Used in RIGHT_OUTER_JOIN and
+  // FULL_OUTER_JOIN.
+  bool match_all_build_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // llvm function for build batch
   llvm::Function* codegen_process_build_batch_fn_;
 
@@ -108,14 +161,18 @@ class HashJoinNode : public ExecNode {
   // HashJoinNode::ProcessBuildBatch
   typedef void (*ProcessBuildBatchFn)(HashJoinNode*, RowBatch*);
   ProcessBuildBatchFn process_build_batch_fn_;
+<<<<<<< HEAD
   
   // llvm function object for probe batch
   llvm::Function* codegen_process_probe_batch_fn_;
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // HashJoinNode::ProcessProbeBatch() exactly
   typedef int (*ProcessProbeBatchFn)(HashJoinNode*, RowBatch*, RowBatch*, int);
   // Jitted ProcessProbeBatch function pointer.  Null if codegen is disabled.
   ProcessProbeBatchFn process_probe_batch_fn_;
+<<<<<<< HEAD
   
   RuntimeProfile::Counter* build_timer_;   // time to build hash table
   RuntimeProfile::Counter* probe_timer_;   // time to probe
@@ -127,6 +184,13 @@ class HashJoinNode : public ExecNode {
   Status Init(ObjectPool* pool, const TPlanNode& tnode);
 
   // GetNext helper function for the common join cases: Inner join, left semi and left 
+=======
+
+  RuntimeProfile::Counter* build_buckets_counter_;   // num buckets in hash table
+  RuntimeProfile::Counter* hash_tbl_load_factor_counter_;
+
+  // GetNext helper function for the common join cases: Inner join, left semi and left
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // outer
   Status LeftJoinGetNext(RuntimeState* state, RowBatch* row_batch, bool* eos);
 
@@ -136,15 +200,22 @@ class HashJoinNode : public ExecNode {
   //    continue processing a batch in the middle
   //  max_added_rows: maximum rows that can be added to out_batch
   // return the number of rows added to out_batch
+<<<<<<< HEAD
   int ProcessProbeBatch(RowBatch* out_batch, RowBatch* probe_batch, int max_added_rows); 
+=======
+  int ProcessProbeBatch(RowBatch* out_batch, RowBatch* probe_batch, int max_added_rows);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Construct the build hash table, adding all the rows in 'build_batch'
   void ProcessBuildBatch(RowBatch* build_batch);
 
+<<<<<<< HEAD
   // Write combined row, consisting of probe_row and build_row, to out_row.
   // This is replaced by codegen.
   void CreateOutputRow(TupleRow* out_row, TupleRow* probe_row, TupleRow* build_row);
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Codegen function to create output row
   llvm::Function* CodegenCreateOutputRow(LlvmCodeGen* codegen);
 
@@ -152,13 +223,22 @@ class HashJoinNode : public ExecNode {
   // hash_fn is the codegen'd function for computing hashes over tuple rows in the
   // hash table.
   // Returns NULL if codegen was not possible.
+<<<<<<< HEAD
   llvm::Function* CodegenProcessBuildBatch(LlvmCodeGen*, llvm::Function* hash_fn);
   
+=======
+  llvm::Function* CodegenProcessBuildBatch(RuntimeState* state, llvm::Function* hash_fn);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Codegen processing probe batches.  Identical signature to ProcessProbeBatch.
   // hash_fn is the codegen'd function for computing hashes over tuple rows in the
   // hash table.
   // Returns NULL if codegen was not possible.
+<<<<<<< HEAD
   llvm::Function* CodegenProcessProbeBatch(LlvmCodeGen*, llvm::Function* hash_fn);
+=======
+  llvm::Function* CodegenProcessProbeBatch(RuntimeState* state, llvm::Function* hash_fn);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

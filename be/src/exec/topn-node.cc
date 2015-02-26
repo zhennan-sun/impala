@@ -33,6 +33,7 @@
 using namespace impala;
 using namespace std;
 
+<<<<<<< HEAD
 TopNNode::TopNNode(ObjectPool* pool, const TPlanNode& tnode, const DescriptorTbl& descs) 
   : ExecNode(pool, tnode, descs),
     tuple_row_less_than_(this),
@@ -94,10 +95,42 @@ Status TopNNode::Prepare(RuntimeState* state) {
   tuple_descs_ = child(0)->row_desc().tuple_descriptors();
   Expr::Prepare(lhs_ordering_exprs_, state, child(0)->row_desc());
   Expr::Prepare(rhs_ordering_exprs_, state, child(0)->row_desc());
+=======
+TopNNode::TopNNode(ObjectPool* pool, const TPlanNode& tnode, const DescriptorTbl& descs)
+  : ExecNode(pool, tnode, descs),
+    offset_(tnode.sort_node.__isset.offset ? tnode.sort_node.offset : 0),
+    num_rows_skipped_(0) {
+}
+
+Status TopNNode::Init(const TPlanNode& tnode) {
+  RETURN_IF_ERROR(ExecNode::Init(tnode));
+  RETURN_IF_ERROR(sort_exec_exprs_.Init(tnode.sort_node.sort_info, pool_));
+  is_asc_order_ = tnode.sort_node.sort_info.is_asc_order;
+  nulls_first_ = tnode.sort_node.sort_info.nulls_first;
+
+  DCHECK_EQ(conjunct_ctxs_.size(), 0)
+      << "TopNNode should never have predicates to evaluate.";
+
+  return Status::OK;
+}
+
+Status TopNNode::Prepare(RuntimeState* state) {
+  SCOPED_TIMER(runtime_profile_->total_time_counter());
+  RETURN_IF_ERROR(ExecNode::Prepare(state));
+  tuple_pool_.reset(new MemPool(mem_tracker()));
+  RETURN_IF_ERROR(sort_exec_exprs_.Prepare(
+      state, child(0)->row_desc(), row_descriptor_, expr_mem_tracker()));
+  AddExprCtxsToFree(sort_exec_exprs_);
+  materialized_tuple_desc_ = row_descriptor_.tuple_descriptors()[0];
+  // Allocate memory for a temporary tuple.
+  tmp_tuple_ = reinterpret_cast<Tuple*>(
+      tuple_pool_->Allocate(materialized_tuple_desc_->byte_size()));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return Status::OK;
 }
 
 Status TopNNode::Open(RuntimeState* state) {
+<<<<<<< HEAD
   RETURN_IF_CANCELLED(state);
   SCOPED_TIMER(runtime_profile_->total_time_counter());
   RETURN_IF_ERROR(child(0)->Open(state));
@@ -115,16 +148,67 @@ Status TopNNode::Open(RuntimeState* state) {
   
   DCHECK_LE(priority_queue_.size(), limit_);
   PrepareForOutput();
+=======
+  SCOPED_TIMER(runtime_profile_->total_time_counter());
+  RETURN_IF_ERROR(ExecNode::Open(state));
+  RETURN_IF_CANCELLED(state);
+  RETURN_IF_ERROR(QueryMaintenance(state));
+  RETURN_IF_ERROR(sort_exec_exprs_.Open(state));
+
+  tuple_row_less_than_.reset(new TupleRowComparator(
+      sort_exec_exprs_.lhs_ordering_expr_ctxs(), sort_exec_exprs_.rhs_ordering_expr_ctxs(),
+      is_asc_order_, nulls_first_));
+  priority_queue_.reset(
+      new priority_queue<Tuple*, vector<Tuple*>, TupleRowComparator>(
+          *tuple_row_less_than_));
+
+  RETURN_IF_ERROR(child(0)->Open(state));
+
+  // Limit of 0, no need to fetch anything from children.
+  if (limit_ != 0) {
+    RowBatch batch(child(0)->row_desc(), state->batch_size(), mem_tracker());
+    bool eos;
+    do {
+      batch.Reset();
+      RETURN_IF_ERROR(child(0)->GetNext(state, &batch, &eos));
+      for (int i = 0; i < batch.num_rows(); ++i) {
+        InsertTupleRow(batch.GetRow(i));
+      }
+      RETURN_IF_CANCELLED(state);
+      RETURN_IF_ERROR(QueryMaintenance(state));
+    } while (!eos);
+  }
+  DCHECK_LE(priority_queue_->size(), limit_ + offset_);
+  PrepareForOutput();
+  child(0)->Close(state);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return Status::OK;
 }
 
 Status TopNNode::GetNext(RuntimeState* state, RowBatch* row_batch, bool* eos) {
+<<<<<<< HEAD
   RETURN_IF_CANCELLED(state);
   SCOPED_TIMER(runtime_profile_->total_time_counter());
   while (!row_batch->IsFull() && (get_next_iter_ != sorted_top_n_.end())) {
     int row_idx = row_batch->AddRow();
     TupleRow* dst_row = row_batch->GetRow(row_idx);
     TupleRow* src_row = *get_next_iter_;
+=======
+  SCOPED_TIMER(runtime_profile_->total_time_counter());
+  RETURN_IF_ERROR(ExecDebugAction(TExecNodePhase::GETNEXT, state));
+  RETURN_IF_CANCELLED(state);
+  RETURN_IF_ERROR(QueryMaintenance(state));
+  while (!row_batch->AtCapacity() && (get_next_iter_ != sorted_top_n_.end())) {
+    if (num_rows_skipped_ < offset_) {
+      ++get_next_iter_;
+      ++num_rows_skipped_;
+      continue;
+    }
+    int row_idx = row_batch->AddRow();
+    TupleRow* dst_row = row_batch->GetRow(row_idx);
+    Tuple* src_tuple = *get_next_iter_;
+    TupleRow* src_row = reinterpret_cast<TupleRow*>(&src_tuple);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     row_batch->CopyRow(src_row, dst_row);
     ++get_next_iter_;
     row_batch->CommitLastRow();
@@ -132,16 +216,28 @@ Status TopNNode::GetNext(RuntimeState* state, RowBatch* row_batch, bool* eos) {
     COUNTER_SET(rows_returned_counter_, num_rows_returned_);
   }
   *eos = get_next_iter_ == sorted_top_n_.end();
+<<<<<<< HEAD
   return Status::OK; 
 }
 
 Status TopNNode::Close(RuntimeState* state) {
   COUNTER_UPDATE(memory_used_counter(), tuple_pool_->peak_allocated_bytes());
   return ExecNode::Close(state);
+=======
+  return Status::OK;
+}
+
+void TopNNode::Close(RuntimeState* state) {
+  if (is_closed()) return;
+  if (tuple_pool_.get() != NULL) tuple_pool_->FreeAll();
+  sort_exec_exprs_.Close(state);
+  ExecNode::Close(state);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 // Insert if either not at the limit or it's a new TopN tuple_row
 void TopNNode::InsertTupleRow(TupleRow* input_row) {
+<<<<<<< HEAD
   TupleRow* insert_tuple_row = NULL;
   
   if (priority_queue_.size() < limit_) {
@@ -164,10 +260,35 @@ void TopNNode::InsertTupleRow(TupleRow* input_row) {
   if (insert_tuple_row != NULL) {
     priority_queue_.push(insert_tuple_row);
   }
+=======
+  Tuple* insert_tuple = NULL;
+
+  if (priority_queue_->size() < limit_ + offset_) {
+    insert_tuple = reinterpret_cast<Tuple*>(
+        tuple_pool_->Allocate(materialized_tuple_desc_->byte_size()));
+    insert_tuple->MaterializeExprs<false>(input_row, *materialized_tuple_desc_,
+        sort_exec_exprs_.sort_tuple_slot_expr_ctxs(), tuple_pool_.get());
+  } else {
+    DCHECK(!priority_queue_->empty());
+    Tuple* top_tuple = priority_queue_->top();
+    tmp_tuple_->MaterializeExprs<false>(input_row, *materialized_tuple_desc_,
+            sort_exec_exprs_.sort_tuple_slot_expr_ctxs(), NULL);
+    if ((*tuple_row_less_than_)(tmp_tuple_, top_tuple)) {
+      // TODO: DeepCopy() will allocate new buffers for the string data. This needs
+      // to be fixed to use a freelist
+      tmp_tuple_->DeepCopy(top_tuple, *materialized_tuple_desc_, tuple_pool_.get());
+      insert_tuple = top_tuple;
+      priority_queue_->pop();
+    }
+  }
+
+  if (insert_tuple != NULL) priority_queue_->push(insert_tuple);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 // Reverse the order of the tuples in the priority queue
 void TopNNode::PrepareForOutput() {
+<<<<<<< HEAD
   sorted_top_n_.resize(priority_queue_.size());
   int index = sorted_top_n_.size() - 1;
 
@@ -175,6 +296,15 @@ void TopNNode::PrepareForOutput() {
     TupleRow* tuple_row = priority_queue_.top();
     priority_queue_.pop();
     sorted_top_n_[index] = tuple_row;
+=======
+  sorted_top_n_.resize(priority_queue_->size());
+  int index = sorted_top_n_.size() - 1;
+
+  while (priority_queue_->size() > 0) {
+    Tuple* tuple = priority_queue_->top();
+    priority_queue_->pop();
+    sorted_top_n_[index] = tuple;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     --index;
   }
 
@@ -184,12 +314,22 @@ void TopNNode::PrepareForOutput() {
 void TopNNode::DebugString(int indentation_level, stringstream* out) const {
   *out << string(indentation_level * 2, ' ');
   *out << "TopNNode("
+<<<<<<< HEAD
        << " ordering_exprs=" << Expr::DebugString(lhs_ordering_exprs_)
        << " sort_order=[";
   for (int i = 0; i < is_asc_order_.size(); ++i) {
     *out << (i > 0 ? " " : "") << (is_asc_order_[i] ? "asc" : "desc");
   }
   *out << "]";
+=======
+      << Expr::DebugString(sort_exec_exprs_.lhs_ordering_expr_ctxs());
+  for (int i = 0; i < is_asc_order_.size(); ++i) {
+    *out << (i > 0 ? " " : "")
+         << (is_asc_order_[i] ? "asc" : "desc")
+         << " nulls " << (nulls_first_[i] ? "first" : "last");
+ }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ExecNode::DebugString(indentation_level, out);
   *out << ")";
 }

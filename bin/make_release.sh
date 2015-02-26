@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 set -e
 set -u
 
@@ -113,3 +114,6 @@ else
   cd $IMPALA_BE_DIR
   make -j4
 fi
+=======
+$IMPALA_HOME/bin/make_impala.sh -build_type=Release $*
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

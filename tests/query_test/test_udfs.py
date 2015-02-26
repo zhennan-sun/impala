@@ -1,0 +1,350 @@
+#!/usr/bin/env python
+# Copyright (c) 2012 Cloudera, Inc. All rights reserved.
+
+from tests.beeswax.impala_beeswax import ImpalaBeeswaxException
+from tests.common.test_vector import *
+from tests.common.impala_test_suite import *
+from tests.common.impala_cluster import ImpalaCluster
+from subprocess import call
+
+class TestUdfs(ImpalaTestSuite):
+  @classmethod
+  def get_workload(cls):
+    return 'functional-query'
+
+  @classmethod
+  def add_test_dimensions(cls):
+    super(TestUdfs, cls).add_test_dimensions()
+    # Without limiting the test suite to a single exec option, the tests will fail
+    # because the same test case may be executed in parallel with different exec option
+    # values leading to conflicting DDL ops.
+    cls.TestMatrix.add_dimension(create_single_exec_option_dimension())
+
+    # There is no reason to run these tests using all dimensions.
+    cls.TestMatrix.add_dimension(create_uncompressed_text_dimension(cls.get_workload()))
+
+  def test_native_functions(self, vector):
+    database = 'native_function_test'
+
+    self.__load_functions(
+      self.create_udfs_template, vector, database, '/test-warehouse/libTestUdfs.so')
+    self.__load_functions(
+      self.create_udas_template, vector, database, '/test-warehouse/libudasample.so')
+
+    self.run_test_case('QueryTest/udf', vector, use_db=database)
+    self.run_test_case('QueryTest/udf-init-close', vector, use_db=database)
+    self.run_test_case('QueryTest/uda', vector, use_db=database)
+
+  def test_ir_functions(self, vector):
+    database = 'ir_function_test'
+    self.__load_functions(
+      self.create_udfs_template, vector, database, '/test-warehouse/test-udfs.ll')
+    self.run_test_case('QueryTest/udf', vector, use_db=database)
+    self.run_test_case('QueryTest/udf-init-close', vector, use_db=database)
+
+  def test_udf_errors(self, vector):
+    self.run_test_case('QueryTest/udf-errors', vector)
+
+  def test_hive_udfs(self, vector):
+    self.client.execute('create database if not exists udf_test')
+    self.client.execute('create database if not exists uda_test')
+    self.run_test_case('QueryTest/load-hive-udfs', vector)
+    self.run_test_case('QueryTest/hive-udf', vector)
+
+  def test_libs_with_same_filenames(self, vector):
+    self.run_test_case('QueryTest/libs_with_same_filenames', vector)
+
+  def test_udf_update_via_drop(self, vector):
+    """Test updating the UDF binary without restarting Impala. Dropping
+    the function should remove the binary from the local cache."""
+    # Run with sync_ddl to guarantee the drop is processed by all impalads.
+    exec_options = vector.get_value('exec_option')
+    exec_options['sync_ddl'] = 1
+    old_udf = os.path.join(os.environ['IMPALA_HOME'],
+        'testdata/udfs/impala-hive-udfs.jar')
+    new_udf = os.path.join(os.environ['IMPALA_HOME'],
+        'tests/test-hive-udfs/target/test-hive-udfs-1.0.jar')
+    udf_dst = '/test-warehouse/impala-hive-udfs2.jar'
+
+    drop_fn_stmt = 'drop function if exists default.udf_update_test_drop()'
+    create_fn_stmt = "create function default.udf_update_test_drop() returns string "\
+        "LOCATION '" + udf_dst + "' SYMBOL='com.cloudera.impala.TestUpdateUdf'"
+    query_stmt = "select default.udf_update_test_drop()"
+
+    # Put the old UDF binary on HDFS, make the UDF in Impala and run it.
+    call(["hadoop", "fs", "-put", "-f", old_udf, udf_dst])
+    self.execute_query_expect_success(self.client, drop_fn_stmt, exec_options)
+    self.execute_query_expect_success(self.client, create_fn_stmt, exec_options)
+    self.__run_query_all_impalads(exec_options, query_stmt, ["Old UDF"])
+
+    # Update the binary, drop and create the function again. The new binary should
+    # be running.
+    call(["hadoop", "fs", "-put", "-f", new_udf, udf_dst])
+    self.execute_query_expect_success(self.client, drop_fn_stmt, exec_options)
+    self.execute_query_expect_success(self.client, create_fn_stmt, exec_options)
+    self.__run_query_all_impalads(exec_options, query_stmt, ["New UDF"])
+
+  def test_udf_update_via_create(self, vector):
+    """Test updating the UDF binary without restarting Impala. Creating a new function
+    from the library should refresh the cache."""
+    # Run with sync_ddl to guarantee the create is processed by all impalads.
+    exec_options = vector.get_value('exec_option')
+    exec_options['sync_ddl'] = 1
+    old_udf = os.path.join(os.environ['IMPALA_HOME'],
+        'testdata/udfs/impala-hive-udfs.jar')
+    new_udf = os.path.join(os.environ['IMPALA_HOME'],
+        'tests/test-hive-udfs/target/test-hive-udfs-1.0.jar')
+    udf_dst = '/test-warehouse/impala-hive-udfs3.jar'
+    old_function_name = "udf_update_test_create1"
+    new_function_name = "udf_update_test_create2"
+
+    drop_fn_template = 'drop function if exists default.%s()'
+    self.execute_query_expect_success(
+      self.client, drop_fn_template % old_function_name, exec_options)
+    self.execute_query_expect_success(
+      self.client, drop_fn_template % new_function_name, exec_options)
+
+    create_fn_template = "create function default.%s() returns string "\
+        "LOCATION '" + udf_dst + "' SYMBOL='com.cloudera.impala.TestUpdateUdf'"
+    query_template = "select default.%s()"
+
+    # Put the old UDF binary on HDFS, make the UDF in Impala and run it.
+    call(["hadoop", "fs", "-put", "-f", old_udf, udf_dst])
+    self.execute_query_expect_success(
+      self.client, create_fn_template % old_function_name, exec_options)
+    self.__run_query_all_impalads(
+      exec_options, query_template % old_function_name, ["Old UDF"])
+
+    # Update the binary, and create a new function using the binary. The new binary
+    # should be running.
+    call(["hadoop", "fs", "-put", "-f", new_udf, udf_dst])
+    self.execute_query_expect_success(
+      self.client, create_fn_template % new_function_name, exec_options)
+    self.__run_query_all_impalads(
+      exec_options, query_template % new_function_name, ["New UDF"])
+
+    # The old function should use the new library now
+    self.__run_query_all_impalads(
+      exec_options, query_template % old_function_name, ["New UDF"])
+
+  def test_drop_function_while_running(self, vector):
+    self.client.execute("drop function if exists default.drop_while_running(BIGINT)")
+    self.client.execute("create function default.drop_while_running(BIGINT) returns "\
+        "BIGINT LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Identity'")
+    query = \
+        "select default.drop_while_running(l_orderkey) from tpch.lineitem limit 10000";
+
+    # Run this query asynchronously.
+    handle = self.execute_query_async(query, vector.get_value('exec_option'),
+                                      table_format=vector.get_value('table_format'))
+
+    # Fetch some rows from the async query to make sure the UDF is being used
+    results = self.client.fetch(query, handle, 1)
+    assert results.success
+    assert len(results.data) == 1
+
+    # Drop the function while the original query is running.
+    self.client.execute("drop function default.drop_while_running(BIGINT)")
+
+    # Fetch the rest of the rows, this should still be able to run the UDF
+    results = self.client.fetch(query, handle, -1)
+    assert results.success
+    assert len(results.data) == 9999
+
+  # Run serially because this will blow the process limit, potentially causing other
+  # queries to fail
+  @pytest.mark.execute_serially
+  def test_mem_limits(self, vector):
+    # Set the mem limit high enough that a simple scan can run
+    mem_limit = 1024 * 1024
+    vector.get_value('exec_option')['mem_limit'] = mem_limit
+
+    try:
+      self.run_test_case('QueryTest/udf-mem-limit', vector)
+      assert False, "Query was expected to fail"
+    except ImpalaBeeswaxException, e:
+      self.__check_exception(e)
+
+    try:
+      self.run_test_case('QueryTest/uda-mem-limit', vector)
+      assert False, "Query was expected to fail"
+    except ImpalaBeeswaxException, e:
+      self.__check_exception(e)
+
+  def __check_exception(self, e):
+    # The interesting exception message may be in 'e' or in its inner_exception
+    # depending on the point of query failure.
+    if 'Memory limit exceeded' in str(e) or 'Cancelled' in str(e):
+      return
+    if e.inner_exception is not None\
+       and ('Memory limit exceeded' in e.inner_exception.message
+            or 'Cancelled' not in e.inner_exception.message):
+      return
+    raise e
+
+  def __run_query_all_impalads(self, exec_options, query, expected):
+    impala_cluster = ImpalaCluster()
+    for impalad in impala_cluster.impalads:
+      client = impalad.service.create_beeswax_client()
+      result = self.execute_query_expect_success(client, query, exec_options)
+      assert result.data == expected
+
+  def __load_functions(self, template, vector, database, location):
+    queries = template.format(database=database, location=location)
+    # Split queries and remove empty lines
+    queries = [q for q in queries.split(';') if q.strip()]
+    exec_options = vector.get_value('exec_option')
+    for query in queries:
+      if query.strip() == '': continue
+      result = self.execute_query_expect_success(self.client, query, exec_options)
+      assert result is not None
+
+  # Create test UDA functions in {database} from library {location}
+  create_udas_template = """
+drop function if exists {database}.test_count(int);
+drop function if exists {database}.hll(int);
+drop function if exists {database}.sum_small_decimal(decimal(9,2));
+
+create database if not exists {database};
+
+create aggregate function {database}.test_count(int) returns bigint
+location '{location}' update_fn='CountUpdate';
+
+create aggregate function {database}.hll(int) returns string
+location '{location}' update_fn='HllUpdate';
+
+create aggregate function {database}.sum_small_decimal(decimal(9,2))
+returns decimal(9,2) location '{location}' update_fn='SumSmallDecimalUpdate';
+"""
+
+  # Create test UDF functions in {database} from library {location}
+  create_udfs_template = """
+drop function if exists {database}.identity(boolean);
+drop function if exists {database}.identity(tinyint);
+drop function if exists {database}.identity(smallint);
+drop function if exists {database}.identity(int);
+drop function if exists {database}.identity(bigint);
+drop function if exists {database}.identity(float);
+drop function if exists {database}.identity(double);
+drop function if exists {database}.identity(string);
+drop function if exists {database}.identity(timestamp);
+drop function if exists {database}.identity(decimal(9,0));
+drop function if exists {database}.identity(decimal(18,1));
+drop function if exists {database}.identity(decimal(38,10));
+drop function if exists {database}.all_types_fn(
+    string, boolean, tinyint, smallint, int, bigint, float, double, decimal(2,0));
+drop function if exists {database}.no_args();
+drop function if exists {database}.var_and(boolean...);
+drop function if exists {database}.var_sum(int...);
+drop function if exists {database}.var_sum(double...);
+drop function if exists {database}.var_sum(string...);
+drop function if exists {database}.var_sum(decimal(4,2)...);
+drop function if exists {database}.var_sum_multiply(double, int...);
+drop function if exists {database}.constant_timestamp();
+drop function if exists {database}.validate_arg_type(string);
+drop function if exists {database}.count_rows();
+drop function if exists {database}.constant_arg(int);
+drop function if exists {database}.validate_open(int);
+drop function if exists {database}.mem_test(bigint);
+drop function if exists {database}.mem_test_leaks(bigint);
+drop function if exists {database}.unmangled_symbol();
+
+create database if not exists {database};
+
+create function {database}.identity(boolean) returns boolean
+location '{location}' symbol='Identity';
+
+create function {database}.identity(tinyint) returns tinyint
+location '{location}' symbol='Identity';
+
+create function {database}.identity(smallint) returns smallint
+location '{location}' symbol='Identity';
+
+create function {database}.identity(int) returns int
+location '{location}' symbol='Identity';
+
+create function {database}.identity(bigint) returns bigint
+location '{location}' symbol='Identity';
+
+create function {database}.identity(float) returns float
+location '{location}' symbol='Identity';
+
+create function {database}.identity(double) returns double
+location '{location}' symbol='Identity';
+
+create function {database}.identity(string) returns string
+location '{location}'
+symbol='_Z8IdentityPN10impala_udf15FunctionContextERKNS_9StringValE';
+
+create function {database}.identity(timestamp) returns timestamp
+location '{location}'
+symbol='_Z8IdentityPN10impala_udf15FunctionContextERKNS_12TimestampValE';
+
+create function {database}.identity(decimal(9,0)) returns decimal(9,0)
+location '{location}'
+symbol='_Z8IdentityPN10impala_udf15FunctionContextERKNS_10DecimalValE';
+
+create function {database}.identity(decimal(18,1)) returns decimal(18,1)
+location '{location}'
+symbol='_Z8IdentityPN10impala_udf15FunctionContextERKNS_10DecimalValE';
+
+create function {database}.identity(decimal(38,10)) returns decimal(38,10)
+location '{location}'
+symbol='_Z8IdentityPN10impala_udf15FunctionContextERKNS_10DecimalValE';
+
+create function {database}.all_types_fn(
+    string, boolean, tinyint, smallint, int, bigint, float, double, decimal(2,0))
+returns int
+location '{location}' symbol='AllTypes';
+
+create function {database}.no_args() returns string
+location '{location}'
+symbol='_Z6NoArgsPN10impala_udf15FunctionContextE';
+
+create function {database}.var_and(boolean...) returns boolean
+location '{location}' symbol='VarAnd';
+
+create function {database}.var_sum(int...) returns int
+location '{location}' symbol='VarSum';
+
+create function {database}.var_sum(double...) returns double
+location '{location}' symbol='VarSum';
+
+create function {database}.var_sum(string...) returns int
+location '{location}' symbol='VarSum';
+
+create function {database}.var_sum(decimal(4,2)...) returns decimal(18,2)
+location '{location}' symbol='VarSum';
+
+create function {database}.var_sum_multiply(double, int...) returns double
+location '{location}'
+symbol='_Z14VarSumMultiplyPN10impala_udf15FunctionContextERKNS_9DoubleValEiPKNS_6IntValE';
+
+create function {database}.constant_timestamp() returns timestamp
+location '{location}' symbol='ConstantTimestamp';
+
+create function {database}.validate_arg_type(string) returns boolean
+location '{location}' symbol='ValidateArgType';
+
+create function {database}.count_rows() returns bigint
+location '{location}' symbol='Count' prepare_fn='CountPrepare' close_fn='CountClose';
+
+create function {database}.constant_arg(int) returns int
+location '{location}' symbol='ConstantArg' prepare_fn='ConstantArgPrepare' close_fn='ConstantArgClose';
+
+create function {database}.validate_open(int) returns boolean
+location '{location}' symbol='ValidateOpen'
+prepare_fn='ValidateOpenPrepare' close_fn='ValidateOpenClose';
+
+create function {database}.mem_test(bigint) returns bigint
+location '{location}' symbol='MemTest'
+prepare_fn='MemTestPrepare' close_fn='MemTestClose';
+
+create function {database}.mem_test_leaks(bigint) returns bigint
+location '{location}' symbol='MemTest'
+prepare_fn='MemTestPrepare';
+
+-- Regression test for IMPALA-1475
+create function {database}.unmangled_symbol() returns bigint
+location '{location}' symbol='UnmangledSymbol';
+"""

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 
 TARGET_BUILD_TYPE=Debug
 
@@ -45,3 +46,6 @@ cd $IMPALA_HOME/common/thrift
 make
 cd $IMPALA_BE_DIR
 make -j4
+=======
+$IMPALA_HOME/bin/make_impala.sh -build_type=Debug -build_shared_libs $*
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

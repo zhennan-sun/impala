@@ -18,18 +18,29 @@
 #include <boost/algorithm/string.hpp>
 
 #include "common/logging.h"
+<<<<<<< HEAD
 #include "util/thrift-client.h"
 #include "util/thrift-util.h"
 
 DEFINE_string(impalad, "", "host:port of impalad process");
+=======
+#include "rpc/thrift-client.h"
+#include "rpc/thrift-util.h"
+
+DEFINE_string(impalad, "localhost:21000", "host:port of impalad process");
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 DECLARE_int32(num_nodes);
 
 using namespace std;
 using namespace boost;
 using namespace boost::algorithm;
+<<<<<<< HEAD
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
+=======
+using namespace Apache::Hadoop::Hive;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 using namespace beeswax;
 
 namespace impala {
@@ -52,8 +63,12 @@ Status ImpaladQueryExecutor::Setup() {
   int port = atoi(elems[1].c_str());
   DCHECK_GT(port, 0);
 
+<<<<<<< HEAD
   client_.reset(new ThriftClient<ImpalaServiceClient>(elems[0], port,
       ThriftServer::ThreadPool));
+=======
+  client_.reset(new ThriftClient<ImpalaServiceClient>(elems[0], port));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Wait for up to 10s for the server to start, polling at 50ms intervals
   RETURN_IF_ERROR(WaitForServer(elems[0], port, 200, 50));
@@ -77,18 +92,34 @@ Status ImpaladQueryExecutor::Close() {
 }
 
 Status ImpaladQueryExecutor::Exec(
+<<<<<<< HEAD
     const string& query_string, vector<PrimitiveType>* col_types) {
+=======
+    const string& query_string, vector<FieldSchema>* col_schema) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // close anything that ran previously
   Close();
   Query query;
   query.query = query_string;
   query.configuration = exec_options_;
+<<<<<<< HEAD
+=======
+  query.hadoop_user = "impala_test_user";
+  query_results_.data.clear();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // TODO: catch exception and return error code
   // LogContextId of "" will ask the Beeswax service to assign a new id but Beeswax
   // does not provide a constant for it.
+<<<<<<< HEAD
   try {
     client_->iface()->executeAndWait(query_handle_, query, "");
+=======
+  ResultsMetadata resultsMetadata;
+  try {
+    client_->iface()->executeAndWait(query_handle_, query, "");
+    client_->iface()->get_results_metadata(resultsMetadata, query_handle_);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   } catch (BeeswaxException& e) {
     stringstream ss;
     ss << e.SQLState << ": " << e.message;
@@ -96,6 +127,10 @@ Status ImpaladQueryExecutor::Exec(
   }
   current_row_ = 0;
   query_in_progress_ = true;
+<<<<<<< HEAD
+=======
+  if (col_schema != NULL) *col_schema = resultsMetadata.schema.fieldSchemas;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return Status::OK;
 }
 
@@ -117,7 +152,10 @@ Status ImpaladQueryExecutor::FetchResult(string* row) {
   if (query_results_.data.size() > 0) {
     *row = query_results_.data.at(current_row_);
     ++current_row_;
+<<<<<<< HEAD
     ++exec_stats_.num_rows_;
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   } else {
     *row = "";
   }

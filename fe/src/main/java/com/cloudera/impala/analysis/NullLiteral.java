@@ -14,6 +14,7 @@
 
 package com.cloudera.impala.analysis;
 
+<<<<<<< HEAD
 import com.cloudera.impala.catalog.PrimitiveType;
 import com.cloudera.impala.thrift.TExprNode;
 import com.cloudera.impala.thrift.TExprNodeType;
@@ -22,23 +23,92 @@ public class NullLiteral extends LiteralExpr {
   public NullLiteral() {
     // TODO: should NULL be a type?
     type = PrimitiveType.BOOLEAN;
+=======
+import com.cloudera.impala.catalog.Type;
+import com.cloudera.impala.thrift.TExprNode;
+import com.cloudera.impala.thrift.TExprNodeType;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+
+public class NullLiteral extends LiteralExpr {
+
+  public NullLiteral() {
+    type_ = Type.NULL;
+  }
+
+  /**
+   * Copy c'tor used in clone().
+   */
+  protected NullLiteral(NullLiteral other) {
+    super(other);
+  }
+
+  /**
+   * Returns an analyzed NullLiteral of the specified type.
+   */
+  public static NullLiteral create(Type type) {
+    NullLiteral l = new NullLiteral();
+    l.analyzeNoThrow(null);
+    l.uncheckedCastTo(type);
+    return l;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   @Override
   public boolean equals(Object obj) {
+<<<<<<< HEAD
     if (!super.equals(obj)) {
       return false;
     }
+=======
+    if (!super.equals(obj)) return false;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     return obj instanceof NullLiteral;
   }
 
   @Override
+<<<<<<< HEAD
   public String toSql() {
     return "NULL";
+=======
+  public String toSqlImpl() { return getStringValue(); }
+
+  @Override
+  public String debugString() {
+    return Objects.toStringHelper(this).addValue(super.debugString()).toString();
+  }
+
+  @Override
+  public String getStringValue() { return "NULL"; }
+
+  @Override
+  protected Expr uncheckedCastTo(Type targetType) {
+    Preconditions.checkState(targetType.isValid());
+    type_ = targetType;
+    return this;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   @Override
   protected void toThrift(TExprNode msg) {
     msg.node_type = TExprNodeType.NULL_LITERAL;
   }
+<<<<<<< HEAD
+=======
+
+  @Override
+  public int compareTo(LiteralExpr o) {
+    if (!(o instanceof NullLiteral)) return -1;
+    return 0;
+  }
+
+  @Override
+  public Expr clone() { return new NullLiteral(this); }
+
+  @Override
+  protected void resetAnalysisState() {
+    super.resetAnalysisState();
+    type_ = Type.NULL;
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

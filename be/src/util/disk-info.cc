@@ -86,13 +86,36 @@ void DiskInfo::GetDeviceNames() {
     // If all else fails, return 1
     LOG(WARNING) << "Could not determine number of disks on this machine.";
     disks_.push_back(Disk("sda", 0));
+<<<<<<< HEAD
+=======
+    return;
+  }
+
+  // Determine if the disk is rotational or not.
+  for (int i = 0; i < disks_.size(); ++i) {
+    // We can check if it is rotational by reading:
+    // /sys/block/<device>/queue/rotational
+    // If the file is missing or has unexpected data, default to rotational.
+    stringstream ss;
+    ss << "/sys/block/" << disks_[i].name << "/queue/rotational";
+    ifstream rotational(ss.str().c_str(), ios::in);
+    if (rotational.good()) {
+      string line;
+      getline(rotational, line);
+      if (line == "0") disks_[i].is_rotational = false;
+    }
+    if (rotational.is_open()) rotational.close();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }
 
 void DiskInfo::Init() {
   GetDeviceNames();
   initialized_ = true;
+<<<<<<< HEAD
   LOG(INFO) << DiskInfo::DebugString();
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 int DiskInfo::disk_id(const char* path) {
@@ -107,10 +130,17 @@ string DiskInfo::DebugString() {
   DCHECK(initialized_);
   stringstream stream;
   stream << "Disk Info: " << endl;
+<<<<<<< HEAD
   stream << "  Num disks " << num_disks() << ": ";
   for (int i = 0; i < disks_.size(); ++i) {
     stream << disks_[i].name;
     if (i < num_disks() - 1) stream << ", ";
+=======
+  stream << "  Num disks " << num_disks() << ": " << endl;
+  for (int i = 0; i < disks_.size(); ++i) {
+    stream << "    " << disks_[i].name 
+           << " (rotational=" << (disks_[i].is_rotational ? "true" : "false") << ")\n";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   stream << endl;
   return stream.str();

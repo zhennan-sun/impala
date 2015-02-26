@@ -16,7 +16,11 @@
 #include <stdio.h>
 #include <iostream>
 #include <gtest/gtest.h>
+<<<<<<< HEAD
 #include "util/cpu-info.h"
+=======
+#include "common/init.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "util/disk-info.h"
 #include "util/perf-counters.h"
 
@@ -24,12 +28,19 @@ using namespace std;
 
 namespace impala {
 
+<<<<<<< HEAD
 TEST(PerfCounterTest, Basic) { 
+=======
+TEST(PerfCounterTest, Basic) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   PerfCounters counters;
   EXPECT_TRUE(counters.AddDefaultCounters());
 
   counters.Snapshot("Before");
+<<<<<<< HEAD
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   double result = 0;
   for (int i = 0; i < 1000000; i++) {
     double d1 = rand() / (double) RAND_MAX;
@@ -62,9 +73,14 @@ TEST(DiskInfoTest, Basic) {
 }
 
 int main(int argc, char **argv) {
+<<<<<<< HEAD
   ::testing::InitGoogleTest(&argc, argv);
   impala::CpuInfo::Init();
   impala::DiskInfo::Init();
+=======
+  InitCommonRuntime(argc, argv, false);
+  ::testing::InitGoogleTest(&argc, argv);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return RUN_ALL_TESTS();
 }
 

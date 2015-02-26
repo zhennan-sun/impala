@@ -15,10 +15,17 @@
 package com.cloudera.impala.analysis;
 
 import com.cloudera.impala.common.AnalysisException;
+<<<<<<< HEAD
 import com.cloudera.impala.common.InternalException;
 
 /**
  * Representation of a SHOW DATABASES [pattern] statement. 
+=======
+import com.cloudera.impala.thrift.TShowDbsParams;
+
+/**
+ * Representation of a SHOW DATABASES [pattern] statement.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
  * Acceptable syntax:
  *
  * SHOW DATABASES
@@ -27,9 +34,15 @@ import com.cloudera.impala.common.InternalException;
  * SHOW SCHEMAS LIKE 'pattern'
  *
  */
+<<<<<<< HEAD
 public class ShowDbsStmt extends ParseNodeBase {
   // Pattern to match tables against. | denotes choice, * matches all strings
   private final String pattern;
+=======
+public class ShowDbsStmt extends StatementBase {
+  // Pattern to match tables against. | denotes choice, * matches all strings
+  private final String pattern_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   /**
    * Default constructor, which creates a show statement which returns all
@@ -44,6 +57,7 @@ public class ShowDbsStmt extends ParseNodeBase {
    * supplied pattern.
    */
   public ShowDbsStmt(String pattern) {
+<<<<<<< HEAD
     this.pattern = pattern;
   }
 
@@ -65,5 +79,30 @@ public class ShowDbsStmt extends ParseNodeBase {
 
   public void analyze(Analyzer analyzer) throws AnalysisException, InternalException {
     // Nothing to do here
+=======
+    this.pattern_ = pattern;
+  }
+
+  public String getPattern() { return pattern_; }
+
+  @Override
+  public String toSql() {
+    if (pattern_ == null) {
+      return "SHOW DATABASES";
+    } else {
+      return "SHOW DATABASES LIKE '" + pattern_ + "'";
+    }
+  }
+
+  @Override
+  public void analyze(Analyzer analyzer) throws AnalysisException {
+    // Nothing to do here
+  }
+
+  public TShowDbsParams toThrift() {
+    TShowDbsParams params = new TShowDbsParams();
+    params.setShow_pattern(getPattern());
+    return params;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }

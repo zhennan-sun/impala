@@ -15,13 +15,22 @@
 namespace cpp impala
 namespace java com.cloudera.impala.thrift
 
+<<<<<<< HEAD
+=======
+include "CatalogObjects.thrift"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 include "Types.thrift"
 include "Exprs.thrift"
 
 struct TSlotDescriptor {
   1: required Types.TSlotId id
   2: required Types.TTupleId parent
+<<<<<<< HEAD
   3: required Types.TPrimitiveType slotType
+=======
+  3: required Types.TColumnType slotType
+  // TODO: Make this a list of positions to support SlotRefs into struct fields.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   4: required i32 columnPos   // in originating table
   5: required i32 byteOffset  // into tuple
   6: required i32 nullIndicatorByte
@@ -30,6 +39,7 @@ struct TSlotDescriptor {
   10: required bool isMaterialized
 }
 
+<<<<<<< HEAD
 enum TTableType {
   HDFS_TABLE,
   HBASE_TABLE
@@ -89,6 +99,19 @@ struct TTableDescriptor {
   4: required i32 numClusteringCols
   5: optional THdfsTable hdfsTable
   6: optional THBaseTable hbaseTable
+=======
+// "Union" of all table types.
+struct TTableDescriptor {
+  1: required Types.TTableId id
+  2: required CatalogObjects.TTableType tableType
+  3: required i32 numCols
+  4: required i32 numClusteringCols
+  // Names of the columns. Clustering columns come first.
+  10: optional list<string> colNames;
+  5: optional CatalogObjects.THdfsTable hdfsTable
+  6: optional CatalogObjects.THBaseTable hbaseTable
+  9: optional CatalogObjects.TDataSourceTable dataSourceTable
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Unqualified name of table
   7: required string tableName;

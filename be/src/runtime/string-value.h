@@ -16,13 +16,27 @@
 #ifndef IMPALA_RUNTIME_STRING_VALUE_H
 #define IMPALA_RUNTIME_STRING_VALUE_H
 
+<<<<<<< HEAD
 #include <string>
 
+=======
+#include <string.h>
+#include <string>
+
+#include "udf/udf.h"
+#include "util/hash-util.h"
+#include "runtime/types.h"
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 namespace impala {
 
 // The format of a string-typed slot.
 // The returned StringValue of all functions that return StringValue
 // shares its buffer the parent.
+<<<<<<< HEAD
+=======
+// TODO: rename this to be less confusing with impala_udf::StringVal.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 struct StringValue {
   // TODO: change ptr to an offset relative to a contiguous memory block,
   // so that we can send row batches between nodes without having to swizzle
@@ -33,6 +47,23 @@ struct StringValue {
   StringValue(char* ptr, int len): ptr(ptr), len(len) {}
   StringValue(): ptr(NULL), len(0) {}
 
+<<<<<<< HEAD
+=======
+  // Construct a StringValue from 's'.  's' must be valid for as long as
+  // this object is valid.
+  StringValue(const std::string& s)
+    : ptr(const_cast<char*>(s.c_str())), len(s.size()) {
+  }
+
+  // Construct a StringValue from 's'.  's' must be valid for as long as
+  // this object is valid.
+  // s must be a null-terminated string.  This constructor is to prevent
+  // accidental use of the version taking an std::string.
+  StringValue(const char* s)
+    : ptr(const_cast<char*>(s)), len(strlen(s)) {
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Byte-by-byte comparison. Returns:
   // this < other: -1
   // this == other: 0
@@ -44,6 +75,7 @@ struct StringValue {
   bool operator==(const StringValue& other) const { return Eq(other); }
   // !=
   bool Ne(const StringValue& other) const { return !Eq(other); }
+<<<<<<< HEAD
   // <=
   bool Le(const StringValue& other) const { return Compare(other) <= 0; }
   // >=
@@ -52,6 +84,21 @@ struct StringValue {
   bool Lt(const StringValue& other) const { return Compare(other) < 0; }
   // >
   bool Gt(const StringValue& other) const { return Compare(other) > 0; }
+=======
+  bool operator!=(const StringValue& other) const { return Ne(other); }
+  // <=
+  bool Le(const StringValue& other) const { return Compare(other) <= 0; }
+  bool operator<=(const StringValue& other) const { return Le(other); }
+  // >=
+  bool Ge(const StringValue& other) const { return Compare(other) >= 0; }
+  bool operator>=(const StringValue& other) const { return Ge(other); }
+  // <
+  bool Lt(const StringValue& other) const { return Compare(other) < 0; }
+  bool operator<(const StringValue& other) const { return Lt(other); }
+  // >
+  bool Gt(const StringValue& other) const { return Compare(other) > 0; }
+  bool operator>(const StringValue& other) const { return Gt(other); }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   std::string DebugString() const;
 
@@ -59,16 +106,55 @@ struct StringValue {
   StringValue Substring(int start_pos) const;
 
   // Returns the substring starting at start_pos with given length.
+<<<<<<< HEAD
   // If new_len < 0 then the substring from start_pos to end of string is returned.
+=======
+  // If new_len < 0 then the substring from start_pos to end of string is returned. If
+  // new_len > len, len is extended to new_len.
+  // TODO: len should never be extended. This is not a trivial fix because UrlParser
+  // depends on the current behavior.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   StringValue Substring(int start_pos, int new_len) const;
 
   // Trims leading and trailing spaces.
   StringValue Trim() const;
 
+<<<<<<< HEAD
+=======
+  void ToStringVal(impala_udf::StringVal* sv) const {
+    *sv = impala_udf::StringVal(reinterpret_cast<uint8_t*>(ptr), len);
+  }
+
+  static StringValue FromStringVal(const impala_udf::StringVal& sv) {
+    return StringValue(reinterpret_cast<char*>(sv.ptr), sv.len);
+  }
+
+  // Pads the end of the char pointer with spaces. num_chars is the number of used
+  // characters, cptr_len is the length of cptr
+  inline static void PadWithSpaces(char* cptr, int64_t cptr_len, int64_t num_chars);
+
+  // Returns number of characters in a char array (ignores trailing spaces)
+  inline static int64_t UnpaddedCharLength(const char* cptr, int64_t len);
+
+  // Converts a char slot to a pointer to the char string.
+  // The slot should be a StringValue* or a char*, determined by type.IsVarLen()
+  // Returns NULL if the slot is null.
+  inline static char* CharSlotToPtr(void* slot, const ColumnType& type);
+  inline static const char* CharSlotToPtr(const void* slot, const ColumnType& type);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // For C++/IR interop, we need to be able to look up types by name.
   static const char* LLVM_CLASS_NAME;
 };
 
+<<<<<<< HEAD
+=======
+// This function must be called 'hash_value' to be picked up by boost.
+inline std::size_t hash_value(const StringValue& v) {
+  return HashUtil::Hash(v.ptr, v.len, 0);
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 std::ostream& operator<<(std::ostream& os, const StringValue& string_value);
 
 }

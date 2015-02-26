@@ -18,11 +18,19 @@
 
 #include <vector>
 #include <boost/scoped_ptr.hpp>
+<<<<<<< HEAD
+=======
+#include <boost/shared_ptr.hpp>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include <boost/function.hpp>
 
 #include "common/status.h"
 #include "common/object-pool.h"
 #include "runtime/runtime-state.h"
+<<<<<<< HEAD
+=======
+#include "util/thread.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
@@ -85,6 +93,12 @@ class PlanFragmentExecutor {
   // Prepare for execution. Call this prior to Open().
   // This call won't block.
   // runtime_state() and row_desc() will not be valid until Prepare() is called.
+<<<<<<< HEAD
+=======
+  // If request.query_options.mem_limit > 0, it is used as an approximate limit on the
+  // number of bytes this query can consume at runtime.
+  // The query will be aborted (MEM_LIMIT_EXCEEDED) if it goes over that limit.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   Status Prepare(const TExecPlanFragmentParams& request);
 
   // Start execution. Call this prior to GetNext().
@@ -105,9 +119,25 @@ class PlanFragmentExecutor {
   // will have been stopped.
   Status GetNext(RowBatch** batch);
 
+<<<<<<< HEAD
   // Initiate cancellation. Must not be called until after Prepare() returned.
   void Cancel();
 
+=======
+  // Closes the underlying plan fragment and frees up all resources allocated
+  // in Open()/GetNext().
+  void Close();
+
+  // Initiate cancellation. Must not be called until after Prepare() returned.
+  void Cancel();
+
+  // Returns true if this query has a limit and it has been reached.
+  bool ReachedLimit();
+
+  // Releases the thread token for this fragment executor.
+  void ReleaseThreadToken();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // call these only after Prepare()
   RuntimeState* runtime_state() { return runtime_state_.get(); }
   const RowDescriptor& row_desc();
@@ -115,6 +145,12 @@ class PlanFragmentExecutor {
   // Profile information for plan and output sink.
   RuntimeProfile* profile();
 
+<<<<<<< HEAD
+=======
+  // Name of the counter that is tracking per query, per host peak mem usage.
+  static const std::string PER_HOST_PEAK_MEM_COUNTER;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
  private:
   ExecEnv* exec_env_;  // not owned
   ExecNode* plan_;  // lives in runtime_state_->obj_pool()
@@ -122,7 +158,11 @@ class PlanFragmentExecutor {
 
   // profile reporting-related
   ReportStatusCallback report_status_cb_;
+<<<<<<< HEAD
   boost::thread report_thread_;
+=======
+  boost::scoped_ptr<Thread> report_thread_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   boost::mutex report_thread_lock_;
 
   // Indicates that profile reporting thread should stop.
@@ -135,11 +175,24 @@ class PlanFragmentExecutor {
   bool report_thread_active_;  // true if we started the thread
 
   // true if plan_->GetNext() indicated that it's done
+<<<<<<< HEAD
   bool done_; 
+=======
+  bool done_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // true if Prepare() returned OK
   bool prepared_;
 
+<<<<<<< HEAD
+=======
+  // true if Close() has been called
+  bool closed_;
+
+  // true if this fragment has not returned the thread token to the thread resource mgr
+  bool has_thread_token_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Overall execution status. Either ok() or set to the first error status that
   // was encountered.
   Status status_;
@@ -158,8 +211,44 @@ class PlanFragmentExecutor {
   boost::scoped_ptr<RowBatch> row_batch_;
   boost::scoped_ptr<TRowBatch> thrift_batch_;
 
+<<<<<<< HEAD
   RuntimeProfile::Counter* rows_produced_counter_;
 
+=======
+  // A counter for the per query, per host peak mem usage. Note that this is not the
+  // max of the peak memory of all fragments running on a host since it needs to take
+  // into account when they are running concurrently. All fragments for a single query
+  // on a single host will have the same value for this counter.
+  RuntimeProfile::Counter* per_host_mem_usage_;
+
+  // Number of rows returned by this fragment
+  RuntimeProfile::Counter* rows_produced_counter_;
+
+  // Average number of thread tokens for the duration of the plan fragment execution.
+  // Fragments that do a lot of cpu work (non-coordinator fragment) will have at
+  // least 1 token.  Fragments that contain a hdfs scan node will have 1+ tokens
+  // depending on system load.  Other nodes (e.g. hash join node) can also reserve
+  // additional tokens.
+  // This is a measure of how much CPU resources this fragment used during the course
+  // of the execution.
+  RuntimeProfile::Counter* average_thread_tokens_;
+
+  // Stopwatch for this entire fragment. Started in Prepare(), stopped in Close().
+  MonotonicStopWatch fragment_sw_;
+
+  // (Atomic) Flag that indicates whether a completed fragment report has been or will
+  // be fired. It is initialized to 0 and atomically swapped to 1 when a completed
+  // fragment report is about to be fired. Used for reducing the probability that a
+  // report is sent twice at the end of the fragment.
+  AtomicInt<int> completed_report_sent_;
+
+  // Sampled memory usage at even time intervals.
+  RuntimeProfile::TimeSeriesCounter* mem_usage_sampled_counter_;
+
+  // Sampled thread usage (tokens) at even time intervals.
+  RuntimeProfile::TimeSeriesCounter* thread_usage_sampled_counter_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ObjectPool* obj_pool() { return runtime_state_->obj_pool(); }
 
   // typedef for TPlanFragmentExecParams.per_node_scan_ranges
@@ -175,15 +264,34 @@ class PlanFragmentExecutor {
   // done == true or we have an error status.
   void SendReport(bool done);
 
+<<<<<<< HEAD
   void Close();
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // If status_.ok(), sets status_ to status.
   // If we're transitioning to an error status, stops report thread and
   // sends a final report.
   void UpdateStatus(const Status& status);
 
+<<<<<<< HEAD
   // Executes Open() logic and returns resulting status. Does not set status_.
   // If this plan fragment has no sink, OpenInternal() does nothing. 
+=======
+  // Called when the fragment execution is complete to finalize counters.
+  void FragmentComplete();
+
+  // Optimizes the code-generated functions in runtime_state_->llvm_codegen().
+  // Must be called between plan_->Prepare() and plan_->Open().
+  // This is somewhat time consuming so we don't want it to do it in
+  // PlanFragmentExecutor()::Prepare() to allow starting plan fragments more
+  // quickly and in parallel (in a deep plan tree, the fragments are started
+  // in level order).
+  void OptimizeLlvmModule();
+
+  // Executes Open() logic and returns resulting status. Does not set status_.
+  // If this plan fragment has no sink, OpenInternal() does nothing.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // If this plan fragment has a sink and OpenInternal() returns without an
   // error condition, all rows will have been sent to the sink, the sink will
   // have been closed, a final report will have been sent and the report thread will
@@ -191,6 +299,10 @@ class PlanFragmentExecutor {
   Status OpenInternal();
 
   // Executes GetNext() logic and returns resulting status.
+<<<<<<< HEAD
+=======
+  // sets done_ to true if the last row batch was returned.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   Status GetNextInternal(RowBatch** batch);
 
   // Stops report thread, if one is running. Blocks until report thread terminates.

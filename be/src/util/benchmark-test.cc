@@ -32,6 +32,17 @@ struct MemcpyData {
   int size;
 };
 
+<<<<<<< HEAD
+=======
+// Utility class to expose private functions for testing
+class BenchmarkTest {
+ public:
+  static double Measure(Benchmark::BenchmarkFunction fn, void* data) {
+    return Benchmark::Measure(fn, data);
+  };
+};
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 void TestFunction(int batch_size, void* d) {
   MemcpyData* data = reinterpret_cast<MemcpyData*>(d);
   for (int i = 0; i < batch_size; ++i) {
@@ -45,10 +56,17 @@ TEST(BenchmarkTest, Basic) {
   data.dst = reinterpret_cast<char*>(malloc(128));
 
   data.size = 16;
+<<<<<<< HEAD
   double rate_copy_16 = Benchmark::Measure(TestFunction, &data);
 
   data.size = 128;
   double rate_copy_128 = Benchmark::Measure(TestFunction, &data);
+=======
+  double rate_copy_16 = BenchmarkTest::Measure(TestFunction, &data);
+
+  data.size = 128;
+  double rate_copy_128 = BenchmarkTest::Measure(TestFunction, &data);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   cout << "Rate 16 Byte: " << rate_copy_16 << endl;
   cout << "Rate 128 Byte: " << rate_copy_128 << endl;

@@ -17,6 +17,7 @@ package com.cloudera.impala.analysis;
 import com.cloudera.impala.common.Id;
 import com.cloudera.impala.common.IdGenerator;
 
+<<<<<<< HEAD
 public class TupleId extends Id<TupleId> {
   public TupleId() {
     super();
@@ -30,4 +31,23 @@ public class TupleId extends Id<TupleId> {
     super(idGenerator.getNextId());
   }
 
+=======
+/**
+ * Tuple identifier unique within a single query.
+ */
+public class TupleId extends Id<TupleId> {
+  // Construction only allowed via an IdGenerator.
+  protected TupleId(int id) {
+    super(id);
+  }
+
+  public static IdGenerator<TupleId> createGenerator() {
+    return new IdGenerator<TupleId>() {
+      @Override
+      public TupleId getNextId() { return new TupleId(nextId_++); }
+      @Override
+      public TupleId getMaxId() { return new TupleId(nextId_ - 1); }
+    };
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

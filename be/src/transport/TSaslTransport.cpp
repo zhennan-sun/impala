@@ -25,14 +25,23 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
+<<<<<<< HEAD
 #include <transport/TBufferTransports.h>
 #include <transport/TSaslTransport.h>
+=======
+#include <thrift/transport/TBufferTransports.h>
+#include "transport/TSaslTransport.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace std;
 
 namespace apache { namespace thrift { namespace transport {
 
+<<<<<<< HEAD
   TSaslTransport::TSaslTransport(boost::shared_ptr<TTransport> transport) 
+=======
+  TSaslTransport::TSaslTransport(boost::shared_ptr<TTransport> transport)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       : transport_(transport),
         memBuf_(new TMemoryBuffer()),
         shouldWrap_(false),
@@ -60,6 +69,13 @@ namespace apache { namespace thrift { namespace transport {
     return (transport_->peek());
   }
 
+<<<<<<< HEAD
+=======
+  string TSaslTransport::getUsername() {
+    return sasl_->getUsername();
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   void TSaslTransport::sendSaslMessage(const NegotiationStatus status,
       const uint8_t* payload, const uint32_t length, bool flush) {
     uint8_t messageHeader[STATUS_BYTES + PAYLOAD_LENGTH_BYTES];
@@ -78,7 +94,12 @@ namespace apache { namespace thrift { namespace transport {
     NegotiationStatus status = TSASL_INVALID;
     uint32_t resLength;
 
+<<<<<<< HEAD
     if (!transport_->isOpen()) {
+=======
+    // Only client should open the underlying transport.
+    if (isClient_ && !transport_->isOpen()) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       transport_->open();
     }
 
@@ -138,6 +159,7 @@ namespace apache { namespace thrift { namespace transport {
   }
 
   uint32_t TSaslTransport::read(uint8_t* buf, uint32_t len) {
+<<<<<<< HEAD
 
     // if there's not enough data in cache, read from underlying transport
     if (memBuf_->available_read() < len) {
@@ -166,6 +188,36 @@ namespace apache { namespace thrift { namespace transport {
       memBuf_->flush();
       delete tmpBuf;
     }
+=======
+    uint32_t read_bytes = memBuf_->read(buf, len);
+    if (read_bytes > 0) return read_bytes;
+
+    // if there's not enough data in cache, read from underlying transport
+    uint32_t dataLength = readLength();
+
+    // Fast path
+    if (len == dataLength && !shouldWrap_) {
+      transport_->readAll(buf, len);
+      return len;
+    }
+
+    uint8_t* tmpBuf = new uint8_t[dataLength];
+    transport_->readAll(tmpBuf, dataLength);
+    if (shouldWrap_) {
+      tmpBuf = sasl_->unwrap(tmpBuf, 0, dataLength, &dataLength);
+    }
+
+    // We will consume all the data, no need to put it in the memory buffer.
+    if (len == dataLength) {
+      memcpy(buf, tmpBuf, len);
+      delete tmpBuf;
+      return len;
+    }
+
+    memBuf_->write(tmpBuf, dataLength);
+    memBuf_->flush();
+    delete tmpBuf;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     return memBuf_->read(buf, len);
   }
 

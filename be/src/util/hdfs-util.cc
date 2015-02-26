@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
 #include <sstream>
 #include <errno.h>
 #include <string.h>
 
 #include "util/hdfs-util.h"
 
+=======
+#include "util/hdfs-util.h"
+
+#include <sstream>
+#include <string.h>
+
+#include "util/error-util.h"
+
+using namespace boost;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 using namespace std;
 
 namespace impala {
 
+<<<<<<< HEAD
 string AppendHdfsErrorMessage(const string& message, const string& file) {
   stringstream ss;
   ss << message << file
@@ -31,3 +43,46 @@ string AppendHdfsErrorMessage(const string& message, const string& file) {
 
 }
 
+=======
+string GetHdfsErrorMsg(const string& prefix, const string& file) {
+  string error_msg = GetStrErrMsg();
+  stringstream ss;
+  ss << prefix << file << "\n" << error_msg;
+  return ss.str();
+}
+
+Status GetFileSize(const hdfsFS& connection, const char* filename, int64_t* filesize) {
+  hdfsFileInfo* info = hdfsGetPathInfo(connection, filename);
+  if (info == NULL) return Status(GetHdfsErrorMsg("Failed to get file info ", filename));
+  *filesize = info->mSize;
+  hdfsFreeFileInfo(info, 1);
+  return Status::OK;
+}
+
+Status GetLastModificationTime(const hdfsFS& connection, const char* filename,
+                               time_t* last_mod_time) {
+  hdfsFileInfo* info = hdfsGetPathInfo(connection, filename);
+  if (info == NULL) return Status(GetHdfsErrorMsg("Failed to get file info ", filename));
+  *last_mod_time = info->mLastMod;
+  hdfsFreeFileInfo(info, 1);
+  return Status::OK;
+}
+
+bool IsHiddenFile(const string& filename) {
+  return !filename.empty() && (filename[0] == '.' || filename[0] == '_');
+}
+
+Status CopyHdfsFile(const hdfsFS& src_conn, const string& src_path,
+                    const hdfsFS& dst_conn, const string& dst_path) {
+  int error = hdfsCopy(src_conn, src_path.c_str(), dst_conn, dst_path.c_str());
+  if (error != 0) {
+    string error_msg = GetHdfsErrorMsg("");
+    stringstream ss;
+    ss << "Failed to copy " << src_path << " to " << dst_path << ": " << error_msg;
+    return Status(ss.str());
+  }
+  return Status::OK;
+}
+
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

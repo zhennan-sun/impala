@@ -17,8 +17,17 @@
 #define IMPALA_UTIL_JNI_UTIL_H
 
 #include <jni.h>
+<<<<<<< HEAD
 #include <vector>
 
+=======
+#include <string>
+#include <vector>
+
+#include "common/status.h"
+#include "gen-cpp/Frontend_types.h"
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #define THROW_IF_ERROR_WITH_LOGGING(stmt, env, adaptor) \
   do { \
     Status status = (stmt); \
@@ -64,11 +73,16 @@
     } \
   } while (false)
 
+<<<<<<< HEAD
 #define THROW_IF_EXC(env, exc_class, throwable_to_string_id_) \
+=======
+#define THROW_IF_EXC(env, exc_class) \
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   do { \
     jthrowable exc = (env)->ExceptionOccurred(); \
     if (exc != NULL) { \
       DCHECK((throwable_to_string_id_) != NULL); \
+<<<<<<< HEAD
       jstring msg = (jstring) env->CallStaticObjectMethod(JniUtil::jni_util_class(), \
           exc, (throwable_to_string_id_));                              \
       jboolean is_copy; \
@@ -76,6 +90,15 @@
           reinterpret_cast<const char*>((env)->GetStringUTFChars(msg, &is_copy)); \
       (env)->ExceptionClear(); \
       (env)->ThrowNew((exc_class), c_msg); \
+=======
+      jstring stack = (jstring) env->CallStaticObjectMethod(JniUtil::jni_util_class(), \
+          (JniUtil::throwable_to_stack_trace_id()), exc); \
+      jboolean is_copy; \
+      const char* c_stack = \
+          reinterpret_cast<const char*>((env)->GetStringUTFChars(stack, &is_copy)); \
+      (env)->ExceptionClear(); \
+      (env)->ThrowNew((exc_class), c_stack); \
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       return; \
     } \
   } while (false)
@@ -84,12 +107,21 @@
   do { \
     jthrowable exc = (env)->ExceptionOccurred(); \
     if (exc != NULL) { \
+<<<<<<< HEAD
       jstring msg = (jstring) env->CallStaticObjectMethod(JniUtil::jni_util_class(), \
           JniUtil::throwable_to_string_id(), exc); \
       jboolean is_copy; \
       const char* c_msg = \
           reinterpret_cast<const char*>((env)->GetStringUTFChars(msg, &is_copy)); \
       VLOG(1) << string(c_msg); \
+=======
+      jstring stack = (jstring) env->CallStaticObjectMethod(JniUtil::jni_util_class(), \
+          (JniUtil::throwable_to_stack_trace_id()), exc); \
+      jboolean is_copy; \
+      const char* c_stack = \
+          reinterpret_cast<const char*>((env)->GetStringUTFChars(stack, &is_copy)); \
+      VLOG(1) << string(c_stack); \
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
      return; \
     } \
   } while (false)
@@ -98,16 +130,26 @@
   do { \
     jthrowable exc = (env)->ExceptionOccurred(); \
     if (exc != NULL) { \
+<<<<<<< HEAD
       jstring msg = (jstring) env->CallStaticObjectMethod(JniUtil::jni_util_class(), \
           JniUtil::throwable_to_string_id(), exc);                          \
       jboolean is_copy; \
       const char* c_msg = \
           reinterpret_cast<const char*>((env)->GetStringUTFChars(msg, &is_copy)); \
       LOG(ERROR) << string(c_msg); \
+=======
+      jstring stack = (jstring) env->CallStaticObjectMethod(JniUtil::jni_util_class(), \
+          (JniUtil::throwable_to_stack_trace_id()), exc); \
+      jboolean is_copy; \
+      const char* c_stack = \
+          reinterpret_cast<const char*>((env)->GetStringUTFChars(stack, &is_copy)); \
+      LOG(ERROR) << string(c_stack); \
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
      exit(1); \
     } \
   } while (false)
 
+<<<<<<< HEAD
 #define RETURN_ERROR_IF_EXC(env, throwable_to_string_id_) \
   do { \
     jthrowable exc = (env)->ExceptionOccurred(); \
@@ -121,6 +163,12 @@
       (env)->ExceptionClear(); \
       return Status(c_msg); \
     } \
+=======
+#define RETURN_ERROR_IF_EXC(env) \
+  do { \
+    jthrowable exc = (env)->ExceptionOccurred(); \
+    if (exc != NULL) return JniUtil::GetJniExceptionMsg(env);\
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   } while (false)
 
 #define EXIT_IF_JNIERROR(stmt) \
@@ -147,6 +195,40 @@ namespace impala {
 
 class Status;
 
+<<<<<<< HEAD
+=======
+// Utility class to push/pop a single JNI frame. "push" will push a JNI frame and the
+// d'tor will pop the JNI frame. Frames establish a scope for local references. Local
+// references go out of scope when their frame is popped, which enables the GC to clean up
+// the corresponding objects.
+class JniLocalFrame {
+ public:
+  JniLocalFrame(): env_(NULL) {}
+  ~JniLocalFrame() { if (env_ != NULL) env_->PopLocalFrame(NULL); }
+
+  // Pushes a new JNI local frame. The frame can support max_local_ref local references.
+  // The number of local references created inside the frame might exceed max_local_ref,
+  // but there is no guarantee that memory will be available.
+  // Push should be called at most once.
+  Status push(JNIEnv* env, int max_local_ref=10);
+
+ private:
+  JNIEnv* env_;
+};
+
+// Describes one method to look up in a Java object
+struct JniMethodDescriptor {
+  // Name of the method, case must match
+  const std::string name;
+
+  // JNI-style method signature
+  const std::string signature;
+
+  // Handle to the method
+  jmethodID* method_id;
+};
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // Utility class for JNI-related functionality.
 // Init() should be called as soon as the native library is loaded.
 // Creates global class references, and promotes local references to global references.
@@ -169,6 +251,14 @@ class JniUtil {
   // Find JniUtil class, and get JniUtil.throwableToString method id
   static Status Init();
 
+<<<<<<< HEAD
+=======
+  // Returns true if the given class could be found on the CLASSPATH in env.
+  // Returns false otherwise, or if any other error occurred (e.g. a JNI exception).
+  // This function does not log any errors or exceptions.
+  static bool ClassExists(JNIEnv* env, const char* class_str);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Returns a global JNI reference to the class specified by class_str into class_ref.
   // The reference is added to global_refs_ for cleanup in Deinit().
   // Returns Status::OK if successful.
@@ -182,16 +272,113 @@ class JniUtil {
   static Status LocalToGlobalRef(JNIEnv* env, jobject local_ref, jobject* global_ref);
 
   static jmethodID throwable_to_string_id() { return throwable_to_string_id_; }
+<<<<<<< HEAD
+=======
+  static jmethodID throwable_to_stack_trace_id() { return throwable_to_stack_trace_id_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Global reference to java JniUtil class
   static jclass jni_util_class() { return jni_util_cl_; }
 
+<<<<<<< HEAD
   // Delete all global references: class members, and those stored in global_refs_.
   static Status Cleanup();
 
  private:
   static jclass jni_util_cl_;
   static jmethodID throwable_to_string_id_;
+=======
+  // Global reference to InternalException class.
+  static jclass internal_exc_class() { return internal_exc_cl_; }
+
+  // Delete all global references: class members, and those stored in global_refs_.
+  static Status Cleanup();
+
+  // Returns the error message for 'e'. If no exception, returns Status::OK
+  // log_stack determines if the stack trace is written to the log
+  // prefix, if non-empty will be prepended to the error message.
+  static Status GetJniExceptionMsg(JNIEnv* env, bool log_stack = true,
+      const std::string& prefix = "");
+
+  // Populates 'result' with a list of memory metrics from the Jvm. Returns Status::OK
+  // unless there is an exception.
+  static Status GetJvmMetrics(const TGetJvmMetricsRequest& request,
+      TGetJvmMetricsResponse* result);
+
+  // Loads a method whose signature is in the supplied descriptor. Returns Status::OK
+  // and sets descriptor->method_id to a JNI method handle if successful, otherwise an
+  // error status is returned.
+  static Status LoadJniMethod(JNIEnv* jni_env, const jclass& jni_class,
+      JniMethodDescriptor* descriptor);
+
+  // Utility methods to avoid repeating lots of the JNI call boilerplate. It seems these
+  // must be defined in the header to compile properly.
+  template <typename T>
+  static Status CallJniMethod(const jobject& obj, const jmethodID& method, const T& arg) {
+    JNIEnv* jni_env = getJNIEnv();
+    jbyteArray request_bytes;
+    JniLocalFrame jni_frame;
+    RETURN_IF_ERROR(jni_frame.push(jni_env));
+    RETURN_IF_ERROR(SerializeThriftMsg(jni_env, &arg, &request_bytes));
+    jni_env->CallObjectMethod(obj, method, request_bytes);
+    RETURN_ERROR_IF_EXC(jni_env);
+    return Status::OK;
+  }
+
+  template <typename R>
+  static Status CallJniMethod(const jobject& obj, const jmethodID& method, R* response) {
+    JNIEnv* jni_env = getJNIEnv();
+    JniLocalFrame jni_frame;
+    RETURN_IF_ERROR(jni_frame.push(jni_env));
+    jbyteArray result_bytes = static_cast<jbyteArray>(
+        jni_env->CallObjectMethod(obj, method));
+    RETURN_ERROR_IF_EXC(jni_env);
+    RETURN_IF_ERROR(DeserializeThriftMsg(jni_env, result_bytes, response));
+    return Status::OK;
+  }
+
+  template <typename T, typename R>
+  static Status CallJniMethod(const jobject& obj, const jmethodID& method,
+      const T& arg, R* response) {
+    JNIEnv* jni_env = getJNIEnv();
+    jbyteArray request_bytes;
+    JniLocalFrame jni_frame;
+    RETURN_IF_ERROR(jni_frame.push(jni_env));
+    RETURN_IF_ERROR(SerializeThriftMsg(jni_env, &arg, &request_bytes));
+    jbyteArray result_bytes = static_cast<jbyteArray>(
+        jni_env->CallObjectMethod(obj, method, request_bytes));
+    RETURN_ERROR_IF_EXC(jni_env);
+    RETURN_IF_ERROR(DeserializeThriftMsg(jni_env, result_bytes, response));
+    return Status::OK;
+  }
+
+  template <typename T>
+  static Status CallJniMethod(const jobject& obj, const jmethodID& method,
+      const T& arg, std::string* response) {
+    JNIEnv* jni_env = getJNIEnv();
+    jbyteArray request_bytes;
+    JniLocalFrame jni_frame;
+    RETURN_IF_ERROR(jni_frame.push(jni_env));
+    RETURN_IF_ERROR(SerializeThriftMsg(jni_env, &arg, &request_bytes));
+    jstring java_response_string = static_cast<jstring>(
+        jni_env->CallObjectMethod(obj, method, request_bytes));
+    RETURN_ERROR_IF_EXC(jni_env);
+    jboolean is_copy;
+    const char *str = jni_env->GetStringUTFChars(java_response_string, &is_copy);
+    RETURN_ERROR_IF_EXC(jni_env);
+    *response = str;
+    jni_env->ReleaseStringUTFChars(java_response_string, str);
+    RETURN_ERROR_IF_EXC(jni_env);
+    return Status::OK;
+  }
+
+ private:
+  static jclass jni_util_cl_;
+  static jclass internal_exc_cl_;
+  static jmethodID throwable_to_string_id_;
+  static jmethodID throwable_to_stack_trace_id_;
+  static jmethodID get_jvm_metrics_id_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // List of global references created with GetGlobalClassRef() or LocalToGlobalRef.
   // All global references are deleted in Cleanup().
   static std::vector<jobject> global_refs_;

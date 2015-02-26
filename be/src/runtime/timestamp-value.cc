@@ -13,17 +13,29 @@
 // limitations under the License.
 
 #include "runtime/timestamp-value.h"
+<<<<<<< HEAD
 #include "common/status.h"
 #include "common/compiler-util.h"
 #include "util/string-parser.h"
 #include <cstdio>
 
 using namespace std;
+=======
+
+using namespace std;
+using namespace boost;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
 namespace impala {
 
+<<<<<<< HEAD
+=======
+const char* TimestampValue::LLVM_CLASS_NAME = "class.impala::TimestampValue";
+const double TimestampValue::FRACTIONAL = 0.000000001;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 time_t to_time_t(ptime t) {
   if (t == not_a_date_time) {
     return 0;
@@ -33,6 +45,7 @@ time_t to_time_t(ptime t) {
 
   return time_t(x);
 }
+<<<<<<< HEAD
 static const time_duration one_day(24, 0, 0);
 
 
@@ -185,6 +198,22 @@ TimestampValue::TimestampValue(const char* str, int len) {
   if (!time_set) this->time_of_day_ = time_duration(not_a_date_time);
 }
     
+=======
+
+TimestampValue::TimestampValue(const char* str, int len) {
+  TimestampParser::Parse(str, len, &date_, &time_of_day_);
+}
+
+TimestampValue::TimestampValue(const char* str, int len,
+    const DateTimeFormatContext& dt_ctx) {
+  TimestampParser::Parse(str, len, dt_ctx, &date_, &time_of_day_);
+}
+
+int TimestampValue::Format(const DateTimeFormatContext& dt_ctx, int len, char* buff) {
+  return TimestampParser::Format(dt_ctx, date_, time_of_day_, len, buff);
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 ostream& operator<<(ostream& os, const TimestampValue& timestamp_value) {
   return os << timestamp_value.DebugString();
 }

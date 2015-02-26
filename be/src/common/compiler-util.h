@@ -21,6 +21,17 @@
 // about memory" paper.
 // example: if (LIKELY(size > 0)) { ... }
 // example: if (UNLIKELY(!status.ok())) { ... }
+<<<<<<< HEAD
+=======
+#ifdef LIKELY 
+#undef LIKELY
+#endif
+
+#ifdef UNLIKELY 
+#undef UNLIKELY
+#endif
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #define LIKELY(expr) __builtin_expect(!!(expr), 1)
 #define UNLIKELY(expr) __builtin_expect(!!(expr), 0)
 

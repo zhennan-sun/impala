@@ -40,11 +40,19 @@ const StringSearch UrlParser::colon_search(&colon);
 const StringSearch UrlParser::question_search(&question);
 const StringSearch UrlParser::hash_search(&hash);
 
+<<<<<<< HEAD
 bool UrlParser::ParseUrl(const StringValue* url, UrlPart part, StringValue* result) {
   result->ptr = NULL;
   result->len = 0;
   // Remove leading and trailing spaces.
   StringValue trimmed_url = url->Trim();
+=======
+bool UrlParser::ParseUrl(const StringValue& url, UrlPart part, StringValue* result) {
+  result->ptr = NULL;
+  result->len = 0;
+  // Remove leading and trailing spaces.
+  StringValue trimmed_url = url.Trim();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // All parts require checking for the protocol.
   int32_t protocol_pos = protocol_search.Search(&trimmed_url);
@@ -96,6 +104,7 @@ bool UrlParser::ParseUrl(const StringValue* url, UrlPart part, StringValue* resu
         start_pos += at.len;
       }
       StringValue host_start = protocol_end.Substring(start_pos);
+<<<<<<< HEAD
       // Find ':' to strip out port.
       int32_t end_pos = colon_search.Search(&host_start);
       if (end_pos < 0) {
@@ -103,6 +112,20 @@ bool UrlParser::ParseUrl(const StringValue* url, UrlPart part, StringValue* resu
         end_pos = slash_search.Search(&host_start);
       }
       *result = host_start.Substring(0, end_pos);
+=======
+
+      // Find the start of the query
+      int32_t query_start_pos = question_search.Search(&host_start);
+      StringValue url_only = host_start.Substring(0, query_start_pos);
+
+      // Find the first '/' in url_only to determine host<:port>
+      int32_t hostport_end_pos = slash_search.Search(&url_only);
+      StringValue hostport = url_only.Substring(0, hostport_end_pos);
+
+      // Find ':' to strip out port.
+      int32_t end_pos = colon_search.Search(&hostport);
+      *result = hostport.Substring(0, end_pos);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       break;
     }
 
@@ -152,17 +175,29 @@ bool UrlParser::ParseUrl(const StringValue* url, UrlPart part, StringValue* resu
   return true;
 }
 
+<<<<<<< HEAD
 bool UrlParser::ParseUrlKey(const StringValue* url, UrlPart part,
       const StringValue* key, StringValue* result) {
+=======
+bool UrlParser::ParseUrlKey(const StringValue& url, UrlPart part,
+      const StringValue& key, StringValue* result) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Part must be query to ask for a specific query key.
   if (part != QUERY) {
     return false;
   }
   // Remove leading and trailing spaces.
+<<<<<<< HEAD
   StringValue trimmed_url = url->Trim();
 
   // Search for the key in the url, ignoring malformed URLs for now.
   StringSearch key_search(key);
+=======
+  StringValue trimmed_url = url.Trim();
+
+  // Search for the key in the url, ignoring malformed URLs for now.
+  StringSearch key_search(&key);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   while(trimmed_url.len > 0) {
     // Search for the key in the current substring.
     int32_t key_pos = key_search.Search(&trimmed_url);
@@ -177,7 +212,11 @@ bool UrlParser::ParseUrlKey(const StringValue* url, UrlPart part,
       match = false;
     }
     // Advance substring beyond matching key.
+<<<<<<< HEAD
     trimmed_url = trimmed_url.Substring(key_pos + key->len);
+=======
+    trimmed_url = trimmed_url.Substring(key_pos + key.len);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     if (!match) {
       continue;
     }
@@ -206,6 +245,7 @@ bool UrlParser::ParseUrlKey(const StringValue* url, UrlPart part,
   return false;
 }
 
+<<<<<<< HEAD
 UrlParser::UrlPart UrlParser::GetUrlPart(const StringValue* part) {
   // Quick filter on requested URL part, based on first character.
   // Hive requires the requested URL part to be all upper case.
@@ -226,12 +266,35 @@ UrlParser::UrlPart UrlParser::GetUrlPart(const StringValue* part) {
       if (part->Eq(url_path)) {
         return PATH;
       } else if (part->Eq(url_protocol)) {
+=======
+UrlParser::UrlPart UrlParser::GetUrlPart(const StringValue& part) {
+  // Quick filter on requested URL part, based on first character.
+  // Hive requires the requested URL part to be all upper case.
+  switch(part.ptr[0]) {
+    case 'A': {
+      if (!part.Eq(url_authority)) return INVALID;
+      return AUTHORITY;
+    }
+    case 'F': {
+      if (!part.Eq(url_file)) return INVALID;
+      return FILE;
+    }
+    case 'H': {
+      if (!part.Eq(url_host)) return INVALID;
+      return HOST;
+    }
+    case 'P': {
+      if (part.Eq(url_path)) {
+        return PATH;
+      } else if (part.Eq(url_protocol)) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         return PROTOCOL;
       } else {
         return INVALID;
       }
     }
     case 'Q': {
+<<<<<<< HEAD
       if (!part->Eq(url_query)) return INVALID;
       return QUERY;
     }
@@ -241,6 +304,17 @@ UrlParser::UrlPart UrlParser::GetUrlPart(const StringValue* part) {
     }
     case 'U': {
       if (!part->Eq(url_userinfo)) return INVALID;
+=======
+      if (!part.Eq(url_query)) return INVALID;
+      return QUERY;
+    }
+    case 'R': {
+      if (!part.Eq(url_ref)) return INVALID;
+      return REF;
+    }
+    case 'U': {
+      if (!part.Eq(url_userinfo)) return INVALID;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       return USERINFO;
     }
     default: return INVALID;

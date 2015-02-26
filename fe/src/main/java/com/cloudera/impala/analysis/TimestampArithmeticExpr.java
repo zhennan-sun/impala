@@ -18,11 +18,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.cloudera.impala.analysis.ArithmeticExpr.Operator;
+<<<<<<< HEAD
 import com.cloudera.impala.catalog.PrimitiveType;
 import com.cloudera.impala.common.AnalysisException;
 import com.cloudera.impala.thrift.TExprNode;
 import com.cloudera.impala.thrift.TExprNodeType;
 import com.cloudera.impala.thrift.TExprOpcode;
+=======
+import com.cloudera.impala.catalog.Function.CompareMode;
+import com.cloudera.impala.common.AnalysisException;
+import com.cloudera.impala.thrift.TExprNode;
+import com.cloudera.impala.thrift.TExprNodeType;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 import com.google.common.base.Preconditions;
 
 /**
@@ -45,15 +52,26 @@ public class TimestampArithmeticExpr extends Expr {
     MICROSECOND("MICROSECOND"),
     NANOSECOND("NANOSECOND");
 
+<<<<<<< HEAD
     private final String description;
 
     private TimeUnit(String description) {
       this.description = description;
+=======
+    private final String description_;
+
+    private TimeUnit(String description) {
+      this.description_ = description;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     }
 
     @Override
     public String toString() {
+<<<<<<< HEAD
       return description;
+=======
+      return description_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     }
   }
 
@@ -66,6 +84,7 @@ public class TimestampArithmeticExpr extends Expr {
   }
 
   // Set for function call-like arithmetic.
+<<<<<<< HEAD
   private final String funcName;
   private ArithmeticExpr.Operator op;
 
@@ -76,15 +95,35 @@ public class TimestampArithmeticExpr extends Expr {
 
   // Indicates an expr where the interval comes first, e.g., 'interval b year + a'.
   private final boolean intervalFirst;
+=======
+  private final String funcName_;
+  private ArithmeticExpr.Operator op_;
+
+  // Keep the original string passed in the c'tor to resolve
+  // ambiguities with other uses of IDENT during query parsing.
+  private final String timeUnitIdent_;
+  private TimeUnit timeUnit_;
+
+  // Indicates an expr where the interval comes first, e.g., 'interval b year + a'.
+  private final boolean intervalFirst_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // C'tor for function-call like arithmetic, e.g., 'date_add(a, interval b year)'.
   public TimestampArithmeticExpr(String funcName, Expr e1, Expr e2,
       String timeUnitIdent) {
+<<<<<<< HEAD
     this.funcName = funcName;
     this.timeUnitIdent = timeUnitIdent;
     this.intervalFirst = false;
     children.add(e1);
     children.add(e2);
+=======
+    this.funcName_ = funcName.toLowerCase();
+    this.timeUnitIdent_ = timeUnitIdent;
+    this.intervalFirst_ = false;
+    children_.add(e1);
+    children_.add(e2);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   // C'tor for non-function-call like arithmetic, e.g., 'a + interval b year'.
@@ -93,16 +132,38 @@ public class TimestampArithmeticExpr extends Expr {
   public TimestampArithmeticExpr(ArithmeticExpr.Operator op, Expr e1, Expr e2,
       String timeUnitIdent, boolean intervalFirst) {
     Preconditions.checkState(op == Operator.ADD || op == Operator.SUBTRACT);
+<<<<<<< HEAD
     this.funcName = null;
     this.op = op;
     this.timeUnitIdent = timeUnitIdent;
     this.intervalFirst = intervalFirst;
     children.add(e1);
     children.add(e2);
+=======
+    this.funcName_ = null;
+    this.op_ = op;
+    this.timeUnitIdent_ = timeUnitIdent;
+    this.intervalFirst_ = intervalFirst;
+    children_.add(e1);
+    children_.add(e2);
+  }
+
+  /**
+   * Copy c'tor used in clone().
+   */
+  protected TimestampArithmeticExpr(TimestampArithmeticExpr other) {
+    super(other);
+    funcName_ = other.funcName_;
+    op_ = other.op_;
+    timeUnitIdent_ = other.timeUnitIdent_;
+    timeUnit_ = other.timeUnit_;
+    intervalFirst_ = other.intervalFirst_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   @Override
   public void analyze(Analyzer analyzer) throws AnalysisException {
+<<<<<<< HEAD
     super.analyze(analyzer);
 
     // Check if name of function call is date_sub or date_add.
@@ -113,10 +174,24 @@ public class TimestampArithmeticExpr extends Expr {
         op = ArithmeticExpr.Operator.SUBTRACT;
       } else {
         throw new AnalysisException("Encountered function name '" + funcName +
+=======
+    if (isAnalyzed_) return;
+    super.analyze(analyzer);
+
+    if (funcName_ != null) {
+      // Set op based on funcName for function-call like version.
+      if (funcName_.equals("date_add")) {
+        op_ = ArithmeticExpr.Operator.ADD;
+      } else if (funcName_.equals("date_sub")) {
+        op_ = ArithmeticExpr.Operator.SUBTRACT;
+      } else {
+        throw new AnalysisException("Encountered function name '" + funcName_ +
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
             "' in timestamp arithmetic expression '" + toSql() + "'. " +
             "Expected function name 'DATE_ADD' or 'DATE_SUB'.");
       }
     }
+<<<<<<< HEAD
     timeUnit = TIME_UNITS_MAP.get(timeUnitIdent.toUpperCase());
     if (timeUnit == null) {
       throw new AnalysisException("Invalid time unit '" + timeUnitIdent +
@@ -143,11 +218,46 @@ public class TimestampArithmeticExpr extends Expr {
 
     type = PrimitiveType.TIMESTAMP;
     opcode = getOpCode();
+=======
+
+    timeUnit_ = TIME_UNITS_MAP.get(timeUnitIdent_.toUpperCase());
+    if (timeUnit_ == null) {
+      throw new AnalysisException("Invalid time unit '" + timeUnitIdent_ +
+          "' in timestamp arithmetic expression '" + toSql() + "'.");
+    }
+
+    // The first child must return a timestamp or null.
+    if (!getChild(0).getType().isTimestamp() && !getChild(0).getType().isNull()) {
+      throw new AnalysisException("Operand '" + getChild(0).toSql() +
+          "' of timestamp arithmetic expression '" + toSql() + "' returns type '" +
+          getChild(0).getType().toSql() + "'. Expected type 'TIMESTAMP'.");
+    }
+
+    // The second child must be an integer type.
+    if (!getChild(1).getType().isIntegerType() &&
+        !getChild(1).getType().isNull()) {
+      throw new AnalysisException("Operand '" + getChild(1).toSql() +
+          "' of timestamp arithmetic expression '" + toSql() + "' returns type '" +
+          getChild(1).getType().toSql() + "'. Expected an integer type.");
+    }
+
+    String funcOpName = String.format("%sS_%s", timeUnit_.toString(),
+        (op_ == ArithmeticExpr.Operator.ADD) ? "ADD" : "SUB");
+
+    fn_ = getBuiltinFunction(analyzer, funcOpName.toLowerCase(),
+         collectChildReturnTypes(), CompareMode.IS_SUPERTYPE_OF);
+    castForFunctionCall(false);
+
+    Preconditions.checkNotNull(fn_);
+    Preconditions.checkState(fn_.getReturnType().isTimestamp());
+    type_ = fn_.getReturnType();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   @Override
   protected void toThrift(TExprNode msg) {
     msg.node_type = TExprNodeType.FUNCTION_CALL;
+<<<<<<< HEAD
     msg.setOpcode(opcode);
   }
 
@@ -262,10 +372,38 @@ public class TimestampArithmeticExpr extends Expr {
       strBuilder.append(getChild(1).toSql() + " ");
       strBuilder.append(timeUnitIdent);
       strBuilder.append(" " + op.toString() + " ");
+=======
+  }
+
+  public String getTimeUnitIdent() { return timeUnitIdent_; }
+  public TimeUnit getTimeUnit() { return timeUnit_; }
+  public ArithmeticExpr.Operator getOp() { return op_; }
+
+  @Override
+  public String toSqlImpl() {
+    StringBuilder strBuilder = new StringBuilder();
+    if (funcName_ != null) {
+      // Function-call like version.
+      strBuilder.append(funcName_.toUpperCase() + "(");
+      strBuilder.append(getChild(0).toSql() + ", ");
+      strBuilder.append("INTERVAL ");
+      strBuilder.append(getChild(1).toSql());
+      strBuilder.append(" " + timeUnitIdent_);
+      strBuilder.append(")");
+      return strBuilder.toString();
+    }
+    if (intervalFirst_) {
+      // Non-function-call like version with interval as first operand.
+      strBuilder.append("INTERVAL ");
+      strBuilder.append(getChild(1).toSql() + " ");
+      strBuilder.append(timeUnitIdent_);
+      strBuilder.append(" " + op_.toString() + " ");
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       strBuilder.append(getChild(0).toSql());
     } else {
       // Non-function-call like version with interval as second operand.
       strBuilder.append(getChild(0).toSql());
+<<<<<<< HEAD
       strBuilder.append(" " + op.toString() + " ");
       strBuilder.append("INTERVAL ");
       strBuilder.append(getChild(1).toSql() + " ");
@@ -273,4 +411,16 @@ public class TimestampArithmeticExpr extends Expr {
     }
     return strBuilder.toString();
   }
+=======
+      strBuilder.append(" " + op_.toString() + " ");
+      strBuilder.append("INTERVAL ");
+      strBuilder.append(getChild(1).toSql() + " ");
+      strBuilder.append(timeUnitIdent_);
+    }
+    return strBuilder.toString();
+  }
+
+  @Override
+  public Expr clone() { return new TimestampArithmeticExpr(this); }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

@@ -22,6 +22,10 @@
 #include "common/logging.h"
 #include "common/compiler-util.h"
 #include "gen-cpp/Status_types.h"  // for TStatus
+<<<<<<< HEAD
+=======
+#include "gen-cpp/TCLIService_types.h" // for HS2 TStatus
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
@@ -48,6 +52,11 @@ class Status {
 
   static const Status OK;
   static const Status CANCELLED;
+<<<<<<< HEAD
+=======
+  static const Status MEM_LIMIT_EXCEEDED;
+  static const Status DEPRECATED_RPC;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // copy c'tor makes copy of error detail so Status can be returned by value
   Status(const Status& status)
@@ -63,6 +72,7 @@ class Status {
   }
 
   // c'tor for error case
+<<<<<<< HEAD
   Status(TStatusCode::type code, const std::string& error_msg)
     : error_detail_(new ErrorDetail(code, error_msg)) {
     VLOG(2) << error_msg;
@@ -70,6 +80,15 @@ class Status {
 
   // c'tor for internal error
   Status(const std::string& error_msg);
+=======
+  Status(TStatusCode::type code, const std::string& error_msg, bool quiet=false)
+    : error_detail_(new ErrorDetail(code, error_msg)) {
+    if (!quiet) VLOG(2) << error_msg;
+  }
+
+  // c'tor for internal error
+  Status(const std::string& error_msg, bool quiet=false);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   ~Status() {
     if (error_detail_ != NULL) delete error_detail_;
@@ -92,6 +111,15 @@ class Status {
   // same as previous c'tor
   Status& operator=(const TStatus& status);
 
+<<<<<<< HEAD
+=======
+  // "Copy c'tor from HS2 TStatus.
+  Status(const apache::hive::service::cli::thrift::TStatus& hs2_status);
+
+  // same as previous c'tor
+  Status& operator=(const apache::hive::service::cli::thrift::TStatus& hs2_status);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // assign from stringstream
   Status& operator=(const std::stringstream& stream);
 
@@ -102,6 +130,19 @@ class Status {
         && error_detail_->error_code == TStatusCode::CANCELLED;
   }
 
+<<<<<<< HEAD
+=======
+  bool IsMemLimitExceeded() const {
+    return error_detail_ != NULL
+        && error_detail_->error_code == TStatusCode::MEM_LIMIT_EXCEEDED;
+  }
+
+  bool IsRecoverableError() const {
+    return error_detail_ != NULL
+        && error_detail_->error_code == TStatusCode::RECOVERABLE_ERROR;
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Add an error message and set the code if no code has been set yet.
   // If a code has already been set, 'code' is ignored.
   void AddErrorMsg(TStatusCode::type code, const std::string& msg);
@@ -163,7 +204,11 @@ class Status {
   do { \
     Status __status__ = (stmt); \
     if (UNLIKELY(!__status__.ok())) { \
+<<<<<<< HEAD
       string msg; \
+=======
+      std::string msg; \
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       __status__.GetErrorMsg(&msg); \
       LOG(ERROR) << msg;            \
       exit(1); \

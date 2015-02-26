@@ -18,6 +18,10 @@
 
 #include <iomanip>
 #include <sstream>
+<<<<<<< HEAD
+=======
+#include <boost/foreach.hpp>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 #include "common/logging.h"
 #include "common/version.h"
@@ -26,7 +30,17 @@
 #include "runtime/tuple-row.h"
 #include "runtime/row-batch.h"
 #include "util/cpu-info.h"
+<<<<<<< HEAD
 #include "gen-cpp/Opcodes_types.h"
+=======
+#include "util/string-parser.h"
+
+// For DumpStackTraceToString(). Silence warnings for repeated definitions of preprocessor
+// variables (these are also defined in gutil/port.h)
+#undef HAVE_ATTRIBUTE_NOINLINE
+#undef _XOPEN_SOURCE
+#include <glog/../utilities.h>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 #define PRECISION 2
 #define KILOBYTE (1024)
@@ -42,6 +56,7 @@
 #define BILLION (MILLION * 1000)
 
 using namespace std;
+<<<<<<< HEAD
 
 namespace impala {
 
@@ -62,18 +77,130 @@ ostream& operator<<(ostream& os, const TAggregationOp::type& op) {
   }
   return os;
 }
+=======
+using namespace boost;
+using namespace beeswax;
+using namespace parquet;
+
+namespace impala {
+
+#define THRIFT_ENUM_OUTPUT_FN_IMPL(E, MAP) \
+  ostream& operator<<(ostream& os, const E::type& e) {\
+    map<int, const char*>::const_iterator i;\
+    i = MAP.find(e);\
+    if (i != MAP.end()) {\
+      os << i->second;\
+    }\
+    return os;\
+  }
+
+// Macro to stamp out operator<< for thrift enums.  Why doesn't thrift do this?
+#define THRIFT_ENUM_OUTPUT_FN(E) THRIFT_ENUM_OUTPUT_FN_IMPL(E , _##E##_VALUES_TO_NAMES)
+
+// Macro to implement Print function that returns string for thrift enums
+#define THRIFT_ENUM_PRINT_FN(E) \
+  string Print##E(const E::type& e) {\
+    stringstream ss;\
+    ss << e;\
+    return ss.str();\
+  }
+
+THRIFT_ENUM_OUTPUT_FN(TFunctionBinaryType);
+THRIFT_ENUM_OUTPUT_FN(TCatalogObjectType);
+THRIFT_ENUM_OUTPUT_FN(TDdlType);
+THRIFT_ENUM_OUTPUT_FN(TCatalogOpType);
+THRIFT_ENUM_OUTPUT_FN(THdfsFileFormat);
+THRIFT_ENUM_OUTPUT_FN(THdfsCompression);
+THRIFT_ENUM_OUTPUT_FN(TSessionType);
+THRIFT_ENUM_OUTPUT_FN(TStmtType);
+THRIFT_ENUM_OUTPUT_FN(QueryState);
+THRIFT_ENUM_OUTPUT_FN(Encoding);
+THRIFT_ENUM_OUTPUT_FN(CompressionCodec);
+THRIFT_ENUM_OUTPUT_FN(Type);
+
+THRIFT_ENUM_PRINT_FN(TCatalogObjectType);
+THRIFT_ENUM_PRINT_FN(TDdlType);
+THRIFT_ENUM_PRINT_FN(TCatalogOpType);
+THRIFT_ENUM_PRINT_FN(TSessionType);
+THRIFT_ENUM_PRINT_FN(TStmtType);
+THRIFT_ENUM_PRINT_FN(QueryState);
+THRIFT_ENUM_PRINT_FN(Encoding);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 ostream& operator<<(ostream& os, const TUniqueId& id) {
   os << PrintId(id);
   return os;
 }
 
+<<<<<<< HEAD
 string PrintId(const TUniqueId& id) {
   stringstream out;
   out << std::hex << id.hi << ":" << id.lo;
   return out.str();
 }
 
+=======
+string PrintId(const TUniqueId& id, const string& separator) {
+  stringstream out;
+  out << hex << id.hi << separator << id.lo;
+  return out.str();
+}
+
+string PrintAsHex(const char* bytes, int64_t len) {
+  stringstream out;
+  out << hex << std::setfill('0');
+  for (int i = 0; i < len; ++i) {
+    out << setw(2) << static_cast<uint16_t>(bytes[i]);
+  }
+  return out.str();
+}
+
+bool ParseId(const string& s, TUniqueId* id) {
+  // For backwards compatibility, this method parses two forms of query ID from text:
+  //  - <hex-int64_t><colon><hex-int64_t> - this format is the standard going forward
+  //  - <decimal-int64_t><space><decimal-int64_t> - legacy compatibility with CDH4 CM
+  DCHECK(id != NULL);
+
+  const char* hi_part = s.c_str();
+  char* separator = const_cast<char*>(strchr(hi_part, ':'));
+  if (separator == NULL) {
+    // Legacy compatibility branch
+    char_separator<char> sep(" ");
+    tokenizer< char_separator<char> > tokens(s, sep);
+    int i = 0;
+    BOOST_FOREACH(const string& token, tokens) {
+      StringParser::ParseResult parse_result = StringParser::PARSE_SUCCESS;
+      int64_t component = StringParser::StringToInt<int64_t>(
+          token.c_str(), token.length(), &parse_result);
+      if (parse_result != StringParser::PARSE_SUCCESS) return false;
+      if (i == 0) {
+        id->hi = component;
+      } else if (i == 1) {
+        id->lo = component;
+      } else {
+        // Too many tokens, must be ill-formed.
+        return false;
+      }
+      ++i;
+    }
+    return true;
+  }
+
+  // Parse an ID from <int64_t_as_hex><colon><int64_t_as_hex>
+  const char* lo_part = separator + 1;
+  *separator = '\0';
+
+  char* error_hi = NULL;
+  char* error_lo = NULL;
+  id->hi = strtoul(hi_part, &error_hi, 16);
+  id->lo = strtoul(lo_part, &error_lo, 16);
+
+  bool valid = *error_hi == '\0' && *error_lo == '\0';
+  *separator = ':';
+  return valid;
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 string PrintPlanNodeType(const TPlanNodeType::type& type) {
   map<int, const char*>::const_iterator i;
   i = _TPlanNodeType_VALUES_TO_NAMES.find(type);
@@ -101,7 +228,11 @@ string PrintTuple(const Tuple* t, const TupleDescriptor& d) {
     } else {
       string value_str;
       RawValue::PrintValue(
+<<<<<<< HEAD
           t->GetSlot(slot_d->tuple_offset()), slot_d->type(), &value_str);
+=======
+          t->GetSlot(slot_d->tuple_offset()), slot_d->type(), -1, &value_str);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       out << value_str;
     }
   }
@@ -155,7 +286,41 @@ static double GetUnit(int64_t value, string* unit) {
   }
 }
 
+<<<<<<< HEAD
 string PrettyPrinter::Print(int64_t value, TCounterType::type type) {
+=======
+// Print the value (time in ms) to ss
+static void PrintTimeMS(int64_t value, stringstream* ss) {
+  if (value == 0 ) {
+    *ss << "0";
+  } else {
+    bool hour = false;
+    bool minute = false;
+    bool second = false;
+    if (value >= HOUR) {
+      *ss << value / HOUR << "h";
+      value %= HOUR;
+      hour = true;
+    }
+    if (value >= MINUTE) {
+      *ss << value / MINUTE << "m";
+      value %= MINUTE;
+      minute = true;
+    }
+    if (!hour && value >= SECOND) {
+      *ss << value / SECOND << "s";
+      value %= SECOND;
+      second = true;
+    }
+    if (!hour && !minute) {
+      if (second) *ss << setw(3) << setfill('0');
+      *ss << value << "ms";
+    }
+  }
+}
+
+string PrettyPrinter::Print(int64_t value, TCounterType::type type, bool verbose) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   stringstream ss;
   ss.flags(ios::fixed);
   switch (type) {
@@ -166,13 +331,21 @@ string PrettyPrinter::Print(int64_t value, TCounterType::type type) {
         ss << value;
       } else {
         ss << setprecision(PRECISION) << output << unit;
+<<<<<<< HEAD
+=======
+        if (verbose) ss << " (" << value << ")";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       }
       break;
     }
 
     case TCounterType::UNIT_PER_SECOND: {
       string unit;
+<<<<<<< HEAD
       double output = GetUnit(value, &unit); 
+=======
+      double output = GetUnit(value, &unit);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       if (output == 0) {
         ss << "0";
       } else {
@@ -181,6 +354,7 @@ string PrettyPrinter::Print(int64_t value, TCounterType::type type) {
       break;
     }
 
+<<<<<<< HEAD
     case TCounterType::CPU_TICKS:
       if (value < CpuInfo::cycles_per_ms()) {
         ss << (value / 1000) << "K clock cycles";
@@ -223,16 +397,68 @@ string PrettyPrinter::Print(int64_t value, TCounterType::type type) {
       string unit;
       double output = GetByteUnit(value, &unit); 
       ss << setprecision(PRECISION) << output << " " << unit;
+=======
+    case TCounterType::CPU_TICKS: {
+      if (value < CpuInfo::cycles_per_ms()) {
+        ss << (value / 1000) << "K clock cycles";
+      } else {
+        value /= CpuInfo::cycles_per_ms();
+        PrintTimeMS(value, &ss);
+      }
+      break;
+    }
+
+    case TCounterType::TIME_NS: {
+      if (value >= BILLION) {
+        // If the time is over a second, print it up to ms.
+        value /= MILLION;
+        PrintTimeMS(value, &ss);
+      } else if (value >= MILLION) {
+        // if the time is over a ms, print it up to microsecond in the unit of ms.
+        value /= 1000;
+        ss << value / 1000 << "." << value % 1000 << "ms";
+      } else if (value > 1000) {
+        // if the time is over a microsecond, print it using unit microsecond
+        ss << value / 1000 << "." << value % 1000 << "us";
+      } else {
+        ss << value << "ns";
+      }
+      break;
+    }
+
+    case TCounterType::BYTES: {
+      string unit;
+      double output = GetByteUnit(value, &unit);
+      if (output == 0) {
+        ss << "0";
+      } else {
+        ss << setprecision(PRECISION) << output << " " << unit;
+        if (verbose) ss << " (" << value << ")";
+      }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       break;
     }
 
     case TCounterType::BYTES_PER_SECOND: {
       string unit;
+<<<<<<< HEAD
       double output = GetByteUnit(value, &unit); 
+=======
+      double output = GetByteUnit(value, &unit);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       ss << setprecision(PRECISION) << output << " " << unit << "/sec";
       break;
     }
 
+<<<<<<< HEAD
+=======
+    case TCounterType::DOUBLE_VALUE: {
+      double output = *reinterpret_cast<double*>(&value);
+      ss << setprecision(PRECISION) << output << " ";
+      break;
+    }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     default:
       DCHECK(false);
       break;
@@ -248,12 +474,35 @@ string PrintBatch(RowBatch* batch) {
   return out.str();
 }
 
+<<<<<<< HEAD
 string GetVersionString() {
   stringstream ss;
   ss << google::ProgramInvocationShortName() 
      << " v" << Version::BUILD_VERSION 
      << " (build " << Version::BUILD_HASH << ")" << endl
      << "Built on " << Version::BUILD_TIME;
+=======
+string GetBuildVersion(bool compact) {
+  stringstream ss;
+  ss << IMPALA_BUILD_VERSION
+#ifdef NDEBUG
+     << " RELEASE"
+#else
+     << " DEBUG"
+#endif
+     << " (build " << IMPALA_BUILD_HASH
+     << ")";
+  if (!compact) {
+    ss << endl << "Built on " << IMPALA_BUILD_TIME;
+  }
+  return ss.str();
+}
+
+string GetVersionString(bool compact) {
+  stringstream ss;
+  ss << google::ProgramInvocationShortName()
+     << " version " << GetBuildVersion(compact);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return ss.str();
 }
 

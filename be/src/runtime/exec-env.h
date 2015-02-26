@@ -20,6 +20,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 
+<<<<<<< HEAD
 #include "exprs/timestamp-functions.h"
 #include "common/status.h"
 
@@ -40,6 +41,33 @@ class HdfsFsCache;
 class TestExecEnv;
 class Webserver;
 class Metrics;
+=======
+#include "common/status.h"
+#include "exprs/timestamp-functions.h"
+#include "runtime/client-cache.h"
+#include "util/cgroups-mgr.h"
+#include "util/hdfs-bulk-ops.h" // For declaration of HdfsOpThreadPool
+#include "resourcebroker/resource-broker.h"
+
+namespace impala {
+
+class DataStreamMgr;
+class DiskIoMgr;
+class HBaseTableFactory;
+class HdfsFsCache;
+class LibCache;
+class Scheduler;
+class StatestoreSubscriber;
+class TestExecEnv;
+class Webserver;
+class Metrics;
+class MemTracker;
+class ThreadResourceMgr;
+class CgroupsManager;
+class ImpalaServer;
+class RequestPoolService;
+class Frontend;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 // Execution environment for queries/plan fragments.
 // Contains all required global structures, and handles to
@@ -48,6 +76,7 @@ class Metrics;
 class ExecEnv {
  public:
   ExecEnv();
+<<<<<<< HEAD
   virtual ~ExecEnv();
 
   sparrow::SubscriptionManager* subscription_mgr() {
@@ -68,10 +97,57 @@ class ExecEnv {
     DCHECK(scheduler_.get() != NULL);
     return scheduler_.get();
   }
+=======
+
+  ExecEnv(const std::string& hostname, int backend_port, int subscriber_port,
+          int webserver_port, const std::string& statestore_host, int statestore_port);
+
+  // Returns the first created exec env instance. In a normal impalad, this is
+  // the only instance. In test setups with multiple ExecEnv's per process,
+  // we return the first instance.
+  static ExecEnv* GetInstance() { return exec_env_; }
+
+  // Empty destructor because the compiler-generated one requires full
+  // declarations for classes in scoped_ptrs.
+  virtual ~ExecEnv();
+
+  void SetImpalaServer(ImpalaServer* server) { impala_server_ = server; }
+
+  StatestoreSubscriber* statestore_subscriber() {
+    return statestore_subscriber_.get();
+  }
+
+  DataStreamMgr* stream_mgr() { return stream_mgr_.get(); }
+  ImpalaInternalServiceClientCache* impalad_client_cache() {
+    return impalad_client_cache_.get();
+  }
+  CatalogServiceClientCache* catalogd_client_cache() {
+    return catalogd_client_cache_.get();
+  }
+  HBaseTableFactory* htable_factory() { return htable_factory_.get(); }
+  DiskIoMgr* disk_io_mgr() { return disk_io_mgr_.get(); }
+  Webserver* webserver() { return webserver_.get(); }
+  Metrics* metrics() { return metrics_.get(); }
+  MemTracker* process_mem_tracker() { return mem_tracker_.get(); }
+  ThreadResourceMgr* thread_mgr() { return thread_mgr_.get(); }
+  CgroupsMgr* cgroups_mgr() { return cgroups_mgr_.get(); }
+  HdfsOpThreadPool* hdfs_op_thread_pool() { return hdfs_op_thread_pool_.get(); }
+  ImpalaServer* impala_server() { return impala_server_; }
+  Frontend* frontend() { return frontend_.get(); };
+
+  void set_enable_webserver(bool enable) { enable_webserver_ = enable; }
+
+  ResourceBroker* resource_broker() { return resource_broker_.get(); }
+  Scheduler* scheduler() { return scheduler_.get(); }
+  StatestoreSubscriber* subscriber() { return statestore_subscriber_.get(); }
+
+  const TNetworkAddress& backend_address() const { return backend_address_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Starts any dependent services in their correct order
   virtual Status StartServices();
 
+<<<<<<< HEAD
  protected:
   // Leave protected so that subclasses can override
   boost::scoped_ptr<DataStreamMgr> stream_mgr_;
@@ -83,11 +159,64 @@ class ExecEnv {
   boost::scoped_ptr<DiskIoMgr> disk_io_mgr_;
   boost::scoped_ptr<Webserver> webserver_;
   boost::scoped_ptr<Metrics> metrics_;
+=======
+  // Initializes the exec env for running FE tests.
+  Status InitForFeTests();
+
+  // Returns true if this environment was created from the FE tests. This makes the
+  // environment special since the JVM is started first and libraries are loaded
+  // differently.
+  bool is_fe_tests() { return is_fe_tests_; }
+
+  // Returns true if the Llama in use is pseudo-distributed, used for development
+  // purposes. The pseudo-distributed version has special requirements for specifying
+  // resource locations.
+  bool is_pseudo_distributed_llama() { return is_pseudo_distributed_llama_; }
+
+ protected:
+  // Leave protected so that subclasses can override
+  boost::scoped_ptr<DataStreamMgr> stream_mgr_;
+  boost::scoped_ptr<ResourceBroker> resource_broker_;
+  boost::scoped_ptr<Scheduler> scheduler_;
+  boost::scoped_ptr<StatestoreSubscriber> statestore_subscriber_;
+  boost::scoped_ptr<ImpalaInternalServiceClientCache> impalad_client_cache_;
+  boost::scoped_ptr<CatalogServiceClientCache> catalogd_client_cache_;
+  boost::scoped_ptr<HBaseTableFactory> htable_factory_;
+  boost::scoped_ptr<DiskIoMgr> disk_io_mgr_;
+  boost::scoped_ptr<Webserver> webserver_;
+  boost::scoped_ptr<Metrics> metrics_;
+  boost::scoped_ptr<MemTracker> mem_tracker_;
+  boost::scoped_ptr<ThreadResourceMgr> thread_mgr_;
+  boost::scoped_ptr<CgroupsMgr> cgroups_mgr_;
+  boost::scoped_ptr<HdfsOpThreadPool> hdfs_op_thread_pool_;
+  boost::scoped_ptr<RequestPoolService> request_pool_service_;
+  boost::scoped_ptr<Frontend> frontend_;
+
+  // Not owned by this class
+  ImpalaServer* impala_server_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   bool enable_webserver_;
 
  private:
+<<<<<<< HEAD
   TimezoneDatabase tz_database_;
+=======
+  static ExecEnv* exec_env_;
+  TimezoneDatabase tz_database_;
+  bool is_fe_tests_;
+
+  // Address of the Impala backend server instance
+  TNetworkAddress backend_address_;
+
+  // True if the cluster has set 'yarn.scheduler.include-port-in-node-name' to true,
+  // indicating that this cluster is pseudo-distributed. Should not be true in real
+  // deployments.
+  bool is_pseudo_distributed_llama_;
+
+  // Initialise cgroups manager, detect test RM environment and init resource broker.
+  void InitRm();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 } // namespace impala

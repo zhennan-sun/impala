@@ -1,0 +1,18 @@
+====
+---- QUERY
+select count(*) from functional_seq_snap.bad_seq_snap
+---- ERRORS
+
+Problem parsing file: hdfs://regex:.$
+  Expected: '6e 91 6 ec be 78 a0 ac 72 10 7e 41 b4 da 93 3c '
+  Actual:   '6e 91 6 78 78 78 a0 ac 72 10 7e 41 b4 da 93 3c '
+Problem parsing file: hdfs://regex:.$
+Problem parsing file: hdfs://regex:.$
+Problem parsing file: hdfs://regex:.$
+Problem parsing file: hdfs://regex:.$
+
+---- RESULTS
+9434
+---- TYPES
+bigint
+====

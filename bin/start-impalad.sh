@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 # Starts up a single Impalad with the specified command line arguments. An optional
 # -build_type parameter can be passed to determine the build type to use for the
 # impalad instance.
@@ -23,6 +24,26 @@ BUILD_TYPE=debug
 IMPALAD_ARGS=""
 
 # Everything except for -build_type should be passed an an Impalad argument
+=======
+# Starts up an impalad or a mini-impala-cluster with the specified command line
+# arguments. An optional -build_type parameter can be passed to determine the build
+# type to use for the impalad instance.
+
+set -e
+set -u
+
+BUILD_TYPE=debug
+IMPALAD_ARGS=""
+BINARY_BASE_DIR=${IMPALA_HOME}/be/build
+GDB_PREFIX=""
+IN_PROCESS_BINARY=testutil/mini-impala-cluster
+IMPALAD_BINARY=service/impalad
+BINARY=${IMPALAD_BINARY}
+JVM_DEBUG_PORT=""
+JVM_SUSPEND="n"
+JVM_ARGS=""
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 for ARG in $*
 do
   case "$ARG" in
@@ -36,9 +57,48 @@ do
       echo "Invalid build type. Valid values are: debug, release"
       exit 1
       ;;
+<<<<<<< HEAD
+=======
+    -in-process)
+      BINARY=${IN_PROCESS_BINARY}
+      ;;
+    -gdb)
+      echo "Starting Impala under gdb..."
+      GDB_PREFIX="gdb --args"
+      ;;
+    -jvm_debug_port=*)
+      JVM_DEBUG_PORT="${ARG#*=}"
+      ;;
+    -jvm_suspend)
+      JVM_SUSPEND="y"
+      ;;
+    -jvm_args=*)
+      JVM_ARGS="${ARG#*=}"
+      ;;
+    # Pass all other options as an Impalad argument
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     *)
       IMPALAD_ARGS="${IMPALAD_ARGS} ${ARG}"
   esac
 done
 
+<<<<<<< HEAD
 $IMPALA_HOME/be/build/${BUILD_TYPE}/service/impalad ${IMPALAD_ARGS}
+=======
+IMPALA_CMD=${BINARY_BASE_DIR}/${BUILD_TYPE}/${BINARY}
+
+# Temporarily disable unbound variable checking in case JAVA_TOOL_OPTIONS is not set.
+set +u
+# Optionally enable Java debugging.
+if [ -n "$JVM_DEBUG_PORT" ]; then
+  export JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,address=localhost:${JVM_DEBUG_PORT},server=y,suspend=${JVM_SUSPEND} ${JAVA_TOOL_OPTIONS}"
+fi
+# Optionally add additional JVM args.
+if [ -n "$JVM_ARGS" ]; then
+  export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS} ${JVM_ARGS}"
+fi
+set -u
+
+. ${IMPALA_HOME}/bin/set-classpath.sh
+exec ${GDB_PREFIX} ${IMPALA_CMD} ${IMPALAD_ARGS}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

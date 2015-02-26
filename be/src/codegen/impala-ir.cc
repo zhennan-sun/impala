@@ -18,11 +18,40 @@
 // All files here must be added explicitly to the codegen/CMakeLists.txt dependency list
 
 #ifdef IR_COMPILE
+<<<<<<< HEAD
 #include "exec/aggregation-node-ir.cc"
 #include "exec/hash-join-node-ir.cc"
 #include "exec/hdfs-scanner-ir.cc"
 #include "runtime/string-value-ir.cc"
 #include "util/hash-util-ir.cc"
+=======
+#include "codegen/codegen-anyval-ir.cc"
+#include "exec/aggregation-node-ir.cc"
+#include "exec/hash-join-node-ir.cc"
+#include "exec/hash-table-ir.cc"
+#include "exec/hdfs-avro-scanner-ir.cc"
+#include "exec/hdfs-scanner-ir.cc"
+#include "exec/partitioned-aggregation-node-ir.cc"
+#include "exec/partitioned-hash-join-node-ir.cc"
+#include "exprs/aggregate-functions.cc"
+#include "exprs/cast-functions.cc"
+#include "exprs/compound-predicates-ir.cc"
+#include "exprs/conditional-functions-ir.cc"
+#include "exprs/decimal-functions.cc"
+#include "exprs/decimal-operators.cc"
+#include "exprs/expr-ir.cc"
+#include "exprs/in-predicate-ir.cc"
+#include "exprs/is-null-predicate.cc"
+#include "exprs/math-functions.cc"
+#include "exprs/operators.cc"
+#include "exprs/string-functions.cc"
+#include "exprs/udf-builtins.cc"
+#include "exprs/utility-functions.cc"
+#include "udf/udf-ir.cc"
+#include "util/hash-util-ir.cc"
+#include "exprs/timestamp-functions.cc"
+#include "exprs/like-predicate.cc"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #else
 #error "This file should only be used for cross compiling to IR."
 #endif

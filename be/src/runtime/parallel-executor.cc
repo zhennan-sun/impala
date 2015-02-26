@@ -16,10 +16,17 @@
 
 #include <boost/thread/thread.hpp>
 
+<<<<<<< HEAD
+=======
+#include "util/stopwatch.h"
+#include "util/thread.h"
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 using namespace boost;
 using namespace impala;
 using namespace std;
 
+<<<<<<< HEAD
 Status ParallelExecutor::Exec(Function function, void** args, int num_args) {
   Status status;
   thread_group worker_threads;
@@ -30,16 +37,46 @@ Status ParallelExecutor::Exec(Function function, void** args, int num_args) {
             args[i], &lock, &status));
   }
   worker_threads.join_all();
+=======
+Status ParallelExecutor::Exec(Function function, void** args, int num_args,
+    StatsMetric<double>* latencies) {
+  Status status;
+  ThreadGroup worker_threads;
+  mutex lock;
+
+  for (int i = 0; i < num_args; ++i) {
+    stringstream ss;
+    ss << "worker-thread(" << i << ")";
+    worker_threads.AddThread(new Thread("parallel-executor", ss.str(),
+        &ParallelExecutor::Worker, function, args[i], &lock, &status, latencies));
+  }
+  worker_threads.JoinAll();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   return status;
 }
 
+<<<<<<< HEAD
 void ParallelExecutor::Worker(Function function, void* arg, mutex* lock, Status* status) {
+=======
+void ParallelExecutor::Worker(Function function, void* arg, mutex* lock, Status* status,
+    StatsMetric<double>* latencies) {
+  MonotonicStopWatch sw;
+  if (latencies != NULL) sw.Start();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   Status local_status = function(arg);
   if (!local_status.ok()) {
     unique_lock<mutex> l(*lock);
     if (status->ok()) *status = local_status;
   }
+<<<<<<< HEAD
 }
 
 
+=======
+
+  if (latencies != NULL) {
+    latencies->Update(sw.ElapsedTime() / (1000.0 * 1000.0 * 1000.0));
+  }
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

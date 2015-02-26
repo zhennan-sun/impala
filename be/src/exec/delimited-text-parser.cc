@@ -14,13 +14,17 @@
 
 #include "exec/delimited-text-parser.inline.h"
 
+<<<<<<< HEAD
 #include "exec/byte-stream.h"
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "exec/hdfs-scanner.h"
 #include "util/cpu-info.h"
 
 using namespace impala;
 using namespace std;
 
+<<<<<<< HEAD
 DelimitedTextParser::DelimitedTextParser(HdfsScanNode* scan_node,
                                          char tuple_delim,
                                          char field_delim,
@@ -28,19 +32,43 @@ DelimitedTextParser::DelimitedTextParser(HdfsScanNode* scan_node,
                                          char escape_char)
     : scan_node_(scan_node),
       field_delim_(field_delim),
+=======
+DelimitedTextParser::DelimitedTextParser(
+    int num_cols, int num_partition_keys, const bool* is_materialized_col,
+    char tuple_delim, char field_delim, char collection_item_delim, char escape_char)
+    : num_delims_(0),
+      field_delim_(field_delim),
+      process_escapes_(escape_char != '\0'),
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       escape_char_(escape_char),
       collection_item_delim_(collection_item_delim),
       tuple_delim_(tuple_delim),
       current_column_has_escape_(false),
       last_char_is_escape_(false),
       last_row_delim_offset_(-1),
+<<<<<<< HEAD
       is_materialized_col_(NULL),
       column_idx_(0) {
+=======
+      num_cols_(num_cols),
+      num_partition_keys_(num_partition_keys),
+      is_materialized_col_(is_materialized_col),
+      column_idx_(0) {
+  // Escape character should not be the same as tuple or col delim unless it is the
+  // empty delimiter.
+  DCHECK(escape_char == '\0' || escape_char != tuple_delim);
+  DCHECK(escape_char == '\0' || escape_char != field_delim);
+  DCHECK(escape_char == '\0' || escape_char != collection_item_delim);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Initialize the sse search registers.
   char search_chars[SSEUtil::CHARS_PER_128_BIT_REGISTER];
   memset(search_chars, 0, sizeof(search_chars));
+<<<<<<< HEAD
   if (escape_char_ != '\0') {
+=======
+  if (process_escapes_) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     search_chars[0] = escape_char_;
     xmm_escape_search_ = _mm_loadu_si128(reinterpret_cast<__m128i*>(search_chars));
 
@@ -61,16 +89,25 @@ DelimitedTextParser::DelimitedTextParser(HdfsScanNode* scan_node,
     memset(low_mask_, 0, sizeof(low_mask_));
   }
 
+<<<<<<< HEAD
   int num_delims = 0;
   if (tuple_delim != '\0') {
     search_chars[num_delims++] = tuple_delim_;
     // Hive will treats \r (^M) as an alternate tuple delimiter, but \r\n is a
     // single tuple delimiter.
     if (tuple_delim_ == '\n') search_chars[num_delims++] = '\r';
+=======
+  if (tuple_delim != '\0') {
+    search_chars[num_delims_++] = tuple_delim_;
+    // Hive will treats \r (^M) as an alternate tuple delimiter, but \r\n is a
+    // single tuple delimiter.
+    if (tuple_delim_ == '\n') search_chars[num_delims_++] = '\r';
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     xmm_tuple_search_ = _mm_loadu_si128(reinterpret_cast<__m128i*>(search_chars));
   }
 
   if (field_delim != '\0' || collection_item_delim != '\0') {
+<<<<<<< HEAD
     search_chars[num_delims++] = field_delim_;
     search_chars[num_delims++] = collection_item_delim_;
   }
@@ -93,24 +130,46 @@ DelimitedTextParser::DelimitedTextParser(HdfsScanNode* scan_node,
 
 DelimitedTextParser::~DelimitedTextParser() {
   delete[] is_materialized_col_;
+=======
+    search_chars[num_delims_++] = field_delim_;
+    search_chars[num_delims_++] = collection_item_delim_;
+  }
+
+  DCHECK_GT(num_delims_, 0);
+  xmm_delim_search_ = _mm_loadu_si128(reinterpret_cast<__m128i*>(search_chars));
+
+  ParserReset();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 void DelimitedTextParser::ParserReset() {
   current_column_has_escape_ = false;
   last_char_is_escape_ = false;
   last_row_delim_offset_ = -1;
+<<<<<<< HEAD
   column_idx_ = scan_node_->num_partition_keys();
+=======
+  column_idx_ = num_partition_keys_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 // Parsing raw csv data into FieldLocation descriptors.
 Status DelimitedTextParser::ParseFieldLocations(int max_tuples, int64_t remaining_len,
+<<<<<<< HEAD
     char** byte_buffer_ptr, char** row_end_locations, 
+=======
+    char** byte_buffer_ptr, char** row_end_locations,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     FieldLocation* field_locations,
     int* num_tuples, int* num_fields, char** next_column_start) {
   // Start of this batch.
   *next_column_start = *byte_buffer_ptr;
   // If there was a '\r' at the end of the last batch, set the offset to
+<<<<<<< HEAD
   // just before the begining. Otherwise make it invalid.
+=======
+  // just before the beginning. Otherwise make it invalid.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (last_row_delim_offset_ == 0) {
     last_row_delim_offset_ = remaining_len;
   } else {
@@ -118,17 +177,29 @@ Status DelimitedTextParser::ParseFieldLocations(int max_tuples, int64_t remainin
   }
 
   if (CpuInfo::IsSupported(CpuInfo::SSE4_2)) {
+<<<<<<< HEAD
     if (escape_char_ == '\0') {
       ParseSse<false>(max_tuples, &remaining_len, byte_buffer_ptr, row_end_locations,
           field_locations, num_tuples, num_fields, next_column_start);
     } else {
       ParseSse<true>(max_tuples, &remaining_len, byte_buffer_ptr, row_end_locations,
+=======
+    if (process_escapes_) {
+      ParseSse<true>(max_tuples, &remaining_len, byte_buffer_ptr, row_end_locations,
+          field_locations, num_tuples, num_fields, next_column_start);
+    } else {
+      ParseSse<false>(max_tuples, &remaining_len, byte_buffer_ptr, row_end_locations,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
           field_locations, num_tuples, num_fields, next_column_start);
     }
   }
 
   if (*num_tuples == max_tuples) return Status::OK;
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Handle the remaining characters
   while (remaining_len > 0) {
     bool new_tuple = false;
@@ -145,7 +216,11 @@ Status DelimitedTextParser::ParseFieldLocations(int max_tuples, int64_t remainin
       }
     }
 
+<<<<<<< HEAD
     if (**byte_buffer_ptr == escape_char_) {
+=======
+    if (process_escapes_ && **byte_buffer_ptr == escape_char_) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       current_column_has_escape_ = true;
       last_char_is_escape_ = !last_char_is_escape_;
     } else {
@@ -160,7 +235,11 @@ Status DelimitedTextParser::ParseFieldLocations(int max_tuples, int64_t remainin
         AddColumn<true>(*byte_buffer_ptr - *next_column_start,
             next_column_start, num_fields, field_locations);
         FillColumns<false>(0, NULL, num_fields, field_locations);
+<<<<<<< HEAD
         column_idx_ = scan_node_->num_partition_keys();
+=======
+        column_idx_ = num_partition_keys_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         row_end_locations[*num_tuples] = *byte_buffer_ptr;
         ++(*num_tuples);
       }
@@ -187,7 +266,11 @@ Status DelimitedTextParser::ParseFieldLocations(int max_tuples, int64_t remainin
     AddColumn<true>(*byte_buffer_ptr - *next_column_start,
         next_column_start, num_fields, field_locations);
     FillColumns<false>(0, NULL, num_fields, field_locations);
+<<<<<<< HEAD
     column_idx_ = scan_node_->num_partition_keys();
+=======
+    column_idx_ = num_partition_keys_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     ++(*num_tuples);
   }
   return Status::OK;
@@ -201,13 +284,18 @@ int DelimitedTextParser::FindFirstInstance(const char* buffer, int len) {
   const char* buffer_start = buffer;
   bool found = false;
 
+<<<<<<< HEAD
   // If the last char in the previous buffer was \r then either return the start of 
+=======
+  // If the last char in the previous buffer was \r then either return the start of
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // this buffer or skip a \n at the beginning of the buffer.
   if (last_row_delim_offset_ != -1) {
     if (*buffer_start == '\n') return 1;
     return 0;
   }
 restart:
+<<<<<<< HEAD
   if (CpuInfo::IsSupported(CpuInfo::SSE4_2)) {
     __m128i xmm_buffer, xmm_tuple_mask;
     while (tuple_start < len) {
@@ -223,6 +311,21 @@ restart:
       // takes a chr_count and can search less than 16 bytes at a time.
       xmm_tuple_mask =
           _mm_cmpestrm(xmm_tuple_search_, 1, xmm_buffer, chr_count, SSEUtil::STRCHR_MODE);
+=======
+  found = false;
+
+  if (CpuInfo::IsSupported(CpuInfo::SSE4_2)) {
+    __m128i xmm_buffer, xmm_tuple_mask;
+    while (len - tuple_start >= SSEUtil::CHARS_PER_128_BIT_REGISTER) {
+      // TODO: can we parallelize this as well?  Are there multiple sse execution units?
+      // Load the next 16 bytes into the xmm register and do strchr for the
+      // tuple delimiter.
+      xmm_buffer = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
+      // This differs from ParseSse by using the slower cmpestrm instruction which
+      // takes a chr_count and can search less than 16 bytes at a time.
+      xmm_tuple_mask = _mm_cmpestrm(xmm_tuple_search_, 1, xmm_buffer,
+          SSEUtil::CHARS_PER_128_BIT_REGISTER, SSEUtil::STRCHR_MODE);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       int tuple_mask = _mm_extract_epi16(xmm_tuple_mask, 0);
       if (tuple_mask != 0) {
         found = true;
@@ -235,6 +338,7 @@ restart:
         }
         break;
       }
+<<<<<<< HEAD
       tuple_start += chr_count;
       buffer += chr_count;
     }
@@ -243,13 +347,30 @@ restart:
       char c = *buffer++;
       if (c == tuple_delim_ || (c == '\r' && tuple_delim_ == '\n')) {
         tuple_start = i + 1;
+=======
+      tuple_start += SSEUtil::CHARS_PER_128_BIT_REGISTER;
+      buffer += SSEUtil::CHARS_PER_128_BIT_REGISTER;
+    }
+  }
+  if (!found) {
+    for (; tuple_start < len; ++tuple_start) {
+      char c = *buffer++;
+      if (c == tuple_delim_ || (c == '\r' && tuple_delim_ == '\n')) {
+        ++tuple_start;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         found = true;
         break;
       }
     }
   }
 
+<<<<<<< HEAD
   if (escape_char_ != '\0') {
+=======
+  if (!found) return -1;
+
+  if (process_escapes_) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     // Scan backwards for escape characters.  We do this after
     // finding the tuple break rather than during the (above)
     // forward scan to make the forward scan faster.  This will
@@ -265,7 +386,11 @@ restart:
         break;
       }
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     // TODO: This sucks.  All the preceding characters before the tuple delim were
     // escape characters.  We need to read from the previous block to see what to do.
     if (before_tuple_end < 0) {
@@ -274,30 +399,45 @@ restart:
         LOG(WARNING) << "Unhandled code path.  This might cause a tuple to be "
                      << "skipped or repeated.";
         warning_logged = true;
+<<<<<<< HEAD
         return tuple_start;
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       }
     }
 
     // An even number of escape characters means they cancel out and this tuple break
     // is *not* escaped.
+<<<<<<< HEAD
     if (num_escape_chars % 2 != 0) {
       goto restart;
     }
   }
 
   if (!found) return -1;
+=======
+    if (num_escape_chars % 2 != 0) goto restart;
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (tuple_start == len - 1 && buffer_start[tuple_start] == '\r') {
     // If \r is the last char we need to wait to see if the next one is \n or not.
     last_row_delim_offset_ = 0;
     return -1;
   }
+<<<<<<< HEAD
   if (buffer_start[tuple_start] == '\n' && buffer_start[tuple_start - 1] == '\r') {
+=======
+  if (tuple_start < len && buffer_start[tuple_start] == '\n' &&
+      buffer_start[tuple_start - 1] == '\r') {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     // We have \r\n, move to the next character.
     ++tuple_start;
   }
   return tuple_start;
 }
 
+<<<<<<< HEAD
 // The start of the sync block is specified by an integer of -1.
 // By setting the tuple delimiter to 0xff we can do a fast search of the
 // bytes till we find a -1 and then look for 3 more -1 bytes which will make up
@@ -391,3 +531,5 @@ Status DelimitedTextParser::FindSyncBlock(int end_of_range, int sync_size,
 
 }
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

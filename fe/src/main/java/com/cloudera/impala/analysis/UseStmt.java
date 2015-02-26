@@ -14,6 +14,7 @@
 
 package com.cloudera.impala.analysis;
 
+<<<<<<< HEAD
 import com.cloudera.impala.common.AnalysisException;
 import com.cloudera.impala.common.InternalException;
 
@@ -41,5 +42,41 @@ public class UseStmt extends ParseNodeBase {
 
   public void analyze(Analyzer analyzer) throws AnalysisException, InternalException {
     // USE is completely ignored for now
+=======
+import com.cloudera.impala.authorization.Privilege;
+import com.cloudera.impala.catalog.Catalog;
+import com.cloudera.impala.common.AnalysisException;
+import com.cloudera.impala.thrift.TUseDbParams;
+
+/**
+ * Representation of a USE db statement.
+ */
+public class UseStmt extends StatementBase {
+  private final String database_;
+
+  public UseStmt(String db) {
+    database_ = db;
+  }
+
+  public String getDatabase() { return database_; }
+
+  @Override
+  public String toSql() {
+    return "USE " + database_;
+  }
+
+  @Override
+  public void analyze(Analyzer analyzer) throws AnalysisException {
+    if (!database_.equalsIgnoreCase(Catalog.DEFAULT_DB)) {
+      // USE <default> should always be allowed.
+      analyzer.getDb(database_, Privilege.ANY);
+    }
+  }
+
+  public TUseDbParams toThrift() {
+    TUseDbParams params = new TUseDbParams();
+    params.setDb(getDatabase());
+    return params;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }

@@ -16,9 +16,15 @@
 #include <gtest/gtest.h>
 
 #include "runtime/mem-pool.h"
+<<<<<<< HEAD
 #include "runtime/string-buffer.h"
 
 
+=======
+#include "runtime/mem-tracker.h"
+#include "runtime/string-buffer.h"
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 using namespace std;
 
 namespace impala {
@@ -32,7 +38,12 @@ void ValidateString(const string& std_str, const StringBuffer& str) {
 }
 
 TEST(StringBufferTest, Basic) {
+<<<<<<< HEAD
   MemPool pool;
+=======
+  MemTracker tracker;
+  MemPool pool(&tracker);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   StringBuffer str(&pool);
   string std_str;
 
@@ -58,7 +69,11 @@ TEST(StringBufferTest, Basic) {
   std_str.assign("foo");
   str.Assign("foo", strlen("foo"));
   ValidateString(std_str, str);
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Clear
   std_str.clear();
   str.Clear();
@@ -66,6 +81,11 @@ TEST(StringBufferTest, Basic) {
 
   // Underlying buffer size should be the length of the max string during the test.
   EXPECT_EQ(str.buffer_size(), strlen("HelloWorld"));
+<<<<<<< HEAD
+=======
+
+  pool.FreeAll();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 }

@@ -22,13 +22,31 @@
 #include <string>
 
 #include "common/logging.h"
+<<<<<<< HEAD
 
 namespace impala {
 
+=======
+#include "util/runtime-profile.h"
+
+namespace impala {
+
+class MemTracker;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // A MemPool maintains a list of memory chunks from which it allocates memory in
 // response to Allocate() calls;
 // Chunks stay around for the lifetime of the mempool or until they are passed on to
 // another mempool.
+<<<<<<< HEAD
+=======
+//
+// The caller registers a MemTracker with the pool; chunk allocations are counted
+// against that tracker and all of its ancestors. If chunks get moved between pools
+// during AcquireData() calls, the respective MemTrackers are updated accordingly.
+// Chunks freed up in the d'tor are subtracted from the registered trackers.
+//
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // An Allocate() call will attempt to allocate memory from the chunk that was most
 // recently added; if that chunk doesn't have enough memory to
 // satisfy the allocation request, the free chunks are searched for one that is
@@ -60,13 +78,19 @@ namespace impala {
 //      MemPool* p2 = new MemPool();
 // the new mempool receives all chunks containing data from p
 //      p2->AcquireData(p, false);
+<<<<<<< HEAD
 // At this point p.total_allocated_bytes_ would be 0 while p.peak_allocated_bytes_ 
 // remains unchanged. 
+=======
+// At this point p.total_allocated_bytes_ would be 0 while p.peak_allocated_bytes_
+// remains unchanged.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // The one remaining (empty) chunk is released:
 //    delete p;
 
 class MemPool {
  public:
+<<<<<<< HEAD
   MemPool();
 
   // Allocates mempool with fixed-size chunks of size 'chunk_size'.
@@ -80,12 +104,23 @@ class MemPool {
   MemPool(const std::vector<std::string>& chunks);
 
   // Frees all chunks of memory.
+=======
+  // Allocates mempool with fixed-size chunks of size 'chunk_size'.
+  // Chunk_size must be >= 0; 0 requests automatic doubling of chunk sizes,
+  // up to a limit.
+  // 'tracker' tracks the amount of memory allocated by this pool. Must not be NULL.
+  MemPool(MemTracker* mem_tracker, int chunk_size = 0);
+
+  // Frees all chunks of memory and subtracts the total allocated bytes
+  // from the registered limits.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   ~MemPool();
 
   // Allocates 8-byte aligned section of memory of 'size' bytes at the end
   // of the the current chunk. Creates a new chunk if there aren't any chunks
   // with enough capacity.
   uint8_t* Allocate(int size) {
+<<<<<<< HEAD
     if (size == 0) return NULL;
 
     int num_bytes = ((size + 7) / 8) * 8;  // round up to nearest 8 bytes
@@ -103,6 +138,30 @@ class MemPool {
     DCHECK_LE(current_chunk_idx_, chunks_.size() - 1);
     peak_allocated_bytes_ = std::max(total_allocated_bytes_, peak_allocated_bytes_);
     return result;
+=======
+    return Allocate<false>(size);
+  }
+
+  // Same as Allocate() except the mem limit is checked before the allocation and
+  // this call will fail (returns NULL) if it does.
+  // The caller must handle the NULL case. This should be used for allocations
+  // where the size can be very big to bound the amount by which we exceed mem limits.
+  uint8_t* TryAllocate(int size) {
+    return Allocate<true>(size);
+  }
+
+  // Returns 'byte_size' to the current chunk back to the mem pool. This can
+  // only be used to return either all or part of the previous allocation returned
+  // by Allocate().
+  void ReturnPartialAllocation(int byte_size) {
+    DCHECK_GE(byte_size, 0);
+    DCHECK(current_chunk_idx_ != -1);
+    ChunkInfo& info = chunks_[current_chunk_idx_];
+    DCHECK(info.owns_data);
+    DCHECK_GE(info.allocated_bytes, byte_size);
+    info.allocated_bytes -= byte_size;
+    total_allocated_bytes_ -= byte_size;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   // Makes all allocated chunks available for re-use, but doesn't delete any chunks.
@@ -117,6 +176,13 @@ class MemPool {
     DCHECK(CheckIntegrity(false));
   }
 
+<<<<<<< HEAD
+=======
+  // Deletes all allocated chunks. FreeAll() or AcquireData() must be called for
+  // each mem pool
+  void FreeAll();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Absorb all chunks that hold data from src. If keep_current is true, let src hold on
   // to its last allocated chunk that contains data.
   // All offsets handed out by calls to GetOffset()/GetCurrentOffset() for 'src'
@@ -134,6 +200,11 @@ class MemPool {
 
   int64_t total_allocated_bytes() const { return total_allocated_bytes_; }
   int64_t peak_allocated_bytes() const { return peak_allocated_bytes_; }
+<<<<<<< HEAD
+=======
+  int64_t total_reserved_bytes() const { return total_reserved_bytes_; }
+  MemTracker* mem_tracker() { return mem_tracker_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Return sum of chunk_sizes_.
   int64_t GetTotalChunkSizes() const;
@@ -156,14 +227,23 @@ class MemPool {
 
   // Print allocated bytes from all chunks.
   std::string DebugPrint();
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // TODO: make a macro for doing this
   // For C++/IR interop, we need to be able to look up types by name.
   static const char* LLVM_CLASS_NAME;
 
  private:
+<<<<<<< HEAD
   static const int DEFAULT_INITIAL_CHUNK_SIZE = 4 * 1024;
   static const int MAX_CHUNK_SIZE = 512 * 1024;
+=======
+  friend class MemPoolTest;
+  static const int DEFAULT_INITIAL_CHUNK_SIZE = 4 * 1024;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   struct ChunkInfo {
     bool owns_data;  // true if we eventually need to dealloc data
@@ -178,12 +258,16 @@ class MemPool {
     // bytes allocated via Allocate() in this chunk
     int allocated_bytes;
 
+<<<<<<< HEAD
     explicit ChunkInfo(int size)
       : owns_data(true),
         data(new uint8_t[size]),
         size(size),
         cumulative_allocated_bytes(0),
         allocated_bytes(0) {}
+=======
+    explicit ChunkInfo(int size);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
     ChunkInfo()
       : owns_data(true),
@@ -212,12 +296,30 @@ class MemPool {
   // Maximum number of bytes allocated from this pool at one time.
   int64_t peak_allocated_bytes_;
 
+<<<<<<< HEAD
   std::vector<ChunkInfo> chunks_;
 
   // Find or allocated a chunk with at least min_size spare capacity and update
   // current_chunk_idx_. Also updates chunks_, chunk_sizes_ and allocated_bytes_
   // if a new chunk needs to be created.
   void FindChunk(int min_size);
+=======
+  // sum of all bytes allocated in chunks_
+  int64_t total_reserved_bytes_;
+
+  std::vector<ChunkInfo> chunks_;
+
+  // The current and peak memory footprint of this pool. This is different from
+  // total allocated_bytes_ since it includes bytes in chunks that are not used.
+  MemTracker* mem_tracker_;
+
+  // Find or allocated a chunk with at least min_size spare capacity and update
+  // current_chunk_idx_. Also updates chunks_, chunk_sizes_ and allocated_bytes_
+  // if a new chunk needs to be created.
+  // If check_limits is true, this call can fail (returns false) if adding a
+  // new chunk exceeds the mem limits.
+  bool FindChunk(int min_size, bool check_limits);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Check integrity of the supporting data structures; always returns true but DCHECKs
   // all invariants.
@@ -232,6 +334,35 @@ class MemPool {
     if (current_chunk_idx_ == -1) return 0;
     return chunks_[current_chunk_idx_].allocated_bytes;
   }
+<<<<<<< HEAD
+=======
+
+  template <bool CHECK_LIMIT_FIRST>
+  uint8_t* Allocate(int size) {
+    if (size == 0) return NULL;
+
+    int num_bytes = ((size + 7) / 8) * 8;  // round up to nearest 8 bytes
+    if (current_chunk_idx_ == -1
+        || num_bytes + chunks_[current_chunk_idx_].allocated_bytes
+          > chunks_[current_chunk_idx_].size) {
+      if (CHECK_LIMIT_FIRST) {
+        // If we couldn't allocate a new chunk, return NULL.
+        if (!FindChunk(num_bytes, true)) return NULL;
+      } else {
+        FindChunk(num_bytes, false);
+      }
+    }
+    ChunkInfo& info = chunks_[current_chunk_idx_];
+    DCHECK(info.owns_data);
+    uint8_t* result = info.data + info.allocated_bytes;
+    DCHECK_LE(info.allocated_bytes + num_bytes, info.size);
+    info.allocated_bytes += num_bytes;
+    total_allocated_bytes_ += num_bytes;
+    DCHECK_LE(current_chunk_idx_, chunks_.size() - 1);
+    peak_allocated_bytes_ = std::max(total_allocated_bytes_, peak_allocated_bytes_);
+    return result;
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 inline

@@ -26,13 +26,21 @@ namespace impala {
 
 const int RawValue::ASCII_PRECISION = 16; // print 16 digits for double/float
 
+<<<<<<< HEAD
 void RawValue::PrintValueAsBytes(const void* value, PrimitiveType type,
+=======
+void RawValue::PrintValueAsBytes(const void* value, const ColumnType& type,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
                                  stringstream* stream) {
   if (value == NULL) return;
 
   const char* chars = reinterpret_cast<const char*>(value);
   const StringValue* string_val = NULL;
+<<<<<<< HEAD
   switch (type) {
+=======
+  switch (type.type) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     case TYPE_BOOLEAN:
       stream->write(chars, sizeof(bool));
       return;
@@ -55,6 +63,7 @@ void RawValue::PrintValueAsBytes(const void* value, PrimitiveType type,
       stream->write(chars, sizeof(double));
       break;
     case TYPE_STRING:
+<<<<<<< HEAD
       string_val = reinterpret_cast<const StringValue*>(value);
       stream->write(static_cast<char*>(string_val->ptr), string_val->len);
       return;
@@ -113,6 +122,28 @@ void RawValue::PrintValue(const void* value, PrimitiveType type, stringstream* s
 }
 
 void RawValue::PrintValue(const void* value, PrimitiveType type, string* str) {
+=======
+    case TYPE_VARCHAR:
+      string_val = reinterpret_cast<const StringValue*>(value);
+      stream->write(static_cast<char*>(string_val->ptr), string_val->len);
+      break;
+    case TYPE_TIMESTAMP:
+      stream->write(chars, TimestampValue::Size());
+      break;
+    case TYPE_CHAR:
+      stream->write(StringValue::CharSlotToPtr(chars, type), type.len);
+      break;
+    case TYPE_DECIMAL:
+      stream->write(chars, type.GetByteSize());
+      break;
+    default:
+      DCHECK(false) << "bad RawValue::PrintValue() type: " << type.DebugString();
+  }
+}
+
+void RawValue::PrintValue(const void* value, const ColumnType& type, int scale,
+                          string* str) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (value == NULL) {
     *str = "NULL";
     return;
@@ -125,52 +156,108 @@ void RawValue::PrintValue(const void* value, PrimitiveType type, string* str) {
   bool val;
 
   // Special case types that we can print more efficiently without using a stringstream
+<<<<<<< HEAD
   switch (type) {
+=======
+  switch (type.type) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     case TYPE_BOOLEAN:
       val = *reinterpret_cast<const bool*>(value);
       *str = (val ? "true" : "false");
       return;
     case TYPE_STRING:
+<<<<<<< HEAD
+=======
+    case TYPE_VARCHAR:
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       string_val = reinterpret_cast<const StringValue*>(value);
       tmp.assign(static_cast<char*>(string_val->ptr), string_val->len);
       str->swap(tmp);
       return;
+<<<<<<< HEAD
     default:
       PrintValue(value, type, &out);
+=======
+    case TYPE_CHAR:
+      *str = string(StringValue::CharSlotToPtr(value, type), type.len);
+      return;
+    default:
+      PrintValue(value, type, scale, &out);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
   *str = out.str();
 }
 
+<<<<<<< HEAD
 int RawValue::Compare(const void* v1, const void* v2, PrimitiveType type) {
+=======
+int RawValue::Compare(const void* v1, const void* v2, const ColumnType& type) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   const StringValue* string_value1;
   const StringValue* string_value2;
   const TimestampValue* ts_value1;
   const TimestampValue* ts_value2;
   float f1, f2;
   double d1, d2;
+<<<<<<< HEAD
   switch (type) {
+=======
+  int32_t i1, i2;
+  int64_t b1, b2;
+  switch (type.type) {
+    case TYPE_NULL:
+      return 0;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     case TYPE_BOOLEAN:
       return *reinterpret_cast<const bool*>(v1) - *reinterpret_cast<const bool*>(v2);
     case TYPE_TINYINT:
       return *reinterpret_cast<const int8_t*>(v1) - *reinterpret_cast<const int8_t*>(v2);
     case TYPE_SMALLINT:
+<<<<<<< HEAD
       return *reinterpret_cast<const int16_t*>(v1) - *reinterpret_cast<const int16_t*>(v2);
     case TYPE_INT:
       return *reinterpret_cast<const int32_t*>(v1) - *reinterpret_cast<const int32_t*>(v2);
     case TYPE_BIGINT:
       // TODO: overflow issues?
       return *reinterpret_cast<const int64_t*>(v1) - *reinterpret_cast<const int64_t*>(v2);
+=======
+      return *reinterpret_cast<const int16_t*>(v1) -
+             *reinterpret_cast<const int16_t*>(v2);
+    case TYPE_INT:
+      i1 = *reinterpret_cast<const int32_t*>(v1);
+      i2 = *reinterpret_cast<const int32_t*>(v2);
+      return i1 > i2 ? 1 : (i1 < i2 ? -1 : 0);
+    case TYPE_BIGINT:
+      b1 = *reinterpret_cast<const int64_t*>(v1);
+      b2 = *reinterpret_cast<const int64_t*>(v2);
+      return b1 > b2 ? 1 : (b1 < b2 ? -1 : 0);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     case TYPE_FLOAT:
       // TODO: can this be faster? (just returning the difference has underflow problems)
       f1 = *reinterpret_cast<const float*>(v1);
       f2 = *reinterpret_cast<const float*>(v2);
+<<<<<<< HEAD
+=======
+      if (isnan(f1) && isnan(f2)) return 0;
+      if (isnan(f1)) return -1;
+      if (isnan(f2)) return 1;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       return f1 > f2 ? 1 : (f1 < f2 ? -1 : 0);
     case TYPE_DOUBLE:
       // TODO: can this be faster?
       d1 = *reinterpret_cast<const double*>(v1);
       d2 = *reinterpret_cast<const double*>(v2);
+<<<<<<< HEAD
       return d1 > d2 ? 1 : (d1 < d2 ? -1 : 0);
     case TYPE_STRING:
+=======
+      if (isnan(d1) && isnan(d2)) return 0;
+      if (isnan(d1)) return -1;
+      if (isnan(d2)) return 1;
+      return d1 > d2 ? 1 : (d1 < d2 ? -1 : 0);
+    case TYPE_STRING:
+    case TYPE_VARCHAR:
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       string_value1 = reinterpret_cast<const StringValue*>(v1);
       string_value2 = reinterpret_cast<const StringValue*>(v2);
       return string_value1->Compare(*string_value2);
@@ -178,12 +265,40 @@ int RawValue::Compare(const void* v1, const void* v2, PrimitiveType type) {
       ts_value1 = reinterpret_cast<const TimestampValue*>(v1);
       ts_value2 = reinterpret_cast<const TimestampValue*>(v2);
       return *ts_value1 > *ts_value2 ? 1 : (*ts_value1 < *ts_value2 ? -1 : 0);
+<<<<<<< HEAD
     default:
       DCHECK(false) << "invalid type: " << TypeToString(type);
+=======
+    case TYPE_CHAR: {
+      const char* v1ptr = StringValue::CharSlotToPtr(v1, type);
+      const char* v2ptr = StringValue::CharSlotToPtr(v2, type);
+      int64_t l1 = StringValue::UnpaddedCharLength(v1ptr, type.len);
+      int64_t l2 = StringValue::UnpaddedCharLength(v2ptr, type.len);
+      return StringCompare(v1ptr, l1, v2ptr, l2, std::min(l1, l2));
+    }
+    case TYPE_DECIMAL:
+      switch (type.GetByteSize()) {
+        case 4:
+          return reinterpret_cast<const Decimal4Value*>(v1)->Compare(
+                 *reinterpret_cast<const Decimal4Value*>(v2));
+        case 8:
+          return reinterpret_cast<const Decimal8Value*>(v1)->Compare(
+                 *reinterpret_cast<const Decimal8Value*>(v2));
+        case 16:
+          return reinterpret_cast<const Decimal16Value*>(v1)->Compare(
+                 *reinterpret_cast<const Decimal16Value*>(v2));
+        default:
+          DCHECK(false) << type;
+          return 0;
+      }
+    default:
+      DCHECK(false) << "invalid type: " << type.DebugString();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       return 0;
   };
 }
 
+<<<<<<< HEAD
 void RawValue::Write(const void* value, void* dst, PrimitiveType type, MemPool* pool) {
   DCHECK(value != NULL);
   
@@ -224,6 +339,51 @@ void RawValue::Write(const void* value, void* dst, PrimitiveType type, MemPool* 
       const StringValue* src = reinterpret_cast<const StringValue*>(value);
       StringValue* dest = reinterpret_cast<StringValue*>(dst);
       dest->len = src->len;
+=======
+void RawValue::Write(const void* value, void* dst, const ColumnType& type,
+    MemPool* pool) {
+  DCHECK(value != NULL);
+  switch (type.type) {
+    case TYPE_NULL:
+      break;
+    case TYPE_BOOLEAN:
+      *reinterpret_cast<bool*>(dst) = *reinterpret_cast<const bool*>(value);
+      break;
+    case TYPE_TINYINT:
+      *reinterpret_cast<int8_t*>(dst) = *reinterpret_cast<const int8_t*>(value);
+      break;
+    case TYPE_SMALLINT:
+      *reinterpret_cast<int16_t*>(dst) = *reinterpret_cast<const int16_t*>(value);
+      break;
+    case TYPE_INT:
+      *reinterpret_cast<int32_t*>(dst) = *reinterpret_cast<const int32_t*>(value);
+      break;
+    case TYPE_BIGINT:
+      *reinterpret_cast<int64_t*>(dst) = *reinterpret_cast<const int64_t*>(value);
+      break;
+    case TYPE_FLOAT:
+      *reinterpret_cast<float*>(dst) = *reinterpret_cast<const float*>(value);
+      break;
+    case TYPE_DOUBLE:
+      *reinterpret_cast<double*>(dst) = *reinterpret_cast<const double*>(value);
+      break;
+    case TYPE_TIMESTAMP:
+      *reinterpret_cast<TimestampValue*>(dst) =
+          *reinterpret_cast<const TimestampValue*>(value);
+      break;
+    case TYPE_STRING:
+    case TYPE_VARCHAR:
+    case TYPE_CHAR: {
+      if (!type.IsVarLen()) {
+        DCHECK_EQ(type.type, TYPE_CHAR);
+        memcpy(StringValue::CharSlotToPtr(dst, type), value, type.len);
+        break;
+      }
+      const StringValue* src = reinterpret_cast<const StringValue*>(value);
+      StringValue* dest = reinterpret_cast<StringValue*>(dst);
+      dest->len = src->len;
+      if (type.type == TYPE_VARCHAR) DCHECK_LE(dest->len, type.len);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       if (pool != NULL) {
         dest->ptr = reinterpret_cast<char*>(pool->Allocate(dest->len));
         memcpy(dest->ptr, src->ptr, dest->len);
@@ -232,8 +392,71 @@ void RawValue::Write(const void* value, void* dst, PrimitiveType type, MemPool* 
       }
       break;
     }
+<<<<<<< HEAD
     default:
       DCHECK(false) << "RawValue::Write(): bad type: " << TypeToString(type);
+=======
+    case TYPE_DECIMAL:
+      memcpy(dst, value, type.GetByteSize());
+      break;
+    default:
+      DCHECK(false) << "RawValue::Write(): bad type: " << type.DebugString();
+  }
+}
+
+// TODO: can we remove some of this code duplication? Templated allocator?
+void RawValue::Write(const void* value, const ColumnType& type,
+    void* dst, uint8_t** buf) {
+  DCHECK(value != NULL);
+  switch (type.type) {
+    case TYPE_BOOLEAN:
+      *reinterpret_cast<bool*>(dst) = *reinterpret_cast<const bool*>(value);
+      break;
+    case TYPE_TINYINT:
+      *reinterpret_cast<int8_t*>(dst) = *reinterpret_cast<const int8_t*>(value);
+      break;
+    case TYPE_SMALLINT:
+      *reinterpret_cast<int16_t*>(dst) = *reinterpret_cast<const int16_t*>(value);
+      break;
+    case TYPE_INT:
+      *reinterpret_cast<int32_t*>(dst) = *reinterpret_cast<const int32_t*>(value);
+      break;
+    case TYPE_BIGINT:
+      *reinterpret_cast<int64_t*>(dst) = *reinterpret_cast<const int64_t*>(value);
+      break;
+    case TYPE_FLOAT:
+      *reinterpret_cast<float*>(dst) = *reinterpret_cast<const float*>(value);
+      break;
+    case TYPE_DOUBLE:
+      *reinterpret_cast<double*>(dst) = *reinterpret_cast<const double*>(value);
+      break;
+    case TYPE_TIMESTAMP:
+      *reinterpret_cast<TimestampValue*>(dst) =
+          *reinterpret_cast<const TimestampValue*>(value);
+      break;
+    case TYPE_STRING:
+    case TYPE_VARCHAR:
+    case TYPE_CHAR: {
+      DCHECK(buf != NULL);
+      if (!type.IsVarLen()) {
+        DCHECK_EQ(type.type, TYPE_CHAR);
+        memcpy(dst, value, type.len);
+        break;
+      }
+      const StringValue* src = reinterpret_cast<const StringValue*>(value);
+      StringValue* dest = reinterpret_cast<StringValue*>(dst);
+      dest->len = src->len;
+      dest->ptr = reinterpret_cast<char*>(*buf);
+      memcpy(dest->ptr, src->ptr, dest->len);
+      *buf += dest->len;
+      break;
+    }
+    case TYPE_DECIMAL:
+      memcpy(dst, value, type.GetByteSize());
+      break;
+    default:
+      DCHECK(false) << "RawValue::Write(): bad type: " << type.DebugString();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }
 

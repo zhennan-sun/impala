@@ -16,6 +16,13 @@
 #ifndef IMPALA_EXPRS_UTILITY_FUNCTIONS_H
 #define IMPALA_EXPRS_UTILITY_FUNCTIONS_H
 
+<<<<<<< HEAD
+=======
+#include "udf/udf.h"
+
+using namespace impala_udf;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 namespace impala {
 
 class Expr;
@@ -24,8 +31,35 @@ class TupleRow;
 
 class UtilityFunctions {
  public:
+<<<<<<< HEAD
   // Implementation of the version() function. Returns the version string.  
   static void* Version(Expr* e, TupleRow* row);
+=======
+  // Implementations of the FnvHash function. Returns the Fowler-Noll-Vo hash of the
+  // input as an int64_t.
+  template <typename T> static BigIntVal FnvHash(FunctionContext* ctx, const T& input_val);
+  static BigIntVal FnvHashString(FunctionContext* ctx, const StringVal& input_val);
+  static BigIntVal FnvHashTimestamp(FunctionContext* ctx, const TimestampVal& input_val);
+  static BigIntVal FnvHashDecimal(FunctionContext* ctx, const DecimalVal& input_val);
+
+  // Implementation of the user() function. Returns the username of the user who executed
+  // this function.
+  static StringVal User(FunctionContext* ctx);
+
+  // Implementation of the version() function. Returns the version string.
+  static StringVal Version(FunctionContext* ctx);
+
+  // Implementation of the pid() function. Returns the pid of the impalad that initiated
+  // this query.
+  static IntVal Pid(FunctionContext* ctx);
+
+  // Testing function that sleeps for the specified number of milliseconds. Returns true.
+  static BooleanVal Sleep(FunctionContext* ctx, const IntVal& milliseconds);
+
+  // Implementation of the current_database() function. Returns the current default
+  // database from the parent session of this query.
+  static StringVal CurrentDatabase(FunctionContext* ctx);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

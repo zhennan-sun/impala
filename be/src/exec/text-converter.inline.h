@@ -27,6 +27,11 @@
 #include "runtime/string-value.h"
 #include "runtime/timestamp-value.h"
 #include "runtime/mem-pool.h"
+<<<<<<< HEAD
+=======
+#include "runtime/string-value.inline.h"
+#include "exprs/string-functions.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
@@ -34,6 +39,7 @@ namespace impala {
 // corresponding changes to CodegenWriteSlot.
 inline bool TextConverter::WriteSlot(const SlotDescriptor* slot_desc, Tuple* tuple,
     const char* data, int len, bool copy_string, bool need_escape, MemPool* pool) {
+<<<<<<< HEAD
   if (len == 0 && slot_desc->type() != TYPE_STRING) {
     tuple->SetNull(slot_desc->null_indicator_offset());
     return true;
@@ -43,10 +49,23 @@ inline bool TextConverter::WriteSlot(const SlotDescriptor* slot_desc, Tuple* tup
     return true;
   } 
     
+=======
+  if ((len == 0 && !slot_desc->type().IsStringType()) || data == NULL) {
+    tuple->SetNull(slot_desc->null_indicator_offset());
+    return true;
+  } else if (check_null_ && len == null_col_val_.size() &&
+      StringCompare(data, len, null_col_val_.data(), null_col_val_.size(), len) == 0) {
+    // We matched the special NULL indicator.
+    tuple->SetNull(slot_desc->null_indicator_offset());
+    return true;
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   StringParser::ParseResult parse_result = StringParser::PARSE_SUCCESS;
   void* slot = tuple->GetSlot(slot_desc->tuple_offset());
 
   // Parse the raw-text data. Translate the text string to internal format.
+<<<<<<< HEAD
   switch (slot_desc->type()) {
     case TYPE_STRING: {
       StringValue* str_slot = reinterpret_cast<StringValue*>(slot);
@@ -61,6 +80,41 @@ inline bool TextConverter::WriteSlot(const SlotDescriptor* slot_desc, Tuple* tup
           memcpy(slot_data, data, str_slot->len);
         }
         str_slot->ptr = slot_data;
+=======
+  const ColumnType& type = slot_desc->type();
+  switch (type.type) {
+    case TYPE_STRING:
+    case TYPE_VARCHAR:
+    case TYPE_CHAR: {
+      int buffer_len = len;
+      if (type.type == TYPE_VARCHAR || type.type == TYPE_CHAR) buffer_len = type.len;
+
+      bool reuse_data = type.IsVarLen() && !(len != 0 && (copy_string || need_escape));
+      if (type.type == TYPE_CHAR) reuse_data &= (buffer_len <= len);
+
+      StringValue str;
+      str.len = std::min(buffer_len, len);
+      if (reuse_data) {
+        str.ptr = const_cast<char*>(data);
+      } else {
+        str.ptr = type.IsVarLen() ? reinterpret_cast<char*>(pool->Allocate(buffer_len)) :
+            reinterpret_cast<char*>(slot);
+        if (need_escape) {
+          UnescapeString(data, str.ptr, &str.len, buffer_len);
+        } else {
+          memcpy(str.ptr, data, str.len);
+        }
+      }
+
+      if (type.type == TYPE_CHAR) {
+        StringValue::PadWithSpaces(str.ptr, buffer_len, str.len);
+        str.len = type.len;
+      }
+      // write back to the slot, if !IsVarLen() we already wrote to the slot
+      if (type.IsVarLen()) {
+        StringValue* str_slot = reinterpret_cast<StringValue*>(slot);
+        *str_slot = str;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       }
       break;
     }
@@ -100,8 +154,42 @@ inline bool TextConverter::WriteSlot(const SlotDescriptor* slot_desc, Tuple* tup
       }
       break;
     }
+<<<<<<< HEAD
     default:
       DCHECK(false) << "bad slot type: " << TypeToString(slot_desc->type());
+=======
+    case TYPE_DECIMAL: {
+      switch (slot_desc->slot_size()) {
+        case 4:
+          *reinterpret_cast<Decimal4Value*>(slot) =
+              StringParser::StringToDecimal<int32_t>(
+                  data, len, slot_desc->type(), &parse_result);
+          break;
+        case 8:
+          *reinterpret_cast<Decimal8Value*>(slot) =
+              StringParser::StringToDecimal<int64_t>(
+                  data, len, slot_desc->type(), &parse_result);
+          break;
+        case 12:
+          DCHECK(false) << "Planner should not generate this.";
+          break;
+        case 16:
+          *reinterpret_cast<Decimal16Value*>(slot) =
+              StringParser::StringToDecimal<int128_t>(
+                  data, len, slot_desc->type(), &parse_result);
+          break;
+        default:
+          DCHECK(false) << "Decimal slots can't be this size.";
+      }
+      if (parse_result != StringParser::PARSE_SUCCESS) {
+        // Don't accept underflow and overflow for decimals.
+        parse_result = StringParser::PARSE_FAILURE;
+      }
+      break;
+    }
+    default:
+      DCHECK(false) << "bad slot type: " << slot_desc->type();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       break;
   }
 

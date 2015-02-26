@@ -15,13 +15,25 @@
 #ifndef IMPALA_UTIL_DEFAULT_PATH_HANDLERS_H
 #define IMPALA_UTIL_DEFAULT_PATH_HANDLERS_H
 
+<<<<<<< HEAD
 namespace impala {
 
+=======
+#include <stdio.h>
+
+namespace impala {
+
+class MemTracker;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class Webserver;
 
 // Adds a set of default path handlers to the webserver to display
 // logs and configuration flags
+<<<<<<< HEAD
 void AddDefaultPathHandlers(Webserver* webserver);
+=======
+void AddDefaultUrlCallbacks(Webserver* webserver, MemTracker* process_mem_tracker = NULL);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 #endif // IMPALA_UTIL_DEFAULT_PATH_HANDLERS_H

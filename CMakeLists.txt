@@ -21,6 +21,7 @@ enable_testing()
 # where to find cmake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
 
+<<<<<<< HEAD
 # find boost headers and libs
 set(Boost_DEBUG TRUE)
 # in order to load libbackend.so into the jvm, we need to link against a shared
@@ -34,6 +35,30 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 message(STATUS ${Boost_INCLUDE_DIRS})
 message(STATUS ${Boost_LIBRARIES})
+=======
+# find libraries that will be statically linked if they were compiled with -fPIC
+find_package(PICLibs REQUIRED)
+
+# find boost headers and libs
+IF (DEFINED ENV{BOOST_ROOT})
+    # The casing and underscoring expected for these properties varies between
+    # versions of CMake. Multiple inconsistent versions may be present here
+    # intentionally to provide what a wide range of versions expects.
+    set(Boost_NO_SYSTEM_PATHS true)
+    set(BOOST_ROOT $ENV{BOOST_ROOT})
+    set(BOOST_LIBRARYDIR $ENV{BOOST_ROOT}/lib)
+    set(BOOST_INCLUDEDIR $ENV{BOOST_ROOT}/include)
+    set(Boost_INCLUDE_DIR ${BOOST_INCLUDEDIR})
+ENDIF (DEFINED ENV{BOOST_ROOT})
+
+set(Boost_DEBUG TRUE)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost REQUIRED COMPONENTS thread regex-mt system-mt filesystem-mt)
+include_directories(${Boost_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${Boost_LIBRARIES})
+message(STATUS "Boost include dir: " ${Boost_INCLUDE_DIRS})
+message(STATUS "Boost libraries: " ${Boost_LIBRARIES})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find jni headers and libs
 find_package(JNI REQUIRED)
@@ -47,8 +72,18 @@ find_package(HDFS REQUIRED)
 include_directories(${HDFS_INCLUDE_DIR})
 set(LIBS ${LIBS} ${HDFS_LIBS})
 
+<<<<<<< HEAD
 find_package(Mongoose REQUIRED)
 include_directories(${MONGOOSE_INCLUDE_DIR})
+=======
+# find the Squeasel webserver library
+find_package(Squeasel REQUIRED)
+include_directories(${SQUEASEL_INCLUDE_DIR})
+
+# find the Mustache template library
+find_package(Mustache REQUIRED)
+include_directories(${MUSTACHE_INCLUDE_DIR})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find GLog headers and libs.  Must include glog headers before the other
 # google libraries.  They all have a config.h and we want glog's to be picked
@@ -58,9 +93,15 @@ include_directories(${GLOG_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GLOG_LIBS})
 # for static linking with GLOG, GLOG_STATIC_LIB is set in GLOG's find module
 add_library(glogstatic STATIC IMPORTED)
+<<<<<<< HEAD
 set_target_properties(glogstatic PROPERTIES IMPORTED_LOCATION ${GLOG_STATIC_LIB})
 
 message(STATUS ${GLOG_INCLUDE_DIR})
+=======
+# TODO: Is this directive required for all libraries? Seems to make no difference.
+set_target_properties(glogstatic PROPERTIES IMPORTED_LOCATION ${GLOG_STATIC_LIB})
+message(STATUS "GLog include dir: " ${GLOG_INCLUDE_DIR})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find GFlags headers and libs (needed for GLog)
 find_package(GFlags REQUIRED)
@@ -69,8 +110,12 @@ set(LIBS ${LIBS} ${GFLAGS_LIBS})
 # for static linking with GFLAGS, GFLAGS_STATIC_LIB is set in GFLAGS' find module
 add_library(gflagsstatic STATIC IMPORTED)
 set_target_properties(gflagsstatic PROPERTIES IMPORTED_LOCATION ${GFLAGS_STATIC_LIB})
+<<<<<<< HEAD
 
 message(STATUS ${GFLAGS_INCLUDE_DIR})
+=======
+message(STATUS "GFlags include dir: " ${GFLAGS_INCLUDE_DIR})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find PProf libs
 find_package(PProf REQUIRED)
@@ -80,8 +125,12 @@ add_library(pprofstatic STATIC IMPORTED)
 set_target_properties(pprofstatic PROPERTIES IMPORTED_LOCATION "${PPROF_STATIC_LIB}")
 add_library(tcmallocstatic STATIC IMPORTED)
 set_target_properties(tcmallocstatic PROPERTIES IMPORTED_LOCATION "${HEAPPROF_STATIC_LIB}")
+<<<<<<< HEAD
 
 message(STATUS ${PPROF_INCLUDE_DIR})
+=======
+message(STATUS "PProf include dir: " ${PPROF_INCLUDE_DIR})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find GTest headers and libs
 find_package(GTest REQUIRED)
@@ -89,9 +138,14 @@ include_directories(${GTEST_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GTEST_LIBRARIES})
 add_library(gtest STATIC IMPORTED)
 set_target_properties(gtest PROPERTIES IMPORTED_LOCATION "${GTEST_LIBRARY}")
+<<<<<<< HEAD
 
 message(STATUS ${GTEST_INCLUDE_DIR})
 message(STATUS ${GTEST_LIBRARY})
+=======
+message(STATUS "GTest include dir: " ${GTEST_INCLUDE_DIR})
+message(STATUS "GTest library: " ${GTEST_LIBRARY})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find LLVM
 find_package(Llvm REQUIRED)
@@ -105,6 +159,7 @@ add_library(saslstatic STATIC IMPORTED)
 set_target_properties(saslstatic PROPERTIES IMPORTED_LOCATION ${SASL_STATIC_LIBRARY})
 set(SASL_LIBRARY saslstatic)
 
+<<<<<<< HEAD
 # find thrift headers and libs
 find_package(Thrift REQUIRED)
 include_directories(${Thrift_INCLUDE_DIR})
@@ -119,16 +174,86 @@ add_library(thriftstatic STATIC IMPORTED)
 set_target_properties(thriftstatic PROPERTIES IMPORTED_LOCATION ${Thrift_STATIC_LIB})
 add_library(thriftnbstatic STATIC IMPORTED)
 set_target_properties(thriftnbstatic PROPERTIES IMPORTED_LOCATION ${Thrift_NB_STATIC_LIB})
+=======
+# find openldap
+find_package(Ldap REQUIRED)
+include_directories(${LDAP_INCLUDE_DIR})
+add_library(ldapstatic STATIC IMPORTED)
+set_target_properties(ldapstatic PROPERTIES IMPORTED_LOCATION ${LDAP_STATIC_LIBRARY})
+add_library(lberstatic STATIC IMPORTED)
+set_target_properties(lberstatic PROPERTIES IMPORTED_LOCATION ${LBER_STATIC_LIBRARY})
+set(LDAP_LIBRARY ldapstatic)
+set(LBER_LIBRARY lberstatic)
+
+# find thrift headers and libs
+find_package(Thrift REQUIRED)
+include_directories(${THRIFT_INCLUDE_DIR})
+set(LIBS ${LIBS} ${THRIFT_LIBS})
+message(STATUS "Thrift include dir: ${THRIFT_INCLUDE_DIR}")
+message(STATUS "Thrift contrib dir: ${THRIFT_CONTRIB_DIR}")
+message(STATUS "Thrift library path: ${THRIFT_LIBS}")
+message(STATUS "Thrift static library: ${THRIFT_STATIC_LIB}")
+message(STATUS "Thrift compiler: ${THRIFT_COMPILER}")
+# for static linking with Thrift, THRIFT_STATIC_LIB is set in FindThrift.cmake
+add_library(thriftstatic STATIC IMPORTED)
+set_target_properties(thriftstatic PROPERTIES IMPORTED_LOCATION ${THRIFT_STATIC_LIB})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # find Snappy headers and libs
 find_package(Snappy REQUIRED)
 include_directories(${SNAPPY_INCLUDE_DIR})
 set(LIBS ${LIBS} ${SNAPPY_LIBRARIES})
 add_library(snappy STATIC IMPORTED)
+<<<<<<< HEAD
 set_target_properties(snappy PROPERTIES IMPORTED_LOCATION "${SNAPPY_LIBRARY}")
 
 message(STATUS ${SNAPPY_INCLUDE_DIR})
 message(STATUS ${SNAPPY_LIBRARY})
+=======
+set_target_properties(snappy PROPERTIES IMPORTED_LOCATION "${SNAPPY_STATIC_LIB}")
+message(STATUS "Snappy include dir: " ${SNAPPY_INCLUDE_DIR})
+message(STATUS "Snappy library: " "${SNAPPY_STATIC_LIB}")
+
+find_package(Lz4 REQUIRED)
+include_directories(${LZ4_INCLUDE_DIR})
+set(LIBS ${LIBS} ${LZ4_LIBRARIES})
+add_library(lz4 STATIC IMPORTED)
+set_target_properties(lz4 PROPERTIES IMPORTED_LOCATION "${LZ4_STATIC_LIB}")
+message(STATUS "Lz4 include dir: " ${LZ4_INCLUDE_DIR})
+message(STATUS "Lz4 library: " "${LZ4_STATIC_LIB}")
+
+# find re2 headers and libs
+find_package(Re2 REQUIRED)
+include_directories(${RE2_INCLUDE_DIR})
+set(LIBS ${LIBS} ${RE2_LIBRARIES})
+add_library(re2 STATIC IMPORTED)
+set_target_properties(re2 PROPERTIES IMPORTED_LOCATION "${RE2_STATIC_LIB}")
+message(STATUS "Re2 include dir: " ${RE2_INCLUDE_DIR})
+message(STATUS "Re2 library: " ${RE2_STATIC_LIB})
+
+# find rapidjson headers
+find_package(RapidJson REQUIRED)
+include_directories(${RAPIDJSON_INCLUDE_DIR})
+message(STATUS "RapidJson include dir: " ${RAPIDJSON_INCLUDE_DIR})
+
+# find boost multi precision headers
+find_package(BoostMultiPrecision REQUIRED)
+include_directories(${BOOST_MULTI_PRECISION_INCLUDE_DIR})
+message(STATUS "BoostMultiPrecision include dir: " ${BOOST_MULTI_PRECISION_INCLUDE_DIR})
+
+# find Avro headers and libs
+find_package(Avro REQUIRED)
+include_directories(${AVRO_INCLUDE_DIR})
+set(LIBS ${LIBS} ${AVRO_STATIC_LIB})
+add_library(avro STATIC IMPORTED)
+set_target_properties(avro PROPERTIES IMPORTED_LOCATION "${AVRO_STATIC_LIB}")
+message(STATUS "Avro include dir: " ${AVRO_INCLUDE_DIR})
+message(STATUS "Avro static library: " ${AVRO_STATIC_LIB})
+
+# Treat gutil just like an Impala native library (i.e., one built with CMake), so no need
+# for find_package()
+add_subdirectory($ENV{IMPALA_HOME}/thirdparty/gutil/)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # compile these subdirs using their own CMakeLists.txt
 add_subdirectory(common/function-registry)
@@ -136,7 +261,11 @@ add_subdirectory(common/thrift)
 add_subdirectory(be)
 
 # Run FE and BE tests
+<<<<<<< HEAD
 add_custom_target(testall 
+=======
+add_custom_target(testall
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR}/fe mvn test
   COMMAND ${CMAKE_SOURCE_DIR}/bin/runbackendtests.sh
 )

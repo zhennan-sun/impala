@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
+=======
+// TODO: "Performance Counters for Linux" is not supported in Linux < 2.6.31.
+//       This file will not compile under RHEL 5 or any of it's derivitives.
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "util/perf-counters.h"
 #include "util/debug-util.h"
 
@@ -175,7 +181,11 @@ bool PerfCounters::InitSysCounter(Counter counter) {
   data.fd = fd;
 
   if (counter == PERF_COUNTER_SW_CPU_CLOCK) {
+<<<<<<< HEAD
     data.type = TCounterType::TIME_MS;
+=======
+    data.type = TCounterType::TIME_NS;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   } else {
     data.type = TCounterType::UNIT;
   }
@@ -237,7 +247,11 @@ bool PerfCounters::GetSysCounters(vector<int64_t>& buffer) {
     if (counters_[i].source == SYS_PERF_COUNTER) {
       int num_bytes = read(counters_[i].fd, &buffer[i], COUNTER_SIZE);
       if (num_bytes != COUNTER_SIZE) return false;
+<<<<<<< HEAD
       if (counters_[i].type == TCounterType::TIME_MS) {
+=======
+      if (counters_[i].type == TCounterType::TIME_NS) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         buffer[i] /= 1000000;
       }
     }

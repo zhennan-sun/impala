@@ -14,12 +14,17 @@
 
 package com.cloudera.impala.analysis;
 
+<<<<<<< HEAD
 import java.util.List;
 
+=======
+import com.cloudera.impala.catalog.Table;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 import com.cloudera.impala.common.AnalysisException;
 import com.google.common.base.Preconditions;
 
 /**
+<<<<<<< HEAD
  * An actual table, such as HBase table or a Hive table.
  * BaseTableRef.
  */
@@ -41,6 +46,26 @@ public class BaseTableRef extends TableRef {
    */
   public TableName getName() {
     return name;
+=======
+ * Represents a reference to an actual table, such as an Hdfs or HBase table.
+ * BaseTableRefs are instantiated as a result of table resolution during analysis
+ * of a SelectStmt.
+ */
+public class BaseTableRef extends TableRef {
+  private final Table table_;
+
+  public BaseTableRef(TableRef tableRef, Table table) {
+    super(tableRef);
+    table_ = table;
+  }
+
+  /**
+   * C'tor for cloning.
+   */
+  private BaseTableRef(BaseTableRef other) {
+    super(other);
+    table_ = other.table_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   /**
@@ -48,6 +73,7 @@ public class BaseTableRef extends TableRef {
    */
   @Override
   public void analyze(Analyzer analyzer) throws AnalysisException {
+<<<<<<< HEAD
     desc = analyzer.registerBaseTableRef(this);
     analyzeJoin(analyzer);
     isAnalyzed = true;
@@ -86,4 +112,24 @@ public class BaseTableRef extends TableRef {
   protected String tableRefToSql() {
     return name.toString() + (alias != null ? " " + alias : "");
   }
+=======
+    Preconditions.checkNotNull(getPrivilegeRequirement());
+    setFullyQualifiedTableName(analyzer);
+    desc_ = analyzer.registerTableRef(this);
+    isAnalyzed_ = true;  // true that we have assigned desc
+    analyzeJoin(analyzer);
+  }
+
+  @Override
+  public TupleDescriptor createTupleDescriptor(Analyzer analyzer)
+      throws AnalysisException {
+    TupleDescriptor result = analyzer.getDescTbl().createTupleDescriptor("basetbl");
+    result.setTable(table_);
+    return result;
+  }
+
+  @Override
+  public TableRef clone() { return new BaseTableRef(this); }
+  public String debugString() { return tableRefToSql(); }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

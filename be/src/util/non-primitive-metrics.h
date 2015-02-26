@@ -16,12 +16,26 @@
 #ifndef IMPALA_UTIL_NON_PRIMITIVE_METRICS_H
 #define IMPALA_UTIL_NON_PRIMITIVE_METRICS_H
 
+<<<<<<< HEAD
+=======
+#include "util/metrics.h"
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include <string>
 #include <vector>
 #include <set>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/foreach.hpp>
+<<<<<<< HEAD
 #include "util/metrics.h"
+=======
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
@@ -31,6 +45,7 @@ namespace impala {
 // it with a new one.
 // TODO: StructuredMetrics or ContainerMetrics are probably better names here.
 
+<<<<<<< HEAD
 // Utility method to print an iterable type to a stringstream like ["v1", "v2", "v3"] 
 // or [v1, v2, v3], depending on whether quotes are requested via the first parameter
 template <typename T, typename I>
@@ -44,6 +59,21 @@ void PrintStringList(bool quoted_items, const I& iterable, std::stringstream* ou
       ss << item;
     }
     strings.push_back(ss.str());    
+=======
+// Utility method to print an iterable type to a stringstream like ["v1", "v2", "v3"]
+// or [v1, v2, v3], depending on whether quotes are requested via the first parameter
+template <typename T, typename I>
+void PrintStringList(bool print_as_json, const I& iterable, std::stringstream* out) {
+  std::vector<std::string> strings;
+  BOOST_FOREACH(const T& item, iterable) {
+    std::stringstream ss;
+    if (print_as_json) {
+      PrintPrimitiveAsJson(item, &ss);
+    } else  {
+      ss << item;
+    }
+    strings.push_back(ss.str());
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   (*out) <<"[" << boost::algorithm::join(strings, ", ") << "]";
@@ -86,7 +116,11 @@ class SetMetric : public Metrics::Metric<std::set<T> > {
   }
 
  protected:
+<<<<<<< HEAD
   virtual void PrintValueJson(std::stringstream* out) {    
+=======
+  virtual void PrintValueJson(std::stringstream* out) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     PrintStringList<T, std::set<T> >(true, this->value_, out);
   }
 
@@ -120,7 +154,12 @@ class MapMetric : public Metrics::Metric<std::map<K, V> > {
       std::stringstream ss;
       ss << "  ";
       if (quoted_items) {
+<<<<<<< HEAD
         ss << "\"" << entry.first << "\" : \"" << entry.second << "\"";
+=======
+        ss << "\"" << entry.first << "\" : ";
+        PrintPrimitiveAsJson(entry.second, &ss);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       } else {
         ss << entry.first << " : " << entry.second;
       }
@@ -131,7 +170,11 @@ class MapMetric : public Metrics::Metric<std::map<K, V> > {
   }
 
 
+<<<<<<< HEAD
   virtual void PrintValueJson(std::stringstream* out) {    
+=======
+  virtual void PrintValueJson(std::stringstream* out) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     PrintToString(true, out);
   }
 
@@ -140,6 +183,64 @@ class MapMetric : public Metrics::Metric<std::map<K, V> > {
   }
 };
 
+<<<<<<< HEAD
+=======
+// Metric which accumulates min, max and mean of all values
+// Printed output looks like:
+// name: count: 4, last: 0.0141, min: 4.546e-06, max: 0.0243, mean: 0.0336, stddev: 0.0336
+//
+// After construction, all statistics are ill-defined. The first call
+// to Update will initialise all stats.
+template <typename T>
+class StatsMetric : public Metrics::Metric<T> {
+ public:
+  StatsMetric(const std::string& key) : Metrics::Metric<T>(key) { }
+
+  void Update(const T& value) {
+    boost::lock_guard<boost::mutex> l(this->lock_);
+    this->value_ = value;
+    this->acc_(value);
+  }
+
+  virtual void PrintValueJson(std::stringstream* out) {
+    (*out) << "{ \"count\": ";
+    PrintPrimitiveAsJson(boost::accumulators::count(this->acc_), out);
+    if (boost::accumulators::count(this->acc_) > 0) {
+      (*out) << ", \"last\": ";
+      PrintPrimitiveAsJson(this->value_, out);
+      (*out) << ", \"min\": ";
+      PrintPrimitiveAsJson(boost::accumulators::min(this->acc_), out);
+      (*out) << ", \"max\": ";
+      PrintPrimitiveAsJson(boost::accumulators::max(this->acc_), out);
+      (*out) << ", \"mean\": ";
+      PrintPrimitiveAsJson(boost::accumulators::mean(this->acc_), out);
+      (*out) << ", \"stddev\": ";
+      PrintPrimitiveAsJson(sqrt(boost::accumulators::variance(this->acc_)), out);
+    }
+    (*out) << " }";
+  }
+
+  virtual void PrintValue(std::stringstream* out) {
+    (*out) << " count: " << boost::accumulators::count(this->acc_);
+    if (boost::accumulators::count(this->acc_) > 0) {
+      (*out) << ", last: " << this->value_
+             << ", min: " << boost::accumulators::min(this->acc_)
+             << ", max: " << boost::accumulators::max(this->acc_)
+             << ", mean: " << boost::accumulators::mean(this->acc_)
+             << ", stddev: " << sqrt(boost::accumulators::variance(this->acc_));
+    }
+  }
+ private:
+  boost::accumulators::accumulator_set<T,
+      boost::accumulators::features<boost::accumulators::tag::mean,
+                                    boost::accumulators::tag::count,
+                                    boost::accumulators::tag::min,
+                                    boost::accumulators::tag::max,
+                                    boost::accumulators::tag::variance> > acc_;
+
+};
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 #endif

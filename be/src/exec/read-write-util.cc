@@ -13,11 +13,15 @@
 // limitations under the License.
 
 #include "exec/read-write-util.h"
+<<<<<<< HEAD
 #include "exec/byte-stream.h"
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace std;
 using namespace impala;
 
+<<<<<<< HEAD
 Status ReadWriteUtil::ReadZLong(ByteStream* byte_stream, int64_t* value) {
   uint8_t buf[MAX_ZLONG_LEN];
   int64_t nread;
@@ -81,6 +85,23 @@ Status ReadWriteUtil::SkipBytes(ByteStream* byte_stream) {
   int64_t len;
   RETURN_IF_ERROR(ReadZLong(byte_stream, &len));
   return byte_stream->SeekRelative(len);
+=======
+// This function is not inlined because it can potentially cause LLVM to crash (see
+// http://llvm.org/bugs/show_bug.cgi?id=19315), and inlining does not appear to have any
+// performance impact.
+int64_t ReadWriteUtil::ReadZLong(uint8_t** buf) {
+  uint64_t zlong = 0;
+  int shift = 0;
+  bool more;
+  do {
+    DCHECK_LE(shift, 64);
+    zlong |= static_cast<uint64_t>(**buf & 0x7f) << shift;
+    shift += 7;
+    more = (**buf & 0x80) != 0;
+    ++(*buf);
+  } while (more);
+  return (zlong >> 1) ^ -(zlong & 1);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 int ReadWriteUtil::PutZInt(int32_t integer, uint8_t* buf) {
@@ -117,3 +138,18 @@ int ReadWriteUtil::PutZLong(int64_t longint, uint8_t* buf) {
   return len;
 }
 
+<<<<<<< HEAD
+=======
+string ReadWriteUtil::HexDump(const uint8_t* buf, int64_t length) {
+  stringstream ss;
+  ss << std::hex;
+  for (int i = 0; i < length; ++i) {
+    ss << static_cast<int>(buf[i]) << " ";
+  }
+  return ss.str();
+}
+
+string ReadWriteUtil::HexDump(const char* buf, int64_t length) {
+  return HexDump(reinterpret_cast<const uint8_t*>(buf), length);
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

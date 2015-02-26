@@ -6,6 +6,10 @@ target
 .project
 
 # IntelliJ artifacts
+<<<<<<< HEAD
+=======
+.idea
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 *.iml
 *.ipr
 *.iws
@@ -25,6 +29,15 @@ src/test/resources/hbase-site.xml
 # Generated core-site.xml file
 src/test/resources/core-site.xml
 
+<<<<<<< HEAD
+=======
+# Generated authorization policy file
+src/test/resources/authz-policy.ini
+
+# Generated minicluster config
+src/test/resources/minicluster-conf.xml
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 # Generated thrift files
 generated-sources
 

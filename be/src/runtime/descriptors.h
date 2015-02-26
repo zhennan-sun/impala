@@ -24,9 +24,16 @@
 
 #include "common/status.h"
 #include "common/global-types.h"
+<<<<<<< HEAD
 #include "gen-cpp/Descriptors_types.h"  // for TTupleId
 #include "gen-cpp/Types_types.h"
 #include "runtime/primitive-type.h"
+=======
+#include "runtime/types.h"
+
+#include "gen-cpp/Descriptors_types.h"  // for TTupleId
+#include "gen-cpp/Types_types.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace llvm {
   class Function;
@@ -43,6 +50,10 @@ class TSlotDescriptor;
 class TTable;
 class TTupleDescriptor;
 class Expr;
+<<<<<<< HEAD
+=======
+class ExprContext;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class RuntimeState;
 
 struct LlvmTupleStruct {
@@ -73,8 +84,15 @@ std::ostream& operator<<(std::ostream& os, const NullIndicatorOffset& null_indic
 class SlotDescriptor {
  public:
   SlotId id() const { return id_; }
+<<<<<<< HEAD
   PrimitiveType type() const { return type_; }
   TupleId parent() const { return parent_; }
+=======
+  const ColumnType& type() const { return type_; }
+  TupleId parent() const { return parent_; }
+  // Returns the column index of this slot, including partition keys.
+  // (e.g., col_pos - num_partition_keys = the table column this slot corresponds to)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   int col_pos() const { return col_pos_; }
   // Returns the field index in the generated llvm struct for this slot's tuple
   int field_idx() const { return field_idx_; }
@@ -84,6 +102,10 @@ class SlotDescriptor {
   }
   bool is_materialized() const { return is_materialized_; }
   bool is_nullable() const { return null_indicator_offset_.bit_mask != 0; }
+<<<<<<< HEAD
+=======
+  int slot_size() const { return slot_size_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   std::string DebugString() const;
 
@@ -95,12 +117,20 @@ class SlotDescriptor {
   // The codegen function is cached.
   llvm::Function* CodegenUpdateNull(LlvmCodeGen*, llvm::StructType* tuple, bool set_null);
 
+<<<<<<< HEAD
  protected:
+=======
+ private:
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   friend class DescriptorTbl;
   friend class TupleDescriptor;
 
   const SlotId id_;
+<<<<<<< HEAD
   const PrimitiveType type_;
+=======
+  const ColumnType type_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   const TupleId parent_;
   const int col_pos_;
   const int tuple_offset_;
@@ -110,6 +140,12 @@ class SlotDescriptor {
   // this is provided by the FE
   const int slot_idx_;
 
+<<<<<<< HEAD
+=======
+  // the byte size of this slot.
+  const int slot_size_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // the idx of the slot in the llvm codegen'd tuple struct
   // this is set by TupleDescriptor during codegen and takes into account
   // leading null bytes.
@@ -129,6 +165,10 @@ class SlotDescriptor {
 class TableDescriptor {
  public:
   TableDescriptor(const TTableDescriptor& tdesc);
+<<<<<<< HEAD
+=======
+  virtual ~TableDescriptor() {}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   int num_cols() const { return num_cols_; }
   int num_clustering_cols() const { return num_clustering_cols_; }
   virtual std::string DebugString() const;
@@ -141,6 +181,10 @@ class TableDescriptor {
 
   const std::string& name() const { return name_; }
   const std::string& database() const { return database_; }
+<<<<<<< HEAD
+=======
+  const std::vector<std::string>& col_names() const { return col_names_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
  protected:
   std::string name_;
@@ -148,6 +192,10 @@ class TableDescriptor {
   TableId id_;
   int num_cols_;
   int num_clustering_cols_;
+<<<<<<< HEAD
+=======
+  std::vector<std::string> col_names_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 // Metadata for a single partition inside an Hdfs table.
@@ -159,12 +207,27 @@ class HdfsPartitionDescriptor {
   char collection_delim() const { return collection_delim_; }
   char escape_char() const { return escape_char_; }
   THdfsFileFormat::type file_format() const { return file_format_; }
+<<<<<<< HEAD
   const std::vector<Expr*>& partition_key_values() const { return partition_key_values_; }
   int block_size() const { return block_size_; }
   THdfsCompression::type compression() const { return compression_; }
 
   // Calls 'Prepare' on all partition key exprs. Calls after the first are no-ops
   Status PrepareExprs(RuntimeState* state);
+=======
+  const std::vector<ExprContext*>& partition_key_value_ctxs() const {
+    return partition_key_value_ctxs_;
+  }
+  int block_size() const { return block_size_; }
+  const std::string& location() const { return location_; }
+  int64_t id() const { return id_; }
+
+  // Calls Prepare()/Open()/Close() on all partition key exprs. Idempotent (this is
+  // because both HdfsScanNode and HdfsTableSink may both use the same partition desc).
+  Status PrepareExprs(RuntimeState* state);
+  Status OpenExprs(RuntimeState* state);
+  void CloseExprs(RuntimeState* state);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   std::string DebugString() const;
 
@@ -174,6 +237,7 @@ class HdfsPartitionDescriptor {
   char collection_delim_;
   char escape_char_;
   int block_size_;
+<<<<<<< HEAD
   THdfsCompression::type compression_;
 
   // True if PrepareExprs has been called, to prevent repeating expensive codegen
@@ -184,6 +248,19 @@ class HdfsPartitionDescriptor {
   // pool. Their order corresponds to the first num_clustering_cols of
   // the parent table.
   std::vector<Expr*> partition_key_values_;
+=======
+  std::string location_;
+  int64_t id_;
+
+  // True if PrepareExprs has been called, to prevent repeating expensive codegen
+  bool exprs_prepared_;
+  bool exprs_opened_;
+  bool exprs_closed_;
+
+  // List of literal (and therefore constant) expressions for each partition key. Their
+  // order corresponds to the first num_clustering_cols of the parent table.
+  std::vector<ExprContext*> partition_key_value_ctxs_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // The format (e.g. text, sequence file etc.) of data in the files in this partition
   THdfsFileFormat::type file_format_;
@@ -197,12 +274,20 @@ class HdfsTableDescriptor : public TableDescriptor {
  public:
   HdfsTableDescriptor(const TTableDescriptor& tdesc, ObjectPool* pool);
   const std::string& hdfs_base_dir() const { return hdfs_base_dir_; }
+<<<<<<< HEAD
   const std::vector<std::string>& partition_key_names() const {
     return partition_key_names_;
   }
   const std::string& null_partition_key_value() const {
     return null_partition_key_value_;
   }
+=======
+  const std::string& null_partition_key_value() const {
+    return null_partition_key_value_;
+  }
+  const std::string& null_column_value() const { return null_column_value_; }
+  const std::string& avro_schema() const { return avro_schema_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   typedef std::map<int64_t, HdfsPartitionDescriptor*> PartitionIdToDescriptorMap;
 
@@ -221,9 +306,18 @@ class HdfsTableDescriptor : public TableDescriptor {
 
  protected:
   std::string hdfs_base_dir_;
+<<<<<<< HEAD
   std::vector<std::string> partition_key_names_;
   std::string null_partition_key_value_;
   PartitionIdToDescriptorMap partition_descriptors_;
+=======
+  std::string null_partition_key_value_;
+  // Special string to indicate NULL values in text-encoded columns.
+  std::string null_column_value_;
+  PartitionIdToDescriptorMap partition_descriptors_;
+  // Set to the table's Avro schema if this is an Avro table, empty string otherwise
+  std::string avro_schema_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Owned by DescriptorTbl
   ObjectPool* object_pool_;
 };
@@ -233,14 +327,42 @@ class HBaseTableDescriptor : public TableDescriptor {
   HBaseTableDescriptor(const TTableDescriptor& tdesc);
   virtual std::string DebugString() const;
   const std::string table_name() const { return table_name_; }
+<<<<<<< HEAD
   const std::vector<std::pair<std::string, std::string> >& cols() const { return cols_; }
+=======
+
+  struct HBaseColumnDescriptor {
+    std::string family;
+    std::string qualifier;
+    bool binary_encoded;
+
+    HBaseColumnDescriptor(const std::string& col_family, const std::string& col_qualifier,
+        bool col_binary_encoded)
+      : family(col_family),
+        qualifier(col_qualifier),
+        binary_encoded(col_binary_encoded){
+    }
+  };
+  const std::vector<HBaseColumnDescriptor>& cols() const { return cols_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
  protected:
   // native name of hbase table
   std::string table_name_;
 
   // List of family/qualifier pairs.
+<<<<<<< HEAD
   std::vector<std::pair<std::string, std::string> > cols_;
+=======
+  std::vector<HBaseColumnDescriptor> cols_;
+};
+
+// Descriptor for a DataSourceTable
+class DataSourceTableDescriptor : public TableDescriptor {
+ public:
+  DataSourceTableDescriptor(const TTableDescriptor& tdesc) : TableDescriptor(tdesc) { }
+  virtual std::string DebugString() const;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 class TupleDescriptor {
@@ -312,6 +434,15 @@ class DescriptorTbl {
 };
 
 // Records positions of tuples within row produced by ExecNode.
+<<<<<<< HEAD
+=======
+// TODO: this needs to differentiate between tuples contained in row
+// and tuples produced by ExecNode (parallel to PlanNode.rowTupleIds and
+// PlanNode.tupleIds); right now, we conflate the two (and distinguish based on
+// context; for instance, HdfsScanNode uses these tids to create row batches, ie, the
+// first case, whereas TopNNode uses these tids to copy output rows, ie, the second
+// case)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class RowDescriptor {
  public:
   RowDescriptor(const DescriptorTbl& desc_tbl, const std::vector<TTupleId>& row_tuples,
@@ -323,10 +454,26 @@ class RowDescriptor {
       tuple_idx_map_(desc.tuple_idx_map_) {
   }
 
+<<<<<<< HEAD
+=======
+  // c'tor for a row assembled from two rows
+  RowDescriptor(const RowDescriptor& lhs_row_desc, const RowDescriptor& rhs_row_desc);
+
+  RowDescriptor(const std::vector<TupleDescriptor*>& tuple_descs,
+      const std::vector<bool>& nullable_tuples);
+
+  RowDescriptor(TupleDescriptor* tuple_desc, bool is_nullable);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // dummy descriptor, needed for the JNI EvalPredicate() function
   RowDescriptor() {}
 
   // Returns total size in bytes.
+<<<<<<< HEAD
+=======
+  // TODO: also take avg string lengths into account, ie, change this
+  // to GetAvgRowSize()
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   int GetRowSize() const;
 
   static const int INVALID_IDX = -1;
@@ -337,6 +484,12 @@ class RowDescriptor {
   // Return true if the Tuple of the given Tuple index is nullable.
   bool TupleIsNullable(int tuple_idx) const;
 
+<<<<<<< HEAD
+=======
+  // Return true if any Tuple of the row is nullable.
+  bool IsAnyTupleNullable() const;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Return descriptors for all tuples in this row, in order of appearance.
   const std::vector<TupleDescriptor*>& tuple_descriptors() const {
     return tuple_desc_map_;
@@ -355,6 +508,12 @@ class RowDescriptor {
   std::string DebugString() const;
 
  private:
+<<<<<<< HEAD
+=======
+  // Initializes tupleIdxMap during c'tor using the tuple_desc_map_.
+  void InitTupleIdxMap();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // map from position of tuple w/in row to its descriptor
   std::vector<TupleDescriptor*> tuple_desc_map_;
 

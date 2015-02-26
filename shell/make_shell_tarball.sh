@@ -16,13 +16,18 @@
 
 # This script makes a tarball of the Python-based shell that can be unzipped and
 # run out-of-the-box with no configuration. The final tarball is left in
+<<<<<<< HEAD
 # ${IMPALA_HOME}/shell/build. 
+=======
+# ${IMPALA_HOME}/shell/build.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 if [ "x${IMPALA_HOME}" == "x" ]; then
   echo "\$IMPALA_HOME must be set"
   exit 1
 fi
 
+<<<<<<< HEAD
 SHELL_HOME=${IMPALA_HOME}/shell
 BUILD_DIR=${SHELL_HOME}/build
 TARBALL_ROOT=${BUILD_DIR}/impala-shell-0.1
@@ -41,6 +46,10 @@ cp ${SHELL_HOME}/thrift_sasl.py ${TARBALL_ROOT}/lib
 cp ${SHELL_HOME}/impala-shell ${TARBALL_ROOT}
 cp ${SHELL_HOME}/impala_shell.py ${TARBALL_ROOT}
 
+=======
+IMPALA_VERSION_INFO_FILE=${IMPALA_HOME}/bin/version.info
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 if [ ! -f ${IMPALA_VERSION_INFO_FILE} ]; then
   echo "No version.info file found. Generating new version info"
   ${IMPALA_HOME}/bin/save-version.sh
@@ -53,8 +62,26 @@ GIT_HASH=$(grep "GIT_HASH: " ${IMPALA_VERSION_INFO_FILE} | awk '{print $2}')
 BUILD_DATE=$(grep "BUILD_TIME: " ${IMPALA_VERSION_INFO_FILE} | cut -f 2- -d ' ')
 cat ${IMPALA_VERSION_INFO_FILE}
 
+<<<<<<< HEAD
 rm -f ${TARBALL_ROOT}/lib/impala_build_version.py
 cat > ${TARBALL_ROOT}/lib/impala_build_version.py <<EOF
+=======
+SHELL_HOME=${IMPALA_HOME}/shell
+BUILD_DIR=${SHELL_HOME}/build
+TARBALL_ROOT=${BUILD_DIR}/impala-shell-${VERSION}
+
+set -u
+set -e
+echo "Deleting all files in ${TARBALL_ROOT}/{gen-py,lib,ext-py}"
+rm -rf ${TARBALL_ROOT}/lib/* 2>&1 > /dev/null
+rm -rf ${TARBALL_ROOT}/gen-py/* 2>&1 > /dev/null
+rm -rf ${TARBALL_ROOT}/ext-py/* 2>&1 > /dev/null
+mkdir -p ${TARBALL_ROOT}/lib
+mkdir -p ${TARBALL_ROOT}/ext-py
+
+rm -f ${SHELL_HOME}/gen-py/impala_build_version.py
+cat > ${SHELL_HOME}/gen-py/impala_build_version.py <<EOF
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 # Copyright 2012 Cloudera Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,15 +96,61 @@ cat > ${TARBALL_ROOT}/lib/impala_build_version.py <<EOF
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 # Impala version string
 
 def get_version_string():
+=======
+def get_version():
+  return "${VERSION}"
+
+def get_git_hash():
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return "${GIT_HASH}"
 
 def get_build_date():
   return "${BUILD_DATE}"
 EOF
 
+<<<<<<< HEAD
 pushd ${BUILD_DIR} > /dev/null
 echo "Making tarball in ${BUILD_DIR}"
 tar czf ${BUILD_DIR}/impala-shell-0.1.tar.gz ./impala-shell-0.1/ --exclude="*.pyc" || popd 2>&1 > /dev/null
+=======
+# Building all eggs.
+echo "Building all external modules into eggs"
+for MODULE in ${SHELL_HOME}/ext-py/*; do
+  pushd ${MODULE} > /dev/null 2>&1
+  echo "Cleaning up old build artifacts."
+  rm -rf dist 2>&1 > /dev/null
+  rm -rf build 2>&1 > /dev/null
+  echo "Creating an egg for ${MODULE}"
+  python setup.py bdist_egg clean
+  cp dist/*.egg ${TARBALL_ROOT}/ext-py
+  popd 2>&1 > /dev/null
+done
+
+# Copy all the shell files into the build dir
+# The location of python libs for thrift is different in rhel/centos/sles
+if [ -d ${THRIFT_HOME}python/lib/python*/site-packages/thrift ]; then
+  cp -r ${THRIFT_HOME}python/lib/python*/site-packages/thrift\
+        ${TARBALL_ROOT}/lib
+else
+  cp -r ${THRIFT_HOME}python/lib64/python*/site-packages/thrift\
+        ${TARBALL_ROOT}/lib
+fi
+cp -r ${SHELL_HOME}/gen-py ${TARBALL_ROOT}
+cp ${SHELL_HOME}/thrift_sasl.py ${TARBALL_ROOT}/lib
+cp ${SHELL_HOME}/option_parser.py ${TARBALL_ROOT}/lib
+cp ${SHELL_HOME}/impala_shell_config_defaults.py ${TARBALL_ROOT}/lib
+cp ${SHELL_HOME}/impala_client.py ${TARBALL_ROOT}/lib
+cp ${SHELL_HOME}/shell_output.py ${TARBALL_ROOT}/lib
+cp ${SHELL_HOME}/pkg_resources.py ${TARBALL_ROOT}/lib
+cp ${SHELL_HOME}/impala-shell ${TARBALL_ROOT}
+cp ${SHELL_HOME}/impala_shell.py ${TARBALL_ROOT}
+
+pushd ${BUILD_DIR} > /dev/null
+echo "Making tarball in ${BUILD_DIR}"
+tar czf ${BUILD_DIR}/impala-shell-${VERSION}.tar.gz ./impala-shell-${VERSION}/\
+    --exclude="*.pyc" || popd 2>&1 > /dev/null
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

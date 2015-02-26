@@ -21,6 +21,7 @@
 // issues when we try to dynamically link the codegen'd functions.
 #ifdef IR_COMPILE
 #include <iostream>
+<<<<<<< HEAD
   #define DCHECK(condition) 
   #define DCHECK_EQ(a, b)
   #define DCHECK_NE(a, b)
@@ -31,12 +32,27 @@
   // Similar to how glog defines DCHECK for release.
   #define LOG(level) while(false) std::cout
   #define VLOG(level) while(false) std::cout 
+=======
+  #define DCHECK(condition) while(false) std::cout
+  #define DCHECK_EQ(a, b) while(false) std::cout
+  #define DCHECK_NE(a, b) while(false) std::cout
+  #define DCHECK_GT(a, b) while(false) std::cout
+  #define DCHECK_LT(a, b) while(false) std::cout
+  #define DCHECK_GE(a, b) while(false) std::cout
+  #define DCHECK_LE(a, b) while(false) std::cout
+  #define DCHECK_NOTNULL(a) while(false) std::cout
+  // Similar to how glog defines DCHECK for release.
+  #define LOG(level) while(false) std::cout
+  #define VLOG(level) while(false) std::cout
+  #define VLOG_IS_ON(level) (false)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #else
   // GLOG defines this based on the system but doesn't check if it's already
   // been defined.  undef it first to avoid warnings.
   // glog MUST be included before gflags.  Instead of including them,
   // our files should include this file instead.
   #undef _XOPEN_SOURCE
+<<<<<<< HEAD
   // This is including a glog internal file.  We want this to expose the
   // function to get the stack trace.
   #include <glog/../utilities.h>
@@ -45,6 +61,21 @@
 
 // Define VLOG levels.  We want display per-row info less than per-file which
 // is less than per-query.  For now per-connection is the same as per-query.
+=======
+  #include <glog/logging.h>
+  #include <gflags/gflags.h>
+
+  #ifdef NDEBUG
+  #undef DCHECK_NOTNULL
+  // Fix warnings of unused variables when NDEBUG is defined (glog emits (a) for the
+  // following macro which triggers the warning).
+  #define DCHECK_NOTNULL(a) while(false)
+  #endif
+#endif
+
+// Define verbose logging levels.  Per-row logging is more verbase than per-file /
+// per-rpc logging which is more verbose than per-connection / per-query logging.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #define VLOG_CONNECTION VLOG(1)
 #define VLOG_RPC        VLOG(2)
 #define VLOG_QUERY      VLOG(1)
@@ -59,5 +90,32 @@
 #define VLOG_ROW_IS_ON VLOG_IS_ON(3)
 #define VLOG_PROGRESS_IS_ON VLOG_IS_ON(2)
 
+<<<<<<< HEAD
 #endif
 
+=======
+// IR modules don't use these methods, and can't see the google namespace used in
+// GetFullLogFilename()'s prototype.
+#ifndef IR_COMPILE
+namespace impala {
+
+// glog doesn't allow multiple invocations of InitGoogleLogging(). This method
+// conditionally calls InitGoogleLogging() only if it hasn't been called before.
+void InitGoogleLoggingSafe(const char* arg);
+
+// Returns the full pathname of the symlink to the most recent log
+// file corresponding to this severity
+void GetFullLogFilename(google::LogSeverity severity, std::string* filename);
+
+// Shuts down the google logging library. Call before exit to ensure that log files are
+// flushed. May only be called once.
+void ShutdownLogging();
+
+// Writes all command-line flags to the log at level INFO.
+void LogCommandLineFlags();
+}
+
+#endif // IR_COMPILE
+
+#endif
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

@@ -14,11 +14,16 @@
 
 package com.cloudera.impala.analysis;
 
+<<<<<<< HEAD
 import com.cloudera.impala.catalog.PrimitiveType;
+=======
+import com.cloudera.impala.catalog.Type;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 import com.cloudera.impala.common.AnalysisException;
 import com.cloudera.impala.thrift.TBoolLiteral;
 import com.cloudera.impala.thrift.TExprNode;
 import com.cloudera.impala.thrift.TExprNodeType;
+<<<<<<< HEAD
 
 public class BoolLiteral extends LiteralExpr {
   private final boolean value;
@@ -34,16 +39,53 @@ public class BoolLiteral extends LiteralExpr {
       this.value = true;
     } else if (value.toLowerCase().equals("false")) {
       this.value = false;
+=======
+import com.google.common.base.Objects;
+
+public class BoolLiteral extends LiteralExpr {
+  private final boolean value_;
+
+  public BoolLiteral(boolean value) {
+    this.value_ = value;
+    type_ = Type.BOOLEAN;
+  }
+
+  public BoolLiteral(String value) throws AnalysisException {
+    type_ = Type.BOOLEAN;
+    if (value.toLowerCase().equals("true")) {
+      this.value_ = true;
+    } else if (value.toLowerCase().equals("false")) {
+      this.value_ = false;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     } else {
       throw new AnalysisException("invalid BOOLEAN literal: " + value);
     }
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * Copy c'tor used in clone.
+   */
+  protected BoolLiteral(BoolLiteral other) {
+    super(other);
+    value_ = other.value_;
+  }
+
+  @Override
+  public String debugString() {
+    return Objects.toStringHelper(this)
+        .add("value", value_)
+        .toString();
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   @Override
   public boolean equals(Object obj) {
     if (!super.equals(obj)) {
       return false;
     }
+<<<<<<< HEAD
     return ((BoolLiteral) obj).value == value;
   }
 
@@ -54,11 +96,52 @@ public class BoolLiteral extends LiteralExpr {
   @Override
   public String toSql() {
     return value ? "TRUE" : "FALSE";
+=======
+    return ((BoolLiteral) obj).value_ == value_;
+  }
+
+  public boolean getValue() { return value_; }
+
+  @Override
+  public String toSqlImpl() {
+    return getStringValue();
+  }
+
+  @Override
+  public String getStringValue() {
+    return value_ ? "TRUE" : "FALSE";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   @Override
   protected void toThrift(TExprNode msg) {
     msg.node_type = TExprNodeType.BOOL_LITERAL;
+<<<<<<< HEAD
     msg.bool_literal = new TBoolLiteral(value);
   }
+=======
+    msg.bool_literal = new TBoolLiteral(value_);
+  }
+
+  @Override
+  protected Expr uncheckedCastTo(Type targetType) throws AnalysisException {
+    if (targetType.equals(this.type_)) {
+      return this;
+    } else {
+      return new CastExpr(targetType, this, true);
+    }
+  }
+
+  @Override
+  public int compareTo(LiteralExpr o) {
+    if (!(o instanceof BoolLiteral)) return -1;
+    BoolLiteral other = (BoolLiteral) o;
+    if (value_ && !other.getValue()) return 1;
+    if (!value_ && other.getValue()) return -1;
+    return 0;
+  }
+
+  @Override
+  public Expr clone() { return new BoolLiteral(this); }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

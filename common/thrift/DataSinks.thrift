@@ -25,6 +25,14 @@ enum TDataSinkType {
   TABLE_SINK
 }
 
+<<<<<<< HEAD
+=======
+enum TTableSinkType {
+  HDFS,
+  HBASE
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // Sink which forwards data to a remote plan fragment,
 // according to the given output partition specification
 // (ie, the m:1 part of an m:n data stream)
@@ -46,11 +54,18 @@ struct THdfsTableSink {
 }
 
 // Union type of all table sinks.
+<<<<<<< HEAD
 // Currently, only THdfsTableSink is supported, so we don't have a separate
 // TTableSinkType yet.
 struct TTableSink {
   1: required Types.TTableId target_table_id
   2: required THdfsTableSink hdfs_table_sink
+=======
+struct TTableSink {
+  1: required Types.TTableId  target_table_id
+  2: required TTableSinkType type
+  3: optional THdfsTableSink  hdfs_table_sink
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 struct TDataSink {

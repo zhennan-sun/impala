@@ -16,10 +16,13 @@
 #ifndef IMPALA_EXEC_HDFS_RCFILE_SCANNER_H
 #define IMPALA_EXEC_HDFS_RCFILE_SCANNER_H
 
+<<<<<<< HEAD
 #include "util/codec.h"
 #include "exec/hdfs-scanner.h"
 #include "exec/delimited-text-parser.h"
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // org.apache.hadoop.hive.ql.io.RCFile is the original RCFile implementation
 // and should be viewed as the canonical definition of this format. If
 // anything is unclear in this file you should consult the code in
@@ -219,15 +222,27 @@
 // within those blocks.  Using this information the column "buffers" (data)
 // that are needed by the query are read into a single buffer.  Column data that
 // is not used by the query is skipped and not read from the file.  The key data
+<<<<<<< HEAD
 // and the column data my be compressed.  The key data is compressed in a single
 // block while the column data is compressed separately by column.
 
 namespace impala {
 
+=======
+// and the column data may be compressed.  The key data is compressed in a single
+// block while the column data is compressed separately by column.
+
+#include "exec/base-sequence-scanner.h"
+
+namespace impala {
+
+struct HdfsFileDesc;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class HdfsScanNode;
 class TupleDescriptor;
 class Tuple;
 
+<<<<<<< HEAD
 // A scanner for reading RCFiles into tuples. 
 class HdfsRCFileScanner : public HdfsScanner {
  public:
@@ -238,16 +253,28 @@ class HdfsRCFileScanner : public HdfsScanner {
   virtual Status InitCurrentScanRange(HdfsPartitionDescriptor* hdfs_partition, 
       DiskIoMgr::ScanRange* scan_range, Tuple* template_tuple, ByteStream* byte_stream);
   virtual Status Close();
+=======
+// A scanner for reading RCFiles into tuples.
+class HdfsRCFileScanner : public BaseSequenceScanner {
+ public:
+  HdfsRCFileScanner(HdfsScanNode* scan_node, RuntimeState* state);
+  virtual ~HdfsRCFileScanner();
+
+  virtual Status Prepare(ScannerContext* context);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   void DebugString(int indentation_level, std::stringstream* out) const;
 
  private:
+<<<<<<< HEAD
   // Sync indicator.
   const static int SYNC_MARKER = -1;
 
   // Size of the sync hash field.
   const static int SYNC_HASH_SIZE = 16;
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // The key class name located in the RCFile Header.
   // This is always "org.apache.hadoop.hive.ql.io.RCFile$KeyBuffer"
   static const char* const RCFILE_KEY_CLASS_NAME;
@@ -261,6 +288,7 @@ class HdfsRCFileScanner : public HdfsScanner {
   static const char* const RCFILE_METADATA_KEY_NUM_COLS;
 
   // The four byte RCFile unique version header present at the beginning
+<<<<<<< HEAD
   // of the file {'R', 'C', 'F' 1} 
   static const uint8_t RCFILE_VERSION_HEADER[4];
 
@@ -285,14 +313,38 @@ class HdfsRCFileScanner : public HdfsScanner {
   // Read the rowgroup header
   // Verifies:
   //   sync hash if pressent.
+=======
+  // of the file {'R', 'C', 'F' 1}
+  static const uint8_t RCFILE_VERSION_HEADER[4];
+
+  // Implementation of superclass functions.
+  virtual FileHeader* AllocateFileHeader();
+  virtual Status ReadFileHeader();
+  virtual Status InitNewRange();
+  virtual Status ProcessRange();
+
+  virtual THdfsFileFormat::type file_format() const {
+    return THdfsFileFormat::RC_FILE;
+  }
+
+  // Reads the RCFile Header Metadata section in the current file to determine the number
+  // of columns.  Other pieces of the metadata are ignored.
+  Status ReadNumColumnsMetadata();
+
+  // Reads the rowgroup header starting after the sync.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Sets:
   //   key_length_
   //   compressed_key_length_
   //   num_rows_
+<<<<<<< HEAD
   Status ReadHeader();
 
   // Read and validate the rowgroup sync field
   Status ReadSync();
+=======
+  Status ReadRowGroupHeader();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Read the rowgroup key buffers, decompress if necessary.
   // The "keys" are really the lengths for the column values.  They
@@ -329,13 +381,20 @@ class HdfsRCFileScanner : public HdfsScanner {
   //   cur_field_length_[col_idx]
   Status NextField(int col_idx);
 
+<<<<<<< HEAD
   // Read a row group into buffers.
   // Calls:
   //   ReadHeader
+=======
+  // Read a row group (except for the sync marker and sync) into buffers.
+  // Calls:
+  //   ReadRowGroupHeader
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   //   ReadKeyBuffers
   //   ReadColumnBuffers
   Status ReadRowGroup();
 
+<<<<<<< HEAD
   // Move to next row. Return false if we were at the last row.
   // Calls NexField on each column that we are reading.
   // Modifies:
@@ -388,6 +447,68 @@ class HdfsRCFileScanner : public HdfsScanner {
 
   // number of columns in this rowgroup object
   int num_cols_;
+=======
+  // Reset state for a new row group
+  void ResetRowGroup();
+
+  // Move to next row. Calls NextField on each column that we are reading.
+  // Modifies:
+  //   row_pos_
+  Status NextRow();
+
+  enum Version {
+    SEQ6,     // Version for sequence file and pre hive-0.9 rc files
+    RCF1      // The version post hive-0.9 which uses a new header
+  };
+
+  // Data that is fixed across headers.  This struct is shared between scan ranges.
+  struct RcFileHeader : public BaseSequenceScanner::FileHeader {
+    // RC file version
+    Version version;
+
+    // The number of columns in the file (may be more than the number of columns in the
+    // table metadata)
+    int num_cols;
+  };
+
+  // Struct encapsulating all the state for parsing a single column from a row
+  // group
+  struct ColumnInfo {
+    // If true, this column should be materialized, otherwise, it can be skipped
+    bool materialize_column;
+
+    // Uncompressed and compressed byte lengths for this column
+    int32_t buffer_len;
+    int32_t uncompressed_buffer_len;
+
+    // Length and start of the key for this column.
+    int32_t key_buffer_len;
+    // This is a ptr into the scanner's key_buffer_ for this column.
+    uint8_t* key_buffer;
+
+    // Current position in the key buffer
+    int32_t key_buffer_pos;
+
+    // Offset into row_group_buffer_ for the start of this column.
+    int32_t start_offset;
+
+    // Offset from the start of the column for the next field in the column
+    int32_t buffer_pos;
+
+    // RLE: Length of the current field
+    int32_t current_field_len;
+    // RLE: Repetition count of the current field
+    int32_t current_field_len_rep;
+  };
+
+  // Vector of column descriptions for each column in the file (i.e., may contain a
+  // different number of non-partition columns than are in the table metadata).  Indexed
+  // by column index, including non-materialized columns.
+  std::vector<ColumnInfo> columns_;
+
+  // Buffer for copying key buffers.  This buffer is reused between row groups.
+  std::vector<uint8_t> key_buffer_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // number of rows in this rowgroup object
   int num_rows_;
@@ -404,6 +525,7 @@ class HdfsRCFileScanner : public HdfsScanner {
   // Read from the row group header.
   int compressed_key_length_;
 
+<<<<<<< HEAD
   // Decompressor class to use, if any.
   boost::scoped_ptr<Codec> decompressor_;
 
@@ -459,6 +581,24 @@ class HdfsRCFileScanner : public HdfsScanner {
 
   // Column buffer byte offset, by column.
   int32_t* col_buf_pos_;
+=======
+  // If true, the row_group_buffer_ can be reused across row groups, otherwise,
+  // it (more specifically the data_buffer_pool_ that allocated the row_group_buffer_)
+  // must be attached to the row batch.
+  bool reuse_row_group_buffer_;
+
+  // Buffer containing the entire row group.  We allocate a buffer for the entire
+  // row group, skipping non-materialized columns.
+  uint8_t* row_group_buffer_;
+
+  // Sum of the bytes lengths of the materialized columns in the current row group.  This
+  // is the number of valid bytes in row_group_buffer_.
+  int row_group_length_;
+
+  // This is the allocated size of 'row_group_buffer_'.  'row_group_buffer_' is reused
+  // across row groups and will grow as necessary.
+  int row_group_buffer_size_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

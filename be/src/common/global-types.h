@@ -15,8 +15,11 @@
 //
 // This file contains type definitions that are used throughout the code base.
 
+<<<<<<< HEAD
 #include "sparrow/util.h"
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 namespace impala {
 
 // for now, these are simply ints; if we find we need to generate ids in the

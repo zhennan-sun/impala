@@ -31,9 +31,15 @@ class StringBuffer {
  public:
   // C'tor for StringBuffer.  Memory backing the string will be allocated from
   // the pool as necessary.  Can optionally be initialized from a StringValue.
+<<<<<<< HEAD
   StringBuffer(MemPool* pool, StringValue* str = NULL) :
     pool_(pool),
     buffer_size_(0) {
+=======
+  StringBuffer(MemPool* pool, StringValue* str = NULL)
+      : pool_(pool), buffer_size_(0) {
+    DCHECK(pool_ != NULL);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     if (str != NULL) {
       string_value_ = *str;
       buffer_size_ = str->len;
@@ -61,11 +67,24 @@ class StringBuffer {
     Append(str, len);
   }
 
+<<<<<<< HEAD
   // Clear the underlying StringValue
+=======
+  // Clear the underlying StringValue.  The allocated buffer can be reused.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   void Clear() {
     string_value_.len = 0;
   }
 
+<<<<<<< HEAD
+=======
+  // Clears the underlying buffer and StringValue
+  void Reset() {
+    string_value_.len = 0;
+    buffer_size_ = 0;
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Returns whether the current string is empty
   bool Empty() const {
     return string_value_.len == 0;
@@ -87,16 +106,28 @@ class StringBuffer {
   }
 
  private:
+<<<<<<< HEAD
   // Grows the buffer backing the string to be at least new_size, copying
   // over the previous string data into the new buffer.
   // TODO: some kind of doubling strategy?
   void GrowBuffer(int new_len) {
     char* new_buffer = reinterpret_cast<char*>(pool_->Allocate(new_len));
+=======
+  // Grows the buffer backing the string to be at least new_size, copying over the
+  // previous string data into the new buffer.
+  void GrowBuffer(int new_len) {
+    // TODO: Release/reuse old buffers somehow
+    buffer_size_ = std::max(buffer_size_ * 2, new_len);
+    char* new_buffer = reinterpret_cast<char*>(pool_->Allocate(buffer_size_));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     if (string_value_.len > 0) {
       memcpy(new_buffer, string_value_.ptr, string_value_.len);
     }
     string_value_.ptr = new_buffer;
+<<<<<<< HEAD
     buffer_size_ = new_len;
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   MemPool* pool_;

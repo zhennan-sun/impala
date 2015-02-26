@@ -14,15 +14,27 @@
 
 package com.cloudera.impala.catalog;
 
+<<<<<<< HEAD
 import java.util.ArrayList;
 
 import com.cloudera.impala.analysis.SqlParserSymbols;
 import com.cloudera.impala.thrift.TPrimitiveType;
 import com.google.common.base.Preconditions;
+=======
+import java.util.List;
+
+import com.cloudera.impala.thrift.TPrimitiveType;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 import com.google.common.collect.Lists;
 
 public enum PrimitiveType {
   INVALID_TYPE("INVALID_TYPE", -1, TPrimitiveType.INVALID_TYPE),
+<<<<<<< HEAD
+=======
+  // NULL_TYPE - used only in LiteralPredicate and NullLiteral to make NULLs compatible
+  // with all other types.
+  NULL_TYPE("NULL_TYPE", 1, TPrimitiveType.NULL_TYPE),
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   BOOLEAN("BOOLEAN", 1, TPrimitiveType.BOOLEAN),
   TINYINT("TINYINT", 1, TPrimitiveType.TINYINT),
   SMALLINT("SMALLINT", 2, TPrimitiveType.SMALLINT),
@@ -36,6 +48,7 @@ public enum PrimitiveType {
   TIMESTAMP("TIMESTAMP", 16, TPrimitiveType.TIMESTAMP),
   // 8-byte pointer and 4-byte length indicator (12 bytes total).
   // Aligning to 8 bytes so 16 total.
+<<<<<<< HEAD
   STRING("STRING", 16, TPrimitiveType.STRING);
 
   private final String description;
@@ -263,3 +276,66 @@ public enum PrimitiveType {
   }
 }
 
+=======
+  STRING("STRING", 16, TPrimitiveType.STRING),
+  VARCHAR("VARCHAR", 16, TPrimitiveType.VARCHAR),
+
+  // Unsupported scalar type.
+  BINARY("BINARY", -1, TPrimitiveType.BINARY),
+
+  // For decimal at the highest precision, the BE uses 16 bytes.
+  DECIMAL("DECIMAL", 16, TPrimitiveType.DECIMAL),
+
+  // Fixed length char array.
+  CHAR("CHAR", -1, TPrimitiveType.CHAR);
+
+  private final String description_;
+  private final int slotSize_;  // size of tuple slot for this type
+  private final TPrimitiveType thriftType_;
+
+  private PrimitiveType(String description, int slotSize, TPrimitiveType thriftType) {
+    description_ = description;
+    slotSize_ = slotSize;
+    thriftType_ = thriftType;
+  }
+
+  @Override
+  public String toString() {
+    return description_;
+  }
+
+  public static PrimitiveType fromThrift(TPrimitiveType t) {
+    switch (t) {
+      case INVALID_TYPE: return INVALID_TYPE;
+      case NULL_TYPE: return NULL_TYPE;
+      case BOOLEAN: return BOOLEAN;
+      case TINYINT: return TINYINT;
+      case SMALLINT: return SMALLINT;
+      case INT: return INT;
+      case BIGINT: return BIGINT;
+      case FLOAT: return FLOAT;
+      case DOUBLE: return DOUBLE;
+      case STRING: return STRING;
+      case VARCHAR: return VARCHAR;
+      case TIMESTAMP: return TIMESTAMP;
+      case CHAR: return CHAR;
+      case DECIMAL: return DECIMAL;
+      case BINARY: return BINARY;
+    }
+    return INVALID_TYPE;
+  }
+
+  public TPrimitiveType toThrift() { return thriftType_; }
+
+  public static List<TPrimitiveType> toThrift(PrimitiveType[] types) {
+    List<TPrimitiveType> result = Lists.newArrayList();
+    for (PrimitiveType t: types) {
+      result.add(t.toThrift());
+    }
+    return result;
+  }
+
+  public int getSlotSize() { return slotSize_; }
+  public static int getMaxSlotSize() { return DECIMAL.slotSize_; }
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

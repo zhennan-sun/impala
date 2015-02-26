@@ -24,9 +24,15 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
+<<<<<<< HEAD
 #include <transport/TBufferTransports.h>
 #include <transport/TSaslTransport.h>
 #include <transport/TSaslClientTransport.h>
+=======
+#include <thrift/transport/TBufferTransports.h>
+#include "transport/TSaslTransport.h"
+#include "transport/TSaslClientTransport.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace sasl;
 

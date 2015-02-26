@@ -18,12 +18,20 @@
 
 #include "runtime/descriptors.h"
 #include "runtime/mem-pool.h"
+<<<<<<< HEAD
+=======
+#include "runtime/row-batch.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "runtime/tuple.h"
 
 namespace impala {
 
 // A TupleRow encapsulates a contiguous sequence of Tuple pointers which
+<<<<<<< HEAD
 // together make up a row. 
+=======
+// together make up a row.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class TupleRow {
  public:
   Tuple* GetTuple(int tuple_idx) {
@@ -34,6 +42,7 @@ class TupleRow {
     tuples_[tuple_idx] = tuple;
   }
 
+<<<<<<< HEAD
   // Create a deep copy of this TupleRow.  DeepCopy will allocate from the MemPool and copy
   // the tuple pointers, the tuples and the string data in the tuples.
   TupleRow* DeepCopy(const std::vector<TupleDescriptor*> descs, MemPool* pool) {
@@ -49,6 +58,44 @@ class TupleRow {
     return result;
   }
  
+=======
+  // Create a deep copy of this TupleRow.  DeepCopy will allocate from  the pool.
+  TupleRow* DeepCopy(const std::vector<TupleDescriptor*>& descs, MemPool* pool) {
+    int size = descs.size() * sizeof(Tuple*);
+    TupleRow* result = reinterpret_cast<TupleRow*>(pool->Allocate(size));
+    DeepCopy(result, descs, pool, false);
+    return result;
+  }
+
+  // Create a deep copy of this TupleRow into 'dst'.  DeepCopy will allocate from
+  // the MemPool and copy the tuple pointers, the tuples and the string data in the
+  // tuples.
+  // If reuse_tuple_mem is true, it is assumed the dst TupleRow has already allocated
+  // tuple memory and that memory will be reused.  Otherwise, new tuples will be allocated
+  // and stored in 'dst'.
+  void DeepCopy(TupleRow* dst, const std::vector<TupleDescriptor*>& descs, MemPool* pool,
+      bool reuse_tuple_mem) {
+    for (int i = 0; i < descs.size(); ++i) {
+      if (this->GetTuple(i) != NULL) {
+        if (reuse_tuple_mem && dst->GetTuple(i) != NULL) {
+          this->GetTuple(i)->DeepCopy(dst->GetTuple(i), *descs[i], pool);
+        } else {
+          dst->SetTuple(i, this->GetTuple(i)->DeepCopy(*descs[i], pool));
+        }
+      } else {
+        // TODO: this is wasteful.  If we have 'reuse_tuple_mem', we should be able
+        // to save the tuple buffer and reuse it (i.e. freelist).
+        dst->SetTuple(i, NULL);
+      }
+    }
+  }
+
+  inline TupleRow* next_row(RowBatch* batch) const {
+    uint8_t* mem = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(this));
+    return reinterpret_cast<TupleRow*>(mem + batch->row_byte_size());
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // TODO: make a macro for doing this
   // For C++/IR interop, we need to be able to look up types by name.
   static const char* LLVM_CLASS_NAME;

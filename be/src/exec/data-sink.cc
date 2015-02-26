@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "exec/data-sink.h"
+<<<<<<< HEAD
 #include "exec/hdfs-table-sink.h"
 #include "exec/exec-node.h"
 #include "exprs/expr.h"
@@ -20,28 +21,59 @@
 #include "runtime/data-stream-sender.h"
 
 #include <string>
+=======
+
+#include <string>
+#include <map>
+
+#include "common/logging.h"
+#include "exec/hdfs-table-sink.h"
+#include "exec/hbase-table-sink.h"
+#include "exec/exec-node.h"
+#include "exprs/expr.h"
+#include "gen-cpp/ImpalaInternalService_types.h"
+#include "gen-cpp/ImpalaInternalService_constants.h"
+#include "runtime/data-stream-sender.h"
+#include "util/container-util.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace std;
 using namespace boost;
 
 namespace impala {
 
+<<<<<<< HEAD
 Status DataSink::CreateDataSink(
+=======
+Status DataSink::CreateDataSink(ObjectPool* pool,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     const TDataSink& thrift_sink, const vector<TExpr>& output_exprs,
     const TPlanFragmentExecParams& params,
     const RowDescriptor& row_desc, scoped_ptr<DataSink>* sink) {
   DataSink* tmp_sink = NULL;
   switch (thrift_sink.type) {
     case TDataSinkType::DATA_STREAM_SINK:
+<<<<<<< HEAD
       if (!thrift_sink.__isset.stream_sink) return Status("Missing data stream sink.");
       // TODO: figure out good buffer size based on size of output row
       tmp_sink = new DataStreamSender(
           row_desc, thrift_sink.stream_sink, params.destinations, 16 * 1024);
+=======
+      if (!thrift_sink.__isset.stream_sink) {
+        return Status("Missing data stream sink.");
+      }
+
+      // TODO: figure out good buffer size based on size of output row
+      tmp_sink = new DataStreamSender(pool,
+          params.sender_id, row_desc, thrift_sink.stream_sink,
+          params.destinations, 16 * 1024);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       sink->reset(tmp_sink);
       break;
 
     case TDataSinkType::TABLE_SINK:
       if (!thrift_sink.__isset.table_sink) return Status("Missing table sink.");
+<<<<<<< HEAD
       tmp_sink = new HdfsTableSink(
           row_desc, params.fragment_instance_id, output_exprs, thrift_sink);
       sink->reset(tmp_sink);
@@ -49,6 +81,32 @@ Status DataSink::CreateDataSink(
 
     default:
       std::stringstream error_msg;
+=======
+      switch (thrift_sink.table_sink.type) {
+        case TTableSinkType::HDFS:
+          tmp_sink = new HdfsTableSink(row_desc, output_exprs, thrift_sink);
+          sink->reset(tmp_sink);
+          break;
+        case TTableSinkType::HBASE:
+          tmp_sink = new HBaseTableSink(row_desc, output_exprs, thrift_sink);
+          sink->reset(tmp_sink);
+          break;
+        default:
+          stringstream error_msg;
+          const char* str = "Unknown table sink";
+          map<int, const char*>::const_iterator i =
+              _TTableSinkType_VALUES_TO_NAMES.find(thrift_sink.table_sink.type);
+          if (i != _TTableSinkType_VALUES_TO_NAMES.end()) {
+            str = i->second;
+          }
+          error_msg << str << " not implemented.";
+          return Status(error_msg.str());
+      }
+
+      break;
+    default:
+      stringstream error_msg;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       map<int, const char*>::const_iterator i =
           _TDataSinkType_VALUES_TO_NAMES.find(thrift_sink.type);
       const char* str = "Unknown data sink type ";
@@ -61,4 +119,60 @@ Status DataSink::CreateDataSink(
   return Status::OK;
 }
 
+<<<<<<< HEAD
 }
+=======
+void DataSink::MergeInsertStats(const TInsertStats& src_stats,
+    TInsertStats* dst_stats) {
+  dst_stats->bytes_written += src_stats.bytes_written;
+  if (src_stats.__isset.parquet_stats) {
+    if (dst_stats->__isset.parquet_stats) {
+      MergeMapValues<string, int64_t>(src_stats.parquet_stats.per_column_size,
+          &dst_stats->parquet_stats.per_column_size);
+    } else {
+      dst_stats->__set_parquet_stats(src_stats.parquet_stats);
+    }
+  }
+}
+
+string DataSink::OutputInsertStats(const PartitionStatusMap& stats,
+    const string& prefix) {
+  const char* indent = "  ";
+  stringstream ss;
+  ss << prefix;
+  bool first = true;
+  BOOST_FOREACH(const PartitionStatusMap::value_type& val, stats) {
+    if (!first) ss << endl;
+    first = false;
+    ss << "Partition: ";
+
+    const string& partition_key = val.first;
+    if (partition_key == g_ImpalaInternalService_constants.ROOT_PARTITION_KEY) {
+      ss << "Default" << endl;
+    } else {
+      ss << partition_key << endl;
+    }
+    const TInsertStats& stats = val.second.stats;
+    ss << indent << "BytesWritten: "
+       << PrettyPrinter::Print(stats.bytes_written, TCounterType::BYTES);
+    if (stats.__isset.parquet_stats) {
+      const TParquetInsertStats& parquet_stats = stats.parquet_stats;
+      ss << endl << indent << "Per Column Sizes:";
+      for (map<string, int64_t>::const_iterator i = parquet_stats.per_column_size.begin();
+           i != parquet_stats.per_column_size.end(); ++i) {
+        ss << endl << indent << indent << i->first << ": "
+           << PrettyPrinter::Print(i->second, TCounterType::BYTES);
+      }
+    }
+  }
+  return ss.str();
+}
+
+Status DataSink::Prepare(RuntimeState* state) {
+  expr_mem_tracker_.reset(
+      new MemTracker(-1, -1, "Data sink", state->instance_mem_tracker(), false));
+  return Status::OK;
+}
+
+}  // namespace impala
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

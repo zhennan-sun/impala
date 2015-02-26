@@ -18,8 +18,18 @@
 // cross compiled and without this, would get stripped by the clang optimizer.
 #ifdef IR_COMPILE
 extern "C"
+<<<<<<< HEAD
 uint32_t IrFvnHash(const void* data, int32_t bytes, uint32_t hash) {
   return HashUtil::FvnHash(data, bytes, hash);
+=======
+uint32_t IrFnvHash(const void* data, int32_t bytes, uint32_t hash) {
+  return HashUtil::FnvHash64to32(data, bytes, hash);
+}
+
+extern "C"
+uint32_t IrMurmurHash(const void* data, int32_t bytes, uint32_t hash) {
+  return HashUtil::MurmurHash2_64(data, bytes, hash);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 extern "C"
@@ -27,7 +37,11 @@ uint32_t IrCrcHash(const void* data, int32_t bytes, uint32_t hash) {
 #ifdef __SSE4_2__
   return HashUtil::CrcHash(data, bytes, hash);
 #else
+<<<<<<< HEAD
   return HashUtil::FvnHash(data, bytes, hash);
+=======
+  return HashUtil::FnvHash64to32(data, bytes, hash);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #endif
 }
 #else

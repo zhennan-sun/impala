@@ -14,10 +14,22 @@
 # limitations under the License.
 
 # Generates the impala version and build information.
+<<<<<<< HEAD
 VERSION=0.1
+=======
+# Note: for internal (aka pre-release) versions, the version should have
+# "-INTERNAL" appended. Parts of the code will look for this to distinguish
+# between released and internal versions.
+VERSION=2.1.0-cdh4-INTERNAL
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 GIT_HASH=$(git rev-parse HEAD)
 BUILD_TIME=`date`
 HEADER="# Generated version information from save-version.sh"
 echo -e \
 "${HEADER}\nVERSION: ${VERSION}\nGIT_HASH: ${GIT_HASH}\nBUILD_TIME: ${BUILD_TIME}"\
 > $IMPALA_HOME/bin/version.info
+<<<<<<< HEAD
+=======
+
+cat $IMPALA_HOME/bin/version.info
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

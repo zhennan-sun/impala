@@ -21,6 +21,7 @@
 
 namespace impala {
 
+<<<<<<< HEAD
 class TExprNode;
 
 class IsNullPredicate: public Predicate {
@@ -38,6 +39,12 @@ class IsNullPredicate: public Predicate {
  private:
   const bool is_not_null_;
   static void* ComputeFn(Expr* e, TupleRow* row);
+=======
+class IsNullPredicate {
+ public:
+  template<typename T> static BooleanVal IsNull(FunctionContext* ctx, const T& val);
+  template<typename T> static BooleanVal IsNotNull(FunctionContext* ctx, const T& val);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

@@ -15,6 +15,7 @@
 namespace cpp impala
 namespace java com.cloudera.impala.thrift
 
+<<<<<<< HEAD
 include "Types.thrift"
 
 // Serialized, self-contained version of a RowBatch (in be/src/runtime/row-batch.h).
@@ -43,8 +44,41 @@ struct TColumnValue {
   3: optional i64 longVal
   4: optional double doubleVal
   5: optional string stringVal
+=======
+// this is a union over all possible return types
+struct TColumnValue {
+  1: optional bool bool_val
+  6: optional byte byte_val
+  7: optional i16 short_val
+  2: optional i32 int_val
+  3: optional i64 long_val
+  4: optional double double_val
+  5: optional string string_val
+  8: optional binary binary_val
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 struct TResultRow {
   1: list<TColumnValue> colVals
 }
+<<<<<<< HEAD
+=======
+
+// A union over all possible return types for a column of data
+// Currently only used by ExternalDataSource types
+struct TColumnData {
+  // One element in the list for every row in the column indicating if there is
+  // a value in the vals list or a null.
+  1: required list<bool> is_null;
+
+  // Only one is set, only non-null values are set.
+  2: optional list<bool> bool_vals;
+  3: optional list<byte> byte_vals;
+  4: optional list<i16> short_vals;
+  5: optional list<i32> int_vals;
+  6: optional list<i64> long_vals;
+  7: optional list<double> double_vals;
+  8: optional list<string> string_vals;
+  9: optional list<binary> binary_vals;
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

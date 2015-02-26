@@ -25,6 +25,7 @@
 
 namespace impala {
 
+<<<<<<< HEAD
 // Create a compressor object.
 
 class GzipCompressor : public Codec {
@@ -44,6 +45,34 @@ class GzipCompressor : public Codec {
  private:
   // If set we use the gzip algorithm otherwise the lzip.
   bool is_gzip_;
+=======
+// Different compression classes.  The classes all expose the same API and
+// abstracts the underlying calls to the compression libraries.
+// TODO: reconsider the abstracted API
+
+class GzipCompressor : public Codec {
+ public:
+  // Compression formats supported by the zlib library
+  enum Format {
+    ZLIB,
+    DEFLATE,
+    GZIP,
+  };
+
+  virtual ~GzipCompressor();
+  virtual int64_t MaxOutputLen(int64_t input_len, const uint8_t* input = NULL);
+  virtual Status ProcessBlock(bool output_preallocated, int64_t input_length,
+      const uint8_t* input, int64_t* output_length, uint8_t** output);
+
+  virtual std::string file_extension() const { return "gz"; }
+
+ private:
+  friend class Codec;
+  GzipCompressor(Format format, MemPool* mem_pool = NULL, bool reuse_buffer = false);
+  virtual Status Init();
+
+  Format format_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Structure used to communicate with the library.
   z_stream stream_;
@@ -51,11 +80,22 @@ class GzipCompressor : public Codec {
   // These are magic numbers from zlib.h.  Not clear why they are not defined there.
   const static int WINDOW_BITS = 15;    // Maximum window size
   const static int GZIP_CODEC = 16;     // Output Gzip.
+<<<<<<< HEAD
   
+=======
+
+  // Compresses 'input' into 'output'.  Output must be preallocated and
+  // at least big enough.
+  // *output_length should be called with the length of the output buffer and on return
+  // is the length of the output.
+  Status Compress(int64_t input_length, const uint8_t* input,
+      int64_t* output_length, uint8_t* output);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 class BzipCompressor : public Codec {
  public:
+<<<<<<< HEAD
   BzipCompressor(MemPool* mem_pool, bool reuse_buffer);
   virtual ~BzipCompressor() { }
 
@@ -65,10 +105,23 @@ class BzipCompressor : public Codec {
   // Initialize the compressor.
   virtual Status Init() { return Status::OK; }
 
+=======
+  virtual ~BzipCompressor() { }
+  virtual int64_t MaxOutputLen(int64_t input_len, const uint8_t* input = NULL);
+  virtual Status ProcessBlock(bool output_preallocated, int64_t input_length,
+      const uint8_t* input, int64_t* output_length, uint8_t** output);
+  virtual std::string file_extension() const { return "bz2"; }
+
+ private:
+  friend class Codec;
+  BzipCompressor(MemPool* mem_pool, bool reuse_buffer);
+  virtual Status Init() { return Status::OK; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 class SnappyBlockCompressor : public Codec {
  public:
+<<<<<<< HEAD
   SnappyBlockCompressor(MemPool* mem_pool, bool reuse_buffer);
   virtual ~SnappyBlockCompressor() { }
 
@@ -80,10 +133,23 @@ class SnappyBlockCompressor : public Codec {
   // Snappy does not need initialization
   virtual Status Init() { return Status::OK; }
 
+=======
+  virtual ~SnappyBlockCompressor() { }
+  virtual int64_t MaxOutputLen(int64_t input_len, const uint8_t* input = NULL);
+  virtual Status ProcessBlock(bool output_preallocated, int64_t input_length,
+      const uint8_t* input, int64_t* output_length, uint8_t** output);
+  virtual std::string file_extension() const { return "snappy"; }
+
+ private:
+  friend class Codec;
+  SnappyBlockCompressor(MemPool* mem_pool, bool reuse_buffer);
+  virtual Status Init() { return Status::OK; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 class SnappyCompressor : public Codec {
  public:
+<<<<<<< HEAD
   SnappyCompressor(MemPool* mem_pool, bool reuse_buffer);
   virtual ~SnappyCompressor() { }
 
@@ -95,6 +161,41 @@ class SnappyCompressor : public Codec {
   // Snappy does not need initialization
   virtual Status Init() { return Status::OK; }
 
+=======
+  virtual ~SnappyCompressor() { }
+  virtual int64_t MaxOutputLen(int64_t input_len, const uint8_t* input = NULL);
+  virtual Status ProcessBlock(bool output_preallocated, int64_t input_length,
+      const uint8_t* input, int64_t* output_length, uint8_t** output);
+  virtual std::string file_extension() const { return "snappy"; }
+
+  // Computes the crc checksum that snappy expects when used in a framing format.
+  // This checksum needs to come after the compressed data.
+  // http://code.google.com/p/snappy/source/browse/trunk/framing_format.txt
+  static uint32_t ComputeChecksum(int64_t input_len, const uint8_t* input);
+
+ private:
+  friend class Codec;
+  SnappyCompressor(MemPool* mem_pool = NULL, bool reuse_buffer = false);
+  virtual Status Init() { return Status::OK; }
+};
+
+// Lz4 is a compression codec with similar compression ratios as snappy
+// but much faster decompression. This compressor is not able to compress
+// unless the output buffer is allocated and will cause an error if
+// asked to do so.
+class Lz4Compressor : public Codec {
+ public:
+  virtual ~Lz4Compressor() { }
+  virtual int64_t MaxOutputLen(int64_t input_len, const uint8_t* input = NULL);
+  virtual Status ProcessBlock(bool output_preallocated, int64_t input_length,
+      const uint8_t* input, int64_t* output_length, uint8_t** output);
+  virtual std::string file_extension() const { return "lz4"; }
+
+ private:
+  friend class Codec;
+  Lz4Compressor(MemPool* mem_pool = NULL, bool reuse_buffer = false);
+  virtual Status Init() { return Status::OK; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

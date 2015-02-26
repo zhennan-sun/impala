@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "exprs/conditional-functions.h"
+<<<<<<< HEAD
 #include "exprs/expr.h"
 #include "exprs/case-expr.h"
 #include "runtime/tuple-row.h"
@@ -195,3 +196,21 @@ void* ConditionalFunctions::NoCaseComputeFn(Expr* e, TupleRow* row) {
 }
 
 }
+=======
+#include "runtime/runtime-state.h"
+#include "udf/udf.h"
+
+using namespace impala;
+using namespace impala_udf;
+using namespace std;
+
+#define CONDITIONAL_CODEGEN_FN(expr_class) \
+  Status expr_class::GetCodegendComputeFn(RuntimeState* state, llvm::Function** fn) { \
+    return GetCodegendComputeFnWrapper(state, fn); \
+  }
+
+CONDITIONAL_CODEGEN_FN(IsNullExpr);
+CONDITIONAL_CODEGEN_FN(NullIfExpr);
+CONDITIONAL_CODEGEN_FN(IfExpr);
+CONDITIONAL_CODEGEN_FN(CoalesceExpr);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

@@ -18,12 +18,15 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+<<<<<<< HEAD
 
   <parent>
     <groupId>com.cloudera</groupId>
     <artifactId>parent</artifactId>
     <version>1.0</version>
   </parent>
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   <groupId>com.cloudera.impala</groupId>
   <artifactId>impala-frontend</artifactId>
   <version>0.1-SNAPSHOT</version>
@@ -34,6 +37,7 @@
   <properties>
     <test.hive.testdata>${project.basedir}/../testdata/target/AllTypes.txt</test.hive.testdata>
     <backend.library.path>${env.IMPALA_HOME}/be/build/debug/service:${env.IMPALA_HOME}/be/build/release/service</backend.library.path>
+<<<<<<< HEAD
     <fe_port>21000</fe_port>
     <impalad>localhost</impalad>
     <use_external_impalad>false</use_external_impalad>
@@ -56,28 +60,131 @@
       <scope>test</scope>
     </dependency>
 
+=======
+    <beeswax_port>21000</beeswax_port>
+    <impalad>localhost</impalad>
+    <testExecutionMode>reduced</testExecutionMode>
+    <hadoop.version>${env.IMPALA_HADOOP_VERSION}</hadoop.version>
+    <hive.version>${env.IMPALA_HIVE_VERSION}</hive.version>
+    <sentry.version>${env.IMPALA_SENTRY_VERSION}</sentry.version>
+    <hbase.version>${env.IMPALA_HBASE_VERSION}</hbase.version>
+    <impala.extdatasrc.api.version>1.0-SNAPSHOT</impala.extdatasrc.api.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.cloudera.impala</groupId>
+      <artifactId>impala-data-source-api</artifactId>
+      <version>${impala.extdatasrc.api.version}</version>
+    </dependency>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <version>${hadoop.version}</version>
+<<<<<<< HEAD
       <scope>system</scope>
       <systemPath>${env.IMPALA_HOME}/thirdparty/hadoop-${hadoop.version}/share/hadoop/hdfs/hadoop-hdfs-${hadoop.version}.jar</systemPath>
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     </dependency>
 
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <version>${hadoop.version}</version>
+<<<<<<< HEAD
       <scope>system</scope>
       <systemPath>${env.IMPALA_HOME}/thirdparty/hadoop-${hadoop.version}/share/hadoop/common/hadoop-common-${hadoop.version}.jar</systemPath>
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     </dependency>
 
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-auth</artifactId>
       <version>${hadoop.version}</version>
+<<<<<<< HEAD
       <scope>system</scope>
       <systemPath>${env.IMPALA_HOME}/thirdparty/hadoop-${hadoop.version}/share/hadoop/common/lib/hadoop-auth-${hadoop.version}.jar</systemPath>
+=======
+    </dependency>
+
+    <dependency>
+      <groupId>com.cloudera.impala</groupId>
+      <artifactId>cdh4-extras</artifactId>
+      <version>${version}</version>
+      <scope>system</scope>
+      <systemPath>${env.IMPALA_HOME}/thirdparty/cdh4-extras/target/cdh4-extras-${version}.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.sentry</groupId>
+      <artifactId>sentry-core</artifactId>
+      <version>${sentry.version}</version>
+      <scope>system</scope>
+      <systemPath>${env.IMPALA_HOME}/thirdparty/sentry-${sentry.version}-SNAPSHOT/lib/sentry-core-${sentry.version}.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.sentry</groupId>
+      <artifactId>sentry-provider-file</artifactId>
+      <version>${sentry.version}</version>
+      <scope>system</scope>
+      <systemPath>${env.IMPALA_HOME}/thirdparty/sentry-${sentry.version}-SNAPSHOT/lib/sentry-provider-file-${sentry.version}.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.sentry</groupId>
+      <artifactId>sentry-binding-hive</artifactId>
+      <version>${sentry.version}</version>
+      <scope>system</scope>
+      <systemPath>${env.IMPALA_HOME}/thirdparty/sentry-${sentry.version}-SNAPSHOT/lib/sentry-binding-hive-${sentry.version}.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>parquet</groupId>
+      <artifactId>parquet-hive</artifactId>
+      <version>${env.IMPALA_PARQUET_VERSION}</version>
+      <scope>system</scope>
+      <systemPath>${env.IMPALA_HOME}/thirdparty/hive-${hive.version}/lib/parquet-hive-${env.IMPALA_PARQUET_VERSION}-cdh4.5.0.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>parquet-format</artifactId>
+      <version>${env.IMPALA_PARQUET_FORMAT_VERSION}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>parquet-hadoop</artifactId>
+      <version>${env.IMPALA_PARQUET_HADOOP_VERSION}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>parquet-common</artifactId>
+      <version>${env.IMPALA_PARQUET_HADOOP_VERSION}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>parquet-encoding</artifactId>
+      <version>${env.IMPALA_PARQUET_HADOOP_VERSION}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>parquet-thrift</artifactId>
+      <version>${env.IMPALA_PARQUET_HADOOP_VERSION}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+      <version>1.2.1</version>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     </dependency>
 
     <dependency>
@@ -139,6 +246,7 @@
       <version>${hive.version}</version>
     </dependency>
     <dependency>
+<<<<<<< HEAD
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
       <version>10.4.2.0</version>
@@ -164,6 +272,18 @@
       <artifactId>mysql-connector-java</artifactId>
       <version>5.1.9</version>
     </dependency>
+=======
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-service</artifactId>
+      <version>${hive.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-jdbc</artifactId>
+      <version>${hive.version}</version>
+    </dependency>
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     <!-- This driver supports PostgreSQL 7.2 and newer -->
     <dependency>
       <groupId>postgresql</groupId>
@@ -171,6 +291,7 @@
       <version>9.0-801.jdbc4</version>
     </dependency>
     <dependency>
+<<<<<<< HEAD
       <groupId>commons-dbcp</groupId>
       <artifactId>commons-dbcp</artifactId>
       <version>1.4</version>
@@ -184,6 +305,11 @@
       <groupId>org.antlr</groupId>
       <artifactId>antlr-runtime</artifactId>
       <version>3.0.1</version>
+=======
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>10.4.2.0</version>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     </dependency>
 
     <dependency>
@@ -193,6 +319,15 @@
     </dependency>
 
     <dependency>
+<<<<<<< HEAD
+=======
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.9</version>
+    </dependency>
+
+    <dependency>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.6.1</version>
@@ -215,6 +350,7 @@
       <version>4.8.2</version>
       <scope>test</scope>
     </dependency>
+<<<<<<< HEAD
 
     <dependency>
       <groupId>ant-contrib</groupId>
@@ -233,6 +369,8 @@
       <artifactId>ant-nodeps</artifactId>
       <version>1.8.1</version>
     </dependency>
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   </dependencies>
 
   <reporting>
@@ -257,6 +395,22 @@
         </configuration>
       </plugin>
 
+<<<<<<< HEAD
+=======
+      <!-- Build fe/tests/ to jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      <executions>
+        <execution>
+          <goals>
+            <goal>test-jar</goal>
+          </goals>
+        </execution>
+      </executions>
+      </plugin>
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       <plugin>
         <groupId>net.sourceforge.czt</groupId>
         <artifactId>maven-cup-plugin</artifactId>
@@ -277,6 +431,10 @@
           </execution>
         </executions>
       </plugin>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       <plugin>
         <groupId>de.jflex</groupId>
         <artifactId>maven-jflex-plugin</artifactId>
@@ -294,6 +452,10 @@
           </execution>
         </executions>
       </plugin>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 <!-- PDH - I don't think we need this right now, regardless there's a better way (ie not part of dev workflow) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -345,8 +507,13 @@
               <value>${testExecutionMode}</value>
             </property>
             <property>
+<<<<<<< HEAD
               <name>fe_port</name>
               <value>${fe_port}</value>
+=======
+              <name>beeswax_port</name>
+              <value>${beeswax_port}</value>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
               <name>impalad</name>
               <value>${impalad}</value>
               <name>use_external_impalad</name>
@@ -543,6 +710,7 @@
 
   <profiles>
     <profile>
+<<<<<<< HEAD
       <id>load-testdata</id>
       <build>
         <plugins>
@@ -682,6 +850,8 @@
     </profile>
 
     <profile>
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       <id>thrift-home-defined</id>
       <activation>
         <file>
@@ -693,5 +863,8 @@
       </properties>
     </profile>
   </profiles>
+<<<<<<< HEAD
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 </project>

@@ -21,7 +21,13 @@ enum TStatusCode {
   ANALYSIS_ERROR,
   NOT_IMPLEMENTED_ERROR,
   RUNTIME_ERROR,
+<<<<<<< HEAD
   INTERNAL_ERROR
+=======
+  MEM_LIMIT_EXCEEDED,
+  INTERNAL_ERROR,
+  RECOVERABLE_ERROR
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 struct TStatus {

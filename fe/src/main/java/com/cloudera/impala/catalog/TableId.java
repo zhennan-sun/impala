@@ -15,6 +15,7 @@
 package com.cloudera.impala.catalog;
 
 import com.cloudera.impala.common.Id;
+<<<<<<< HEAD
 
 public class TableId extends Id {
   public TableId() {
@@ -24,4 +25,27 @@ public class TableId extends Id {
   public TableId(int id) {
     super(id);
   }
+=======
+import com.cloudera.impala.common.IdGenerator;
+
+public class TableId extends Id<TableId> {
+  // Construction only allowed via an IdGenerator.
+  protected TableId(int id) {
+    super(id);
+  }
+
+  public static IdGenerator<TableId> createGenerator() {
+    return new IdGenerator<TableId>() {
+      @Override
+      public TableId getNextId() { return new TableId(nextId_++); }
+      @Override
+      public TableId getMaxId() { return new TableId(nextId_ - 1); }
+    };
+  }
+
+  /**
+   * Returns an invalid table id intended for temporary use, e.g., for CTAS.
+   */
+  public static TableId createInvalidId() { return new TableId(INVALID_ID); }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

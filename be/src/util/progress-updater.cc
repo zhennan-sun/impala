@@ -15,6 +15,10 @@
 #include "util/progress-updater.h"
 
 #include "common/logging.h"
+<<<<<<< HEAD
+=======
+#include <sstream>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace impala;
 using namespace std;
@@ -33,7 +37,11 @@ void ProgressUpdater::Update(int64_t delta) {
   DCHECK_GE(delta, 0);
   if (delta == 0) return;
 
+<<<<<<< HEAD
   __sync_fetch_and_add(&num_complete_, delta);
+=======
+  num_complete_ += delta;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Cache some shared variables to avoid locking.  It's possible the progress
   // update is out of order (e.g. prints 1 out of 10 after 2 out of 10) 
@@ -56,3 +64,20 @@ void ProgressUpdater::Update(int64_t delta) {
                          << num_complete << " out of " << total_ << ")";
   }
 }
+<<<<<<< HEAD
+=======
+
+string ProgressUpdater::ToString() const {
+  stringstream ss;
+  int64_t num_complete = num_complete_;
+  if (num_complete >= total_) {
+    // Always print the final 100% complete
+    ss << label_ << " 100\% Complete (" << num_complete << " out of " << total_ << ")";
+    return ss.str();
+  }
+  int percentage = (static_cast<double>(num_complete) / total_) * 100;
+  ss << label_ << ": " << percentage << "\% Complete ("
+     << num_complete << " out of " << total_ << ")";
+  return ss.str();
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

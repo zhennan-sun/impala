@@ -29,5 +29,8 @@ ostream& operator<<(ostream& os, const StringValue& string_value) {
   return os << string_value.DebugString();
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

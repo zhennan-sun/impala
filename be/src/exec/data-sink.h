@@ -16,16 +16,30 @@
 #ifndef IMPALA_EXEC_DATA_SINK_H
 #define IMPALA_EXEC_DATA_SINK_H
 
+<<<<<<< HEAD
 #include <vector>
 #include "common/status.h"
 
 #include <boost/scoped_ptr.hpp>
+=======
+#include <boost/scoped_ptr.hpp>
+#include <vector>
+
+#include "common/status.h"
+#include "runtime/runtime-state.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "gen-cpp/DataSinks_types.h"
 #include "gen-cpp/Exprs_types.h"
 
 namespace impala {
 
+<<<<<<< HEAD
 class RowBatch;
+=======
+class ObjectPool;
+class RowBatch;
+class RuntimeProfile;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class RuntimeState;
 class TPlanExecRequest;
 class TPlanExecParams;
@@ -35,6 +49,7 @@ class RowDescriptor;
 // Superclass of all data sinks.
 class DataSink {
  public:
+<<<<<<< HEAD
   virtual ~DataSink() {}
 
   // Setup. Call before Send() or Close().
@@ -56,4 +71,55 @@ class DataSink {
 };
 
 }
+=======
+  DataSink() : closed_(false) { }
+  virtual ~DataSink() {}
+
+  // Setup. Call before Send(), Open(), or Close().
+  // Subclasses must call DataSink::Prepare().
+  virtual Status Prepare(RuntimeState* state);
+
+  // Call before Send() or Close().
+  virtual Status Open(RuntimeState* state) = 0;
+
+  // Send a row batch into this sink.
+  // eos should be true when the last batch is passed to Send()
+  virtual Status Send(RuntimeState* state, RowBatch* batch, bool eos) = 0;
+
+  // Releases all resources that were allocated in Prepare()/Send().
+  // Further Send() calls are illegal after calling Close().
+  // It must be okay to call this multiple times. Subsequent calls should
+  // be ignored.
+  virtual void Close(RuntimeState* state) = 0;
+
+  // Creates a new data sink from thrift_sink. A pointer to the
+  // new sink is written to *sink, and is owned by the caller.
+  static Status CreateDataSink(ObjectPool* pool,
+    const TDataSink& thrift_sink, const std::vector<TExpr>& output_exprs,
+    const TPlanFragmentExecParams& params,
+    const RowDescriptor& row_desc, boost::scoped_ptr<DataSink>* sink);
+
+  // Returns the runtime profile for the sink.
+  virtual RuntimeProfile* profile() = 0;
+
+  // Merges one update to the insert stats for a partition. dst_stats will have the
+  // combined stats of src_stats and dst_stats after this method returns.
+  static void MergeInsertStats(const TInsertStats& src_stats,
+      TInsertStats* dst_stats);
+
+  // Outputs the insert stats contained in the map of insert partition updates to a string
+  static std::string OutputInsertStats(const PartitionStatusMap& stats,
+      const std::string& prefix = "");
+
+ protected:
+  // Set to true after Close() has been called. Subclasses should check and set this in
+  // Close().
+  bool closed_;
+
+  boost::scoped_ptr<MemTracker> expr_mem_tracker_;
+
+};
+
+}  // namespace impala
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #endif

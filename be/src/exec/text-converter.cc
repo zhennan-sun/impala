@@ -29,8 +29,16 @@ using namespace impala;
 using namespace llvm;
 using namespace std;
 
+<<<<<<< HEAD
 TextConverter::TextConverter(char escape_char) 
   : escape_char_(escape_char) {
+=======
+TextConverter::TextConverter(char escape_char, const string& null_col_val,
+    bool check_null)
+  : escape_char_(escape_char),
+    null_col_val_(null_col_val),
+    check_null_(check_null) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 void TextConverter::UnescapeString(StringValue* value, MemPool* pool) {
@@ -39,11 +47,23 @@ void TextConverter::UnescapeString(StringValue* value, MemPool* pool) {
   value->ptr = new_data;
 }
 
+<<<<<<< HEAD
 void TextConverter::UnescapeString(const char* src, char* dest, int* len) {
   char* dest_ptr = dest;
   const char* end = src + *len;
   bool escape_next_char = false;
   while (src < end) {
+=======
+void TextConverter::UnescapeString(const char* src, char* dest, int* len,
+    int64_t maxlen) {
+  const char* src_end = src + *len;
+  char* dest_end = dest + *len;
+  if (maxlen > 0) dest_end = dest + maxlen;
+  char* dest_ptr = dest;
+  bool escape_next_char = false;
+
+  while ((src < src_end) && (dest_ptr < dest_end)) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     if (*src == escape_char_) {
       escape_next_char = !escape_next_char;
     } else {
@@ -65,17 +85,26 @@ void TextConverter::UnescapeString(const char* src, char* dest, int* len) {
 //   %parse_result = alloca i32
 //   %0 = call i1 @IsNullString(i8* %data, i32 %len)
 //   br i1 %0, label %set_null, label %check_zero
+<<<<<<< HEAD
 // 
 // set_null:                                         ; preds = %check_zero, %entry
 //   call void @SetNull({ i8, i32 }* %tuple_arg)
 //   ret i1 true
 // 
+=======
+//
+// set_null:                                         ; preds = %check_zero, %entry
+//   call void @SetNull({ i8, i32 }* %tuple_arg)
+//   ret i1 true
+//
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // parse_slot:                                       ; preds = %check_zero
 //   %slot = getelementptr inbounds { i8, i32 }* %tuple_arg, i32 0, i32 1
 //   %1 = call i32 @IrStringToInt32(i8* %data, i32 %len, i32* %parse_result)
 //   %parse_result1 = load i32* %parse_result
 //   %failed = icmp eq i32 %parse_result1, 1
 //   br i1 %failed, label %parse_fail, label %parse_success
+<<<<<<< HEAD
 // 
 // check_zero:                                       ; preds = %entry
 //   %2 = icmp eq i32 %len, 0
@@ -85,16 +114,47 @@ void TextConverter::UnescapeString(const char* src, char* dest, int* len) {
 //   store i32 %1, i32* %slot
 //   ret i1 true
 // 
+=======
+//
+// check_zero:                                       ; preds = %entry
+//   %2 = icmp eq i32 %len, 0
+//   br i1 %2, label %set_null, label %parse_slot
+//
+// parse_success:                                    ; preds = %parse_slot
+//   store i32 %1, i32* %slot
+//   ret i1 true
+//
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // parse_fail:                                       ; preds = %parse_slot
 //   call void @SetNull({ i8, i32 }* %tuple_arg)
 //   ret i1 false
 // }
+<<<<<<< HEAD
 Function* TextConverter::CodegenWriteSlot(LlvmCodeGen* codegen, 
     TupleDescriptor* tuple_desc, SlotDescriptor* slot_desc) {
   SCOPED_TIMER(codegen->codegen_timer());
 
   // Codegen is_null_string 
   Function* is_null_string_fn = codegen->GetFunction(IRFunction::STRING_IS_NULL);
+=======
+Function* TextConverter::CodegenWriteSlot(LlvmCodeGen* codegen,
+    TupleDescriptor* tuple_desc, SlotDescriptor* slot_desc,
+    const char* null_col_val, int len, bool check_null) {
+  if (slot_desc->type().type == TYPE_CHAR) {
+    LOG(INFO) << "Char isn't supported for CodegenWriteSlot";
+    return NULL;
+  }
+  SCOPED_TIMER(codegen->codegen_timer());
+
+  // Codegen is_null_string
+  bool is_default_null = (len == 2 && null_col_val[0] == '\\' && null_col_val[1] == 'N');
+  Function* is_null_string_fn;
+  if (is_default_null) {
+    is_null_string_fn = codegen->GetFunction(IRFunction::IS_NULL_STRING);
+  } else {
+    is_null_string_fn = codegen->GetFunction(IRFunction::GENERIC_IS_NULL_STRING);
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (is_null_string_fn == NULL) return NULL;
 
   StructType* tuple_type = tuple_desc->GenerateLlvmStruct(codegen);
@@ -118,6 +178,7 @@ Function* TextConverter::CodegenWriteSlot(LlvmCodeGen* codegen,
   Function* fn = prototype.GeneratePrototype(&builder, &args[0]);
 
   BasicBlock* set_null_block, *parse_slot_block, *check_zero_block = NULL;
+<<<<<<< HEAD
   codegen->CreateIfElseBlocks(fn, "set_null", "parse_slot", 
       &set_null_block, &parse_slot_block);
   
@@ -136,31 +197,99 @@ Function* TextConverter::CodegenWriteSlot(LlvmCodeGen* codegen,
     Value* len_zero = builder.CreateICmpEQ(args[2], codegen->GetIntConstant(TYPE_INT, 0));
     builder.CreateCondBr(len_zero, set_null_block, parse_slot_block);
   } 
+=======
+  codegen->CreateIfElseBlocks(fn, "set_null", "parse_slot",
+      &set_null_block, &parse_slot_block);
+
+  if (!slot_desc->type().IsVarLen()) {
+    check_zero_block = BasicBlock::Create(codegen->context(), "check_zero", fn);
+  }
+
+  // Check if the data matches the configured NULL string.
+  Value* is_null;
+  if (check_null) {
+    if (is_default_null) {
+      is_null = builder.CreateCall2(is_null_string_fn, args[1], args[2]);
+    } else {
+      is_null = builder.CreateCall4(is_null_string_fn, args[1], args[2],
+          codegen->CastPtrToLlvmPtr(codegen->ptr_type(),
+              const_cast<char*>(null_col_val)),
+          codegen->GetIntConstant(TYPE_INT, len));
+    }
+  } else {
+    // Constant FALSE as branch condition. We rely on later optimization passes
+    // to remove the branch and THEN block.
+    is_null = codegen->false_value();
+  }
+  builder.CreateCondBr(is_null, set_null_block,
+      (slot_desc->type().IsVarLen()) ? parse_slot_block : check_zero_block);
+
+  if (!slot_desc->type().IsVarLen()) {
+    builder.SetInsertPoint(check_zero_block);
+    // If len <= 0 and it is not a string col, set slot to NULL
+    // The len can be less than 0 if the field contained an escape character which
+    // is only valid for string cols.
+    Value* null_len = builder.CreateICmpSLE(
+        args[2], codegen->GetIntConstant(TYPE_INT, 0));
+    builder.CreateCondBr(null_len, set_null_block, parse_slot_block);
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Codegen parse slot block
   builder.SetInsertPoint(parse_slot_block);
   Value* slot = builder.CreateStructGEP(args[0], slot_desc->field_idx(), "slot");
 
+<<<<<<< HEAD
   if (slot_desc->type() == TYPE_STRING) {
     Value* ptr = builder.CreateStructGEP(slot, 0, "string_ptr");
     Value* len = builder.CreateStructGEP(slot, 1, "string_len");
     builder.CreateStore(args[1], ptr);
     builder.CreateStore(args[2], len);
+=======
+  if (slot_desc->type().IsVarLen()) {
+    Value* ptr = builder.CreateStructGEP(slot, 0, "string_ptr");
+    Value* len = builder.CreateStructGEP(slot, 1, "string_len");
+
+    builder.CreateStore(args[1], ptr);
+    // TODO codegen memory allocation for CHAR
+    DCHECK(slot_desc->type().type != TYPE_CHAR);
+    if (slot_desc->type().type == TYPE_VARCHAR) {
+      // determine if we need to truncate the string
+      Value* maxlen = codegen->GetIntConstant(TYPE_INT, slot_desc->type().len);
+      Value* len_lt_maxlen = builder.CreateICmpSLT(args[2], maxlen, "len_lt_maxlen");
+      Value* minlen = builder.CreateSelect(len_lt_maxlen, args[2], maxlen,
+                                           "select_min_len");
+      builder.CreateStore(minlen, len);
+    } else {
+      builder.CreateStore(args[2], len);
+    }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     builder.CreateRet(codegen->true_value());
   } else {
     IRFunction::Type parse_fn_enum;
     Function* parse_fn = NULL;
+<<<<<<< HEAD
     switch (slot_desc->type()) {
+=======
+    switch (slot_desc->type().type) {
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       case TYPE_BOOLEAN:
         parse_fn_enum = IRFunction::STRING_TO_BOOL;
         break;
       case TYPE_TINYINT:
         parse_fn_enum = IRFunction::STRING_TO_INT8;
         break;
+<<<<<<< HEAD
       case TYPE_SMALLINT: 
         parse_fn_enum = IRFunction::STRING_TO_INT16;
         break;
       case TYPE_INT: 
+=======
+      case TYPE_SMALLINT:
+        parse_fn_enum = IRFunction::STRING_TO_INT16;
+        break;
+      case TYPE_INT:
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         parse_fn_enum = IRFunction::STRING_TO_INT32;
         break;
       case TYPE_BIGINT:
@@ -194,7 +323,11 @@ Function* TextConverter::CodegenWriteSlot(LlvmCodeGen* codegen,
     // Check for parse error.  TODO: handle overflow
     Value* parse_failed = builder.CreateICmpEQ(parse_result_val, failed_value, "failed");
     builder.CreateCondBr(parse_failed, parse_failed_block, parse_success_block);
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     // Parse succeeded
     builder.SetInsertPoint(parse_success_block);
     builder.CreateStore(result, slot);

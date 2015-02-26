@@ -12,14 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include <string>
 #include <gtest/gtest.h>
 #include <boost/bind.hpp>
 
 #include "runtime/parallel-executor.h"
+<<<<<<< HEAD
 
 using namespace boost;
 using namespace std;
+=======
+#include "util/thread.h"
+
+using namespace boost;
+using namespace std;
+using namespace impala;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
@@ -76,6 +88,12 @@ TEST(ParallelExecutorTest, Basic) {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+<<<<<<< HEAD
   return RUN_ALL_TESTS();
 }
 
+=======
+  InitThreading();
+  return RUN_ALL_TESTS();
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

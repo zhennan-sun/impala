@@ -15,6 +15,10 @@
 #include "exec/hdfs-scanner.h"
 #include "runtime/row-batch.h"
 #include "util/string-parser.h"
+<<<<<<< HEAD
+=======
+#include "runtime/string-value.inline.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace std;
 using namespace impala;
@@ -36,7 +40,10 @@ int HdfsScanner::WriteAlignedTuples(MemPool* pool, TupleRow* tuple_row, int row_
   uint8_t* tuple_row_mem = reinterpret_cast<uint8_t*>(tuple_row);
   uint8_t* tuple_mem = reinterpret_cast<uint8_t*>(tuple_);
   Tuple* tuple = reinterpret_cast<Tuple*>(tuple_mem);
+<<<<<<< HEAD
   Tuple* template_tuple = template_tuple_;
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   uint8_t error[slots_per_tuple];
   memset(error, 0, sizeof(error));
@@ -48,7 +55,11 @@ int HdfsScanner::WriteAlignedTuples(MemPool* pool, TupleRow* tuple_row, int row_
     uint8_t error_in_row = false;
     // Materialize a single tuple.  This function will be replaced by a codegen'd
     // function.
+<<<<<<< HEAD
     if (WriteCompleteTuple(pool, fields, tuple, tuple_row, template_tuple, 
+=======
+    if (WriteCompleteTuple(pool, fields, tuple, tuple_row, template_tuple_,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
           error, &error_in_row)) {
       ++tuples_returned;
       tuple_mem += tuple_byte_size_;
@@ -75,6 +86,13 @@ int HdfsScanner::WriteAlignedTuples(MemPool* pool, TupleRow* tuple_row, int row_
   return tuples_returned;
 }
 
+<<<<<<< HEAD
+=======
+ExprContext* HdfsScanner::GetConjunctCtx (int idx) const {
+  return conjunct_ctxs_[idx];
+}
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // Define the string parsing functions for llvm.  Stamp out the templated functions
 #ifdef IR_COMPILE
 extern "C"
@@ -113,7 +131,16 @@ double IrStringToDouble(const char* s, int len, StringParser::ParseResult* resul
 
 extern "C"
 bool IrIsNullString(const char* data, int len) {
+<<<<<<< HEAD
   return len >= 2 && data[0] == '\\' && data[1] == 'N';
+=======
+  return data == NULL || (len == 2 && data[0] == '\\' && data[1] == 'N');
+}
+
+extern "C"
+bool IrGenericIsNullString(const char* s, int slen, const char* n, int nlen) {
+  return s == NULL || (slen == nlen && StringCompare(s, slen, n, nlen, slen) == 0);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 #endif
 

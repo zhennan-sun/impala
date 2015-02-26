@@ -25,9 +25,15 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
+<<<<<<< HEAD
 #include <transport/TBufferTransports.h>
 #include <transport/TSaslTransport.h>
 #include <transport/TSaslServerTransport.h>
+=======
+#include <thrift/transport/TBufferTransports.h>
+#include "transport/TSaslTransport.h"
+#include "transport/TSaslServerTransport.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace std;
 using namespace boost;
@@ -40,17 +46,33 @@ TSaslServerTransport::TSaslServerTransport(shared_ptr<TTransport> transport)
 
 TSaslServerTransport::TSaslServerTransport(const string& mechanism,
                                            const string& protocol,
+<<<<<<< HEAD
                                            const string& serverName, unsigned flags,
                                            const map<string, string>& props,
                                            const vector<struct sasl_callback>& callbacks, 
                                            shared_ptr<TTransport> transport) 
      : TSaslTransport(transport) {
   addServerDefinition(mechanism, protocol, serverName, flags, props, callbacks);
+=======
+                                           const string& serverName,
+                                           const string& realm,
+                                           unsigned flags,
+                                           const map<string, string>& props,
+                                           const vector<struct sasl_callback>& callbacks,
+                                           shared_ptr<TTransport> transport)
+     : TSaslTransport(transport) {
+  addServerDefinition(mechanism, protocol, serverName, realm, flags,
+      props, callbacks);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }
 
 TSaslServerTransport:: TSaslServerTransport(
     const std::map<std::string, TSaslServerDefinition*>& serverMap,
+<<<<<<< HEAD
     boost::shared_ptr<TTransport> transport) 
+=======
+    boost::shared_ptr<TTransport> transport)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     : TSaslTransport(transport) {
   serverDefinitionMap_.insert(serverMap.begin(), serverMap.end());
 }
@@ -70,7 +92,15 @@ void TSaslServerTransport::handleSaslStartMessage() {
   uint32_t resLength;
   NegotiationStatus status;
 
+<<<<<<< HEAD
   char* message = reinterpret_cast<char*>(receiveSaslMessage(&status, &resLength));
+=======
+  uint8_t* message = receiveSaslMessage(&status, &resLength);
+  // Message is a non-null terminated string; to use it like a
+  // C-string we have to copy it into a null-terminated buffer.
+  string message_str(reinterpret_cast<char*>(message), resLength);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (status != TSASL_START) {
     stringstream ss;
     ss << "Expecting START status, received " << status;
@@ -79,14 +109,22 @@ void TSaslServerTransport::handleSaslStartMessage() {
     throw TTransportException(ss.str());
   }
   map<string, TSaslServerDefinition*>::iterator defn =
+<<<<<<< HEAD
       TSaslServerTransport::serverDefinitionMap_.find(message);
   if (defn == TSaslServerTransport::serverDefinitionMap_.end()) {
     stringstream ss;
     ss << "Unsupported mechanism type " << message;
+=======
+      TSaslServerTransport::serverDefinitionMap_.find(message_str);
+  if (defn == TSaslServerTransport::serverDefinitionMap_.end()) {
+    stringstream ss;
+    ss << "Unsupported mechanism type " << message_str;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     sendSaslMessage(TSASL_BAD,
                     reinterpret_cast<const uint8_t*>(ss.str().c_str()), ss.str().size());
     throw TTransportException(TTransportException::BAD_ARGS, ss.str());
   }
+<<<<<<< HEAD
   // TODO: when should realm be used?
   string realm;
   TSaslServerDefinition* serverDefinition = defn->second;
@@ -96,17 +134,39 @@ void TSaslServerTransport::handleSaslStartMessage() {
                               &serverDefinition->callbacks_[0]));
   sasl_->evaluateChallengeOrResponse(reinterpret_cast<uint8_t*>(message),
                                      resLength, &resLength);
+=======
+
+  TSaslServerDefinition* serverDefinition = defn->second;
+  sasl_.reset(new TSaslServer(serverDefinition->protocol_,
+                              serverDefinition->serverName_,
+                              serverDefinition->realm_,
+                              serverDefinition->flags_,
+                              &serverDefinition->callbacks_[0]));
+  // First argument is interpreted as C-string
+  sasl_->evaluateChallengeOrResponse(
+      reinterpret_cast<const uint8_t*>(message_str.c_str()), resLength, &resLength);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 }
 
 shared_ptr<TTransport> TSaslServerTransport::Factory::getTransport(
     boost::shared_ptr<TTransport> trans) {
+<<<<<<< HEAD
   shared_ptr<TSaslServerTransport> retTransport;
   boost::lock_guard<boost::mutex> l (transportMap_mutex_);
   map<shared_ptr<TTransport>, shared_ptr<TSaslServerTransport> >::iterator transMap =
       transportMap_.find(trans);
   if (transMap == transportMap_.end()) {
     retTransport.reset(new TSaslServerTransport(serverDefinitionMap_, trans));
+=======
+  shared_ptr<TBufferedTransport> retTransport;
+  boost::lock_guard<boost::mutex> l (transportMap_mutex_);
+  map<shared_ptr<TTransport>, shared_ptr<TBufferedTransport> >::iterator transMap =
+      transportMap_.find(trans);
+  if (transMap == transportMap_.end()) {
+    shared_ptr<TTransport> wrapped(new TSaslServerTransport(serverDefinitionMap_, trans));
+    retTransport.reset(new TBufferedTransport(wrapped));
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     retTransport.get()->open();
     transportMap_[trans] = retTransport;
   } else {

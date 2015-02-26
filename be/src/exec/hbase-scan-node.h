@@ -44,9 +44,15 @@ class HBaseScanNode : public ScanNode {
   virtual Status GetNext(RuntimeState* state, RowBatch* row_batch, bool* eos);
 
   // Close the hbase_scanner_, and report errors.
+<<<<<<< HEAD
   virtual Status Close(RuntimeState* state);
 
   virtual Status SetScanRanges(const std::vector<TScanRangeParams>& scan_ranges);
+=======
+  virtual void Close(RuntimeState* state);
+
+  const int suggested_max_caching() const { return suggested_max_caching_; }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
  protected:
   // Write debug string of this into out.
@@ -90,15 +96,24 @@ class HBaseScanNode : public ScanNode {
   // List of non-row-key slots sorted by col_pos(). Populated in Prepare().
   std::vector<SlotDescriptor*> sorted_non_key_slots_;
 
+<<<<<<< HEAD
   // List of pointers to family/qualifier in same sort order as sorted_non_key_slots_.
   // The memory pointed to by the list-elements is owned by the corresponding 
   // HBaseTableDescriptor.
   std::vector<const std::pair<std::string, std::string>* > sorted_cols_;
+=======
+  // List of pointers to family/qualifier/binary encoding in same sort order as
+  // sorted_non_key_slots_.
+  // The memory pointed to by the list-elements is owned by the corresponding
+  // HBaseTableDescriptor.
+  std::vector<const HBaseTableDescriptor::HBaseColumnDescriptor* > sorted_cols_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Slot into which the HBase row key is written.
   // NULL if row key is not requested.
   SlotDescriptor* row_key_slot_;
 
+<<<<<<< HEAD
   // Size of tuple buffer determined by size of tuples and capacity of row batches.
   int tuple_buffer_size_;
 
@@ -106,12 +121,27 @@ class HBaseScanNode : public ScanNode {
   // GetNext() call.
   void* tuple_buffer_;
 
+=======
+  // True, if row key is binary encoded
+  bool row_key_binary_encoded_;
+
+  // Size of tuple buffer determined by size of tuples and capacity of row batches.
+  int tuple_buffer_size_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Current tuple.
   Tuple* tuple_;
 
   // Helper class for converting text to other types;
   boost::scoped_ptr<TextConverter> text_converter_;
 
+<<<<<<< HEAD
+=======
+  // Max value for "setCaching" suggested by FE. If no value was suggested by the FE, this
+  // will be 0.
+  int suggested_max_caching_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Writes a slot in tuple_ from an HBase value containing text data.
   // The HBase value is converted into the appropriate target type.
   void WriteTextSlot(

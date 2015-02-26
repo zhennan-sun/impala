@@ -18,6 +18,7 @@
  * limitations under the License.
  *
  ******************************************************************************/
+<<<<<<< HEAD
 #include "config.h"
 #ifdef HAVE_SASL_SASL_H
 
@@ -26,6 +27,27 @@
 using namespace std;
 
 namespace sasl {
+=======
+#include "transport/config.h"
+#ifdef HAVE_SASL_SASL_H
+
+#include <cstring>
+#include <sstream>
+#include <transport/TSasl.h>
+#include <boost/algorithm/string.hpp>
+
+#include "common/logging.h"
+
+DEFINE_bool(force_lowercase_usernames, false, "If true, all principals and usernames are"
+    " mapped to lowercase shortnames before being passed to any components (Sentry, "
+    "admission control) for authorization");
+
+using namespace std;
+using namespace boost;
+
+namespace sasl {
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 uint8_t* TSasl::unwrap(const uint8_t* incoming,
                        const int offset, const uint32_t len, uint32_t* outLen) {
   uint32_t outputlen;
@@ -56,15 +78,53 @@ uint8_t* TSasl::wrap(const uint8_t* outgoing,
   return output;
 }
 
+<<<<<<< HEAD
 TSaslClient::TSaslClient(const string& mechanisms, const string& authenticationId,
     const string& protocol, const string& serverName, const map<string,string>& props, 
+=======
+string TSasl::getUsername() {
+  const char* username;
+  int result =
+      sasl_getprop(conn, SASL_USERNAME, reinterpret_cast<const void **>(&username));
+  if (result != SASL_OK) {
+    stringstream ss;
+    ss << "Error getting SASL_USERNAME property: " << sasl_errstring(result, NULL, NULL);
+    throw SaslException(ss.str().c_str());
+  }
+  // Copy the username and return it to the caller. There is no cleanup/delete call for
+  // calls to sasl_getprops, the sasl layer handles the cleanup internally.
+  string ret(username);
+
+  // Temporary fix to auth_to_local-style lowercase mapping from
+  // USER_NAME/REALM@DOMAIN.COM -> user_name/REALM@DOMAIN.COM
+  //
+  // TODO: The right fix is probably to use UserGroupInformation in the frontend which
+  // will use auth_to_local rules to do this.
+  if (FLAGS_force_lowercase_usernames) {
+    vector<string> components;
+    split(components, ret, is_any_of("@"));
+    if (components.size() > 0 ) {
+      to_lower(components[0]);
+      ret = join(components, "@");
+    }
+  }
+  return ret;
+}
+
+TSaslClient::TSaslClient(const string& mechanisms, const string& authenticationId,
+    const string& protocol, const string& serverName, const map<string,string>& props,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     sasl_callback_t* callbacks) {
   conn = NULL;
   if (!props.empty()) {
     throw SaslServerImplException("Properties not yet supported");
   }
   int result = sasl_client_new(protocol.c_str(), serverName.c_str(),
+<<<<<<< HEAD
 			   NULL, NULL, callbacks, 0, &conn);
+=======
+      NULL, NULL, callbacks, 0, &conn);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (result != SASL_OK) {
     if (conn) {
       throw SaslServerImplException(sasl_errdetail(conn));
@@ -72,7 +132,11 @@ TSaslClient::TSaslClient(const string& mechanisms, const string& authenticationI
       throw SaslServerImplException(sasl_errstring(result, NULL, NULL));
     }
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   if (!authenticationId.empty()) {
     /* TODO: setup security property */
     /*

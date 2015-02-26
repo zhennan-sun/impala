@@ -19,15 +19,26 @@
 #include <stdint.h>
 // For StringParser::ParseResult
 #include "util/string-parser.h"
+<<<<<<< HEAD
+=======
+#include "udf/udf.h"
+
+using namespace impala_udf;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace impala {
 
 class Expr;
+<<<<<<< HEAD
 class ExprValue;
+=======
+struct ExprValue;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class TupleRow;
 
 class MathFunctions {
  public:
+<<<<<<< HEAD
   static void* Pi(Expr* e, TupleRow* row);
   static void* E(Expr* e, TupleRow* row);
   static void* Abs(Expr* e, TupleRow* row);
@@ -65,15 +76,83 @@ class MathFunctions {
   static void* PositiveDouble(Expr* e, TupleRow* row);
   static void* NegativeBigInt(Expr* e, TupleRow* row);
   static void* NegativeDouble(Expr* e, TupleRow* row);
+=======
+  static DoubleVal Pi(FunctionContext*);
+  static DoubleVal E(FunctionContext*);
+  static BigIntVal Abs(FunctionContext*, const BigIntVal&);
+  static DoubleVal Abs(FunctionContext*, const DoubleVal&);
+  static FloatVal Abs(FunctionContext*, const FloatVal&);
+  static IntVal Abs(FunctionContext*, const IntVal&);
+  static SmallIntVal Abs(FunctionContext*, const SmallIntVal&);
+  static TinyIntVal Abs(FunctionContext*, const TinyIntVal&);
+  static DoubleVal Sin(FunctionContext*, const DoubleVal&);
+  static DoubleVal Asin(FunctionContext*, const DoubleVal&);
+  static DoubleVal Cos(FunctionContext*, const DoubleVal&);
+  static DoubleVal Acos(FunctionContext*, const DoubleVal&);
+  static DoubleVal Tan(FunctionContext*, const DoubleVal&);
+  static DoubleVal Atan(FunctionContext*, const DoubleVal&);
+  static DoubleVal Sqrt(FunctionContext*, const DoubleVal&);
+  static DoubleVal Exp(FunctionContext*, const DoubleVal&);
+  static BigIntVal Ceil(FunctionContext*, const DoubleVal&);
+  static BigIntVal Floor(FunctionContext*, const DoubleVal&);
+  static DoubleVal Ln(FunctionContext*, const DoubleVal&);
+  static DoubleVal Log10(FunctionContext*, const DoubleVal&);
+  static FloatVal Sign(FunctionContext*, const DoubleVal&);
+  static DoubleVal Radians(FunctionContext*, const DoubleVal&);
+  static DoubleVal Degrees(FunctionContext*, const DoubleVal&);
+  static BigIntVal Round(FunctionContext*, const DoubleVal&);
+  static DoubleVal RoundUpTo(FunctionContext*, const DoubleVal&, const IntVal&);
+  static DoubleVal Log2(FunctionContext*, const DoubleVal&);
+  static DoubleVal Log(FunctionContext*, const DoubleVal& base, const DoubleVal& val);
+  static DoubleVal Pow(FunctionContext*, const DoubleVal& base, const DoubleVal& val);
+  
+  // Used for both Rand() and RandSeed()
+  static void RandPrepare(FunctionContext*, FunctionContext::FunctionStateScope);
+  static DoubleVal Rand(FunctionContext*);
+  static DoubleVal RandSeed(FunctionContext*, const BigIntVal& seed);
+
+  static StringVal Bin(FunctionContext*, const BigIntVal&);
+  static StringVal HexInt(FunctionContext*, const BigIntVal&);
+  static StringVal HexString(FunctionContext*, const StringVal&);
+  static StringVal Unhex(FunctionContext*, const StringVal&);
+  static StringVal ConvInt(FunctionContext*, const BigIntVal& n,
+      const TinyIntVal& src_base, const TinyIntVal& dst_base);
+  static StringVal ConvString(FunctionContext*, const StringVal& s,
+      const TinyIntVal& src_base, const TinyIntVal& dst_base);
+  static BigIntVal PmodBigInt(FunctionContext*, const BigIntVal&, const BigIntVal&);
+  static DoubleVal PmodDouble(FunctionContext*, const DoubleVal&, const DoubleVal&);
+  static FloatVal FmodFloat(FunctionContext*, const FloatVal&, const FloatVal&);
+  static DoubleVal FmodDouble(FunctionContext*, const DoubleVal&, const DoubleVal&);
+
+  template <typename T> static T Positive(FunctionContext*, const T&);
+  template <typename T> static T Negative(FunctionContext*, const T&);
+
+  static BigIntVal QuotientDouble(FunctionContext*, const DoubleVal&, const DoubleVal&);
+  static BigIntVal QuotientBigInt(FunctionContext*, const BigIntVal&, const BigIntVal&);
+
+  template <typename VAL_TYPE, bool ISLEAST>
+  static VAL_TYPE LeastGreatest(FunctionContext*, int num_args, const VAL_TYPE* args);
+  template <bool ISLEAST> static StringVal LeastGreatest(
+      FunctionContext*, int num_args, const StringVal* args);
+  template <bool ISLEAST> static TimestampVal LeastGreatest(
+      FunctionContext*, int num_args, const TimestampVal* args);
+  template <bool ISLEAST> static DecimalVal LeastGreatest(
+      FunctionContext*, int num_args, const DecimalVal* args);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
  private:
   static const int32_t MIN_BASE = 2;
   static const int32_t MAX_BASE = 36;
   static const char* ALPHANUMERIC_CHARS;
 
+<<<<<<< HEAD
   // Converts src_num in decimal to dest_base,
   // and fills expr_val.string_val with the result.
   static void DecimalToBase(int64_t src_num, int8_t dest_base, ExprValue* expr_val);
+=======
+  // Converts src_num in decimal to dest_base.
+  static StringVal DecimalToBase(FunctionContext*, int64_t src_num, int8_t dest_base);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Converts src_num representing a number in src_base but encoded in decimal
   // into its actual decimal number.
@@ -90,7 +169,10 @@ class MathFunctions {
   // Returns false otherwise, indicating some other error condition.
   static bool HandleParseResult(int8_t dest_base, int64_t* num,
       StringParser::ParseResult parse_res);
+<<<<<<< HEAD
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

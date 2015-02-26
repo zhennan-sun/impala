@@ -15,10 +15,17 @@
 package com.cloudera.impala.common;
 
 import java.util.ArrayList;
+<<<<<<< HEAD
+=======
+import java.util.List;
+
+import com.google.common.base.Joiner;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 import com.google.common.collect.Lists;
 
 /**
  * Integer ids that cannot accidentally be compared with ints.
+<<<<<<< HEAD
  *
  */
 public class Id<IdType extends Id<IdType>> {
@@ -56,6 +63,36 @@ public class Id<IdType extends Id<IdType>> {
 
   public int asInt() {
     return id;
+=======
+ */
+public class Id<IdType extends Id<IdType>> {
+  static protected int INVALID_ID = -1;
+  protected final int id_;
+
+  public Id(int id) {
+    this.id_ = id;
+  }
+
+  public boolean isValid() { return id_ != INVALID_ID; }
+  public int asInt() { return id_; }
+
+  @Override
+  public int hashCode() {
+    return Integer.valueOf(id_).hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return Integer.toString(id_);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) return false;
+    // only ids of the same subclass are comparable
+    if (obj.getClass() != this.getClass()) return false;
+    return ((Id)obj).id_ == id_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 
   public ArrayList<IdType> asList() {
@@ -64,7 +101,16 @@ public class Id<IdType extends Id<IdType>> {
     return list;
   }
 
+<<<<<<< HEAD
   public String toString() {
     return Integer.toString(id);
+=======
+  public static <C extends Id> String printIds(List<C> ids) {
+    ArrayList<String> l = Lists.newArrayList();
+    for (C id: ids) {
+      l.add(id.toString());
+    }
+    return "(" + Joiner.on(" ").join(l) + ")";
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }

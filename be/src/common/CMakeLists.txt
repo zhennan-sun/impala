@@ -20,6 +20,7 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/common")
 # where to put generated binaries
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/common")
 
+<<<<<<< HEAD
 add_library(Common STATIC
   service-ids.cc
   status.cc
@@ -32,3 +33,16 @@ add_library(GlobalFlags STATIC
 
 add_library(glog STATIC IMPORTED)
 add_library(gflags STATIC IMPORTED)
+=======
+add_library(Common
+  init.cc
+  logging.cc
+  status.cc
+)
+
+add_library(GlobalFlags
+  global-flags.cc
+)
+
+ADD_BE_TEST(atomic-test)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

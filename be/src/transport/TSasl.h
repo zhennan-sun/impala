@@ -36,7 +36,11 @@
 #include <sasl/saslutil.h>
 #endif
 
+<<<<<<< HEAD
 #include <transport/TTransportException.h>
+=======
+#include <thrift/transport/TTransportException.h>
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 using namespace apache::thrift::transport;
 
@@ -102,6 +106,12 @@ class TSasl {
   /* Determines whether this mechanism has an optional initial response. */
   virtual bool hasInitialResponse() { return false; }
 
+<<<<<<< HEAD
+=======
+  /* Returns the username from the underlying sasl connection. */
+  std::string getUsername();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   protected:
    /* Authorization is complete. */
    bool authComplete;
@@ -139,7 +149,11 @@ class TSaslClient : public sasl::TSasl {
 
     /* Retrieves the negotiated property */
     std::string     getNegotiatedProperty(const std::string& propName);
+<<<<<<< HEAD
      
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     /* Determines whether this mechanism has an optional initial response. */
     virtual bool hasInitialResponse();
 
@@ -156,7 +170,11 @@ class TSaslClient : public sasl::TSasl {
 
 class SaslServerImplException : public SaslException {
   public:
+<<<<<<< HEAD
     SaslServerImplException(const char* errMsg) 
+=======
+    SaslServerImplException(const char* errMsg)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
         : SaslException(errMsg) {
     }
 };
@@ -165,7 +183,11 @@ class SaslServerImplException : public SaslException {
 class TSaslServer : public sasl::TSasl {
  public:
   TSaslServer(const std::string& service, const std::string& serverFQDN,
+<<<<<<< HEAD
               const std::string& userRelm, unsigned flags, sasl_callback_t* callbacks);
+=======
+              const std::string& userRealm, unsigned flags, sasl_callback_t* callbacks);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   /*
    * This initializes the sasl server library and should be called onece per application

@@ -20,6 +20,7 @@ package com.cloudera.impala.analysis;
  *
  */
 class CaseWhenClause {
+<<<<<<< HEAD
   private final Expr whenExpr;
   private final Expr thenExpr;
 
@@ -35,5 +36,22 @@ class CaseWhenClause {
 
   public Expr getThenExpr() {
     return thenExpr;
+=======
+  private final Expr whenExpr_;
+  private final Expr thenExpr_;
+
+  public CaseWhenClause(Expr whenExpr, Expr thenExpr) {
+    super();
+    this.whenExpr_ = whenExpr;
+    this.thenExpr_ = thenExpr;
+  }
+
+  public Expr getWhenExpr() {
+    return whenExpr_;
+  }
+
+  public Expr getThenExpr() {
+    return thenExpr_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }

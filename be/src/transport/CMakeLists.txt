@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 # This will move from the Impala source to the Thrift source repository. 
+=======
+# This will move from the Impala source to the Thrift source repository.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 # where to put generated libraries
 set(LIBRARY_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/transport")
@@ -26,5 +30,9 @@ add_library(ThriftSaslTransport
     TSaslServerTransport.cpp
     TSaslTransport.cpp
     undef.cpp
+<<<<<<< HEAD
   )
 
+=======
+  )
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

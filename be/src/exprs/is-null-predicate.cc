@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "exprs/is-null-predicate.h"
+<<<<<<< HEAD
 
 #include <sstream>
 
@@ -103,5 +104,44 @@ Function* IsNullPredicate::Codegen(LlvmCodeGen* codegen) {
   return codegen->FinalizeFunction(function);
 }
 
+=======
+#include "udf/udf.h"
+
+using namespace impala_udf;
+
+namespace impala {
+
+template<typename T>
+BooleanVal IsNullPredicate::IsNull(FunctionContext* ctx, const T& val) {
+  return val.is_null;
+}
+
+template<typename T>
+BooleanVal IsNullPredicate::IsNotNull(FunctionContext* ctx, const T& val) {
+  return !val.is_null;
+}
+
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const BooleanVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const TinyIntVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const SmallIntVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const IntVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const BigIntVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const FloatVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const DoubleVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const StringVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const TimestampVal&);
+template BooleanVal IsNullPredicate::IsNull(FunctionContext*, const DecimalVal&);
+
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const BooleanVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const TinyIntVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const SmallIntVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const IntVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const BigIntVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const FloatVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const DoubleVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const StringVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const TimestampVal&);
+template BooleanVal IsNullPredicate::IsNotNull(FunctionContext*, const DecimalVal&);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 }

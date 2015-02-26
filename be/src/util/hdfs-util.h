@@ -17,6 +17,7 @@
 #define IMPALA_UTIL_HDFS_UTIL_H
 
 #include <string>
+<<<<<<< HEAD
 
 namespace impala {
 
@@ -27,4 +28,30 @@ std::string AppendHdfsErrorMessage(const std::string& message,
 
 }
 
+=======
+#include <hdfs.h>
+#include "common/status.h"
+
+namespace impala {
+
+// Utility function to get error messages from HDFS. This function takes prefix/file and
+// appends errno to it. Note: any stdlib function can reset errno, this should be called
+// immediately following the failed call into libhdfs.
+std::string GetHdfsErrorMsg(const std::string& prefix, const std::string& file = "");
+
+// Return the size, in bytes, of a file from the hdfs connection.
+Status GetFileSize(const hdfsFS& connection, const char* filename, int64_t* filesize);
+
+// Returns the last modification time of 'filename' in seconds.
+// This should not be called in a fast path (e.g., running a UDF).
+Status GetLastModificationTime(const hdfsFS& connection, const char* filename,
+                               time_t* last_mod_time);
+
+bool IsHiddenFile(const std::string& filename);
+
+// Copy the file at 'src_path' from 'src_conn' to 'dst_path' in 'dst_conn'.
+Status CopyHdfsFile(const hdfsFS& src_conn, const std::string& src_path,
+                    const hdfsFS& dst_conn, const std::string& dst_path);
+}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #endif // IMPALA_UTIL_HDFS_UTIL_H

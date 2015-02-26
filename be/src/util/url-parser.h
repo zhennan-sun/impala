@@ -56,18 +56,30 @@ class UrlParser {
   // Tries to parse the part from url. Places the result in result.
   // Returns false if the URL is malformed or if part is invalid. True otherwise.
   // If false is returned the contents of results are undefined.
+<<<<<<< HEAD
   static bool ParseUrl(const StringValue* url, UrlPart part, StringValue* result);
+=======
+  static bool ParseUrl(const StringValue& url, UrlPart part, StringValue* result);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Tries to parse key from url. Places the result in result.
   // Returns false if the URL is malformed or if part is invalid. True otherwise.
   // If false is returned the contents of results are undefined.
+<<<<<<< HEAD
   static bool ParseUrlKey(const StringValue* url, UrlPart part, const StringValue* key,
+=======
+  static bool ParseUrlKey(const StringValue& url, UrlPart part, const StringValue& key,
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       StringValue* result);
 
   // Compares part against url_authority, url_file, url_host, etc.,
   // and returns the corresponding enum.
   // If part did not match any of the url part constants, returns INVALID.
+<<<<<<< HEAD
   static UrlPart GetUrlPart(const StringValue* part);
+=======
+  static UrlPart GetUrlPart(const StringValue& part);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
  private:
   // Constants representing parts of a URL.

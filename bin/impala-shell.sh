@@ -15,7 +15,12 @@
 
 
 # This script runs the impala shell from a dev environment.
+<<<<<<< HEAD
 
 SHELL_HOME=${IMPALA_SHELL_HOME:-${IMPALA_HOME}/shell}
 export PYTHONPATH="$PYTHONPATH:${SHELL_HOME}/gen-py:${HIVE_HOME}/lib/py:${IMPALA_HOME}:/thirdparty/python-thrift-0.7.0" 
+=======
+. ${IMPALA_HOME}/bin/set-pythonpath.sh
+SHELL_HOME=${IMPALA_SHELL_HOME:-${IMPALA_HOME}/shell}
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 python ${SHELL_HOME}/impala_shell.py "$@"

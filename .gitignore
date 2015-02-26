@@ -5,10 +5,24 @@ derby.log
 thirdparty
 cscope.files
 cscope.out
+<<<<<<< HEAD
+=======
+cscope.in.out
+cscope.po.out
+org.eclipse.jdt.core.prefs
+org.eclipse.jdt.ui.prefs
+*benchmark_results.csv*
+load-*-generated.sql
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 bin/version.info
 
 pprof.out
 
+<<<<<<< HEAD
+=======
+TempStatsStore
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 # CMake:
 Makefile
 CMakeCache.txt
@@ -16,6 +30,21 @@ CMakeFiles
 cmake_install.cmake
 CTestTestfile.cmake
 !CMakeLists.txt
+<<<<<<< HEAD
 llvm-ir/
 shell/gen-py/
 shell/build/
+=======
+
+Testing/
+llvm-ir/
+shell/gen-py/
+shell/build/
+tests/build
+tests/results
+tests/test-hive-udfs/target/
+
+cdh-*-hdfs-data/
+avro_schemas/
+cluster_logs/
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

@@ -25,10 +25,18 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+<<<<<<< HEAD
 #include <transport/TTransport.h>
 #include <transport/TVirtualTransport.h>
 #include <transport/TSasl.h>
 #include <transport/TBufferTransports.h>
+=======
+#include <thrift/transport/TTransport.h>
+#include <thrift/transport/TVirtualTransport.h>
+#include <thrift/transport/TBufferTransports.h>
+
+#include "transport/TSasl.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
 namespace apache { namespace thrift { namespace transport {
 
@@ -136,6 +144,16 @@ class TSaslTransport : public TVirtualTransport<TSaslTransport> {
     return transport_;
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * Returns the username associated with the underlying sasl connection.
+   *
+   * @throws TTransportException if an error occurs
+   */
+  std::string getUsername();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
  protected:
   // Underlying transport
   boost::shared_ptr<TTransport> transport_;

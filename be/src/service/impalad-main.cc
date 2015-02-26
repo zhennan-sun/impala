@@ -18,6 +18,7 @@
 
 #include <unistd.h>
 #include <jni.h>
+<<<<<<< HEAD
 #include <boost/scoped_ptr.hpp>
 #include <boost/unordered_map.hpp>
 
@@ -33,10 +34,19 @@
 #include "util/uid-util.h"
 #include "exec/hbase-table-scanner.h"
 #include "runtime/hbase-table-cache.h"
+=======
+
+#include "common/logging.h"
+#include "common/init.h"
+#include "exec/hbase-table-scanner.h"
+#include "exec/hbase-table-writer.h"
+#include "runtime/hbase-table-factory.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "codegen/llvm-codegen.h"
 #include "common/status.h"
 #include "runtime/coordinator.h"
 #include "runtime/exec-env.h"
+<<<<<<< HEAD
 #include "testutil/test-exec-env.h"
 #include "util/cpu-info.h"
 #include "util/debug-util.h"
@@ -48,10 +58,18 @@
 #include "util/thrift-server.h"
 #include "common/service-ids.h"
 #include "util/authorization.h"
+=======
+#include "util/jni-util.h"
+#include "util/network-util.h"
+#include "rpc/thrift-util.h"
+#include "rpc/thrift-server.h"
+#include "rpc/rpc-trace.h"
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include "service/impala-server.h"
 #include "service/fe-support.h"
 #include "gen-cpp/ImpalaService.h"
 #include "gen-cpp/ImpalaInternalService.h"
+<<<<<<< HEAD
 
 using namespace impala;
 using namespace std;
@@ -104,10 +122,34 @@ int main(int argc, char** argv) {
   EXIT_IF_ERROR(JniUtil::Init());
   EXIT_IF_ERROR(HBaseTableScanner::Init());
   EXIT_IF_ERROR(HBaseTableCache::Init());
+=======
+#include "util/impalad-metrics.h"
+#include "util/thread.h"
+
+using namespace impala;
+using namespace std;
+
+DECLARE_string(classpath);
+DECLARE_bool(use_statestore);
+DECLARE_int32(beeswax_port);
+DECLARE_int32(hs2_port);
+DECLARE_int32(be_port);
+DECLARE_string(principal);
+
+int main(int argc, char** argv) {
+  InitCommonRuntime(argc, argv, true);
+
+  LlvmCodeGen::InitializeLlvm();
+  JniUtil::InitLibhdfs();
+  EXIT_IF_ERROR(HBaseTableScanner::Init());
+  EXIT_IF_ERROR(HBaseTableFactory::Init());
+  EXIT_IF_ERROR(HBaseTableWriter::InitJNI());
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   InitFeSupport();
 
   // start backend service for the coordinator on be_port
   ExecEnv exec_env;
+<<<<<<< HEAD
   ThriftServer* fe_server = NULL;
   ThriftServer* be_server = NULL;
   ImpalaServer* server = 
@@ -117,10 +159,29 @@ int main(int argc, char** argv) {
   Status status = exec_env.StartServices();
   if (!status.ok()) {
     LOG(ERROR) << "Impalad services did not start correctly, exiting";
+=======
+  StartThreadInstrumentation(exec_env.metrics(), exec_env.webserver());
+  InitRpcEventTracing(exec_env.webserver());
+
+  ThriftServer* beeswax_server = NULL;
+  ThriftServer* hs2_server = NULL;
+  ThriftServer* be_server = NULL;
+  ImpalaServer* server = NULL;
+  EXIT_IF_ERROR(CreateImpalaServer(&exec_env, FLAGS_beeswax_port, FLAGS_hs2_port,
+      FLAGS_be_port, &beeswax_server, &hs2_server, &be_server, &server));
+
+  EXIT_IF_ERROR(be_server->Start());
+
+  Status status = exec_env.StartServices();
+  if (!status.ok()) {
+    LOG(ERROR) << "Impalad services did not start correctly, exiting.  Error: "
+               << status.GetErrorMsg();
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     ShutdownLogging();
     exit(1);
   }
 
+<<<<<<< HEAD
   // register be service *after* starting the be server thread and after starting
   // the subscription mgr handler thread
   scoped_ptr<SubscriptionManager::UpdateCallback> cb;
@@ -154,4 +215,17 @@ int main(int argc, char** argv) {
 
   delete be_server;
   delete fe_server;
+=======
+  // this blocks until the beeswax and hs2 servers terminate
+  EXIT_IF_ERROR(beeswax_server->Start());
+  EXIT_IF_ERROR(hs2_server->Start());
+  ImpaladMetrics::IMPALA_SERVER_READY->Update(true);
+  LOG(INFO) << "Impala has started.";
+  beeswax_server->Join();
+  hs2_server->Join();
+
+  delete be_server;
+  delete beeswax_server;
+  delete hs2_server;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 }

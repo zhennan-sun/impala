@@ -20,6 +20,7 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/exprs")
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/exprs")
 
 add_library(Exprs
+<<<<<<< HEAD
   agg-expr.cc
   arithmetic-expr.cc
   binary-predicate.cc
@@ -58,3 +59,45 @@ target_link_libraries(Exprs
 #add_executable(expr-test expr-test.cc)
 #target_link_libraries(expr-test ${IMPALA_TEST_LINK_LIBS})
 #add_test(expr-test ${BUILD_OUTPUT_ROOT_DIRECTORY}/exprs/expr-test)
+=======
+  agg-fn-evaluator.cc
+  aggregate-functions.cc
+  anyval-util.cc
+  case-expr.cc
+  cast-functions.cc
+  compound-predicates.cc
+  compound-predicates-ir.cc
+  conditional-functions.cc
+  conditional-functions-ir.cc
+  decimal-functions.cc
+  decimal-operators.cc
+  expr.cc
+  expr-context.cc
+  expr-ir.cc
+  hive-udf-call.cc
+  in-predicate-ir.cc
+  is-null-predicate.cc
+  like-predicate.cc
+  literal.cc
+  math-functions.cc
+  null-literal.cc
+  operators.cc
+  slot-ref.cc
+  string-functions.cc
+  timestamp-functions.cc
+  timezone_db.cc
+  tuple-is-null-predicate.cc
+  scalar-fn-call.cc
+  udf-builtins.cc
+  utility-functions.cc
+)
+
+add_executable(expr-benchmark expr-benchmark.cc)
+target_link_libraries(expr-benchmark ${IMPALA_TEST_LINK_LIBS})
+
+ADD_BE_TEST(expr-test)
+
+ADD_EXECUTABLE(aggregate-functions-test aggregate-functions-test.cc)
+TARGET_LINK_LIBRARIES(aggregate-functions-test ${UDF_TEST_LINK_LIBS})
+ADD_TEST(uda-test "${EXECUTABLE_OUTPUT_PATH}/aggregate-functions-test")
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

@@ -1,0 +1,283 @@
+====
+---- QUERY
+# Drop the dummy udfs this test uses.
+drop function if exists default.fn();
+drop function if exists function_ddl_test.fn();
+drop function if exists function_ddl_test.fn(int);
+drop function if exists function_ddl_test.fn(int, string);
+drop function if exists function_ddl_test.fn(string, int);
+drop function if exists function_ddl_test.fn2(int);
+drop function if exists function_ddl_test.fn2(int, string);
+drop function if exists function_ddl_test.fn_var_arg(int...);
+drop function if exists function_ddl_test.agg_fn(int);
+drop function if exists function_ddl_test.agg_fn(int, string);
+====
+---- QUERY
+# Verify all the test functions are removed
+show functions in function_ddl_test
+---- RESULTS
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Verify all the test functions are removed
+show aggregate functions in function_ddl_test
+---- RESULTS
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Add them and test function overloading and scoping.
+create function default.fn() RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn'
+====
+---- QUERY
+create function function_ddl_test.fn() RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn'
+====
+---- QUERY
+create function function_ddl_test.fn(int) RETURNS double
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn'
+====
+---- QUERY
+create function function_ddl_test.fn(int, string) RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn'
+====
+---- QUERY
+create function function_ddl_test.fn(string, int) RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn'
+====
+---- QUERY
+create function function_ddl_test.fn2(int) RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn2'
+====
+---- QUERY
+create function function_ddl_test.fn2(int, string) RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='Fn2'
+====
+---- QUERY
+create function function_ddl_test.fn_var_arg(int...) RETURNS int
+LOCATION '/test-warehouse/libTestUdfs.so' SYMBOL='VarSum'
+====
+---- QUERY
+create aggregate function function_ddl_test.agg_fn(int) RETURNS bigint
+LOCATION '/test-warehouse/libudasample.so' UPDATE_FN='CountUpdate'
+====
+---- QUERY
+create aggregate function function_ddl_test.agg_fn(int, string) RETURNS int
+LOCATION '/test-warehouse/libTestUdas.so' UPDATE_FN='TwoArgUpdate'
+====
+---- QUERY
+show functions in default
+---- RESULTS
+'INT','fn()'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+show functions in function_ddl_test
+---- RESULTS
+'INT','fn_var_arg(INT...)'
+'INT','fn2(INT)'
+'INT','fn2(INT, STRING)'
+'INT','fn()'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+show aggregate functions in function_ddl_test
+---- RESULTS
+'BIGINT','agg_fn(INT)'
+'INT','agg_fn(INT, STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Check that none of the functions show up as analytic functions.
+show analytic functions in function_ddl_test
+---- RESULTS
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+drop function function_ddl_test.fn2(int, string)
+====
+---- QUERY
+show functions
+---- RESULTS
+'INT','fn_var_arg(INT...)'
+'INT','fn2(INT)'
+'INT','fn()'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+drop function if exists function_ddl_test.fn2(int, string)
+====
+---- QUERY
+show functions in function_ddl_test
+---- RESULTS
+'INT','fn_var_arg(INT...)'
+'INT','fn2(INT)'
+'INT','fn()'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+show functions in default;
+---- RESULTS
+'INT','fn()'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+drop function default.fn()
+====
+---- QUERY
+show functions in default;
+---- RESULTS
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+show functions in function_ddl_test;
+---- RESULTS
+'INT','fn_var_arg(INT...)'
+'INT','fn2(INT)'
+'INT','fn()'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+drop function fn()
+====
+---- QUERY
+show functions;
+---- RESULTS
+'INT','fn_var_arg(INT...)'
+'INT','fn2(INT)'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+drop function fn_var_arg(INT...)
+====
+---- QUERY
+show functions;
+---- RESULTS
+'INT','fn2(INT)'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+drop function agg_fn(int)
+====
+---- QUERY
+show aggregate functions
+---- RESULTS
+'INT','agg_fn(INT, STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Call invalidate metadata and make sure the functions are still there
+invalidate metadata
+---- RESULTS
+---- TYPES
+====
+---- QUERY
+show functions
+---- RESULTS
+'INT','fn2(INT)'
+'DOUBLE','fn(INT)'
+'INT','fn(INT, STRING)'
+'INT','fn(STRING, INT)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+show aggregate functions
+---- RESULTS
+'INT','agg_fn(INT, STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+show analytic functions
+---- RESULTS
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Negative test for showing builtin scalar functions. The result
+# should not contain aggregate or analytic functions. Note that
+# the result must be non-empty for the test to suceed.
+show functions in _impala_builtins;
+---- RESULTS: VERIFY_IS_NOT_IN
+'DOUBLE','avg(BIGINT)'
+'BIGINT','rank()'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Positive test for showing builtin scalar functions.
+show functions in _impala_builtins;
+---- RESULTS: VERIFY_IS_SUBSET
+'STRING','upper(STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Negative test for showing builtin aggregate fuctions. The result should
+# not contain scalar or analytic functions.
+show aggregate functions in _impala_builtins;
+---- RESULTS: VERIFY_IS_NOT_IN
+'BIGINT','rank()'
+'STRING','upper(STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Positive test for showing builtin aggregate functions.
+show aggregate functions in _impala_builtins;
+---- RESULTS: VERIFY_IS_SUBSET
+'STRING','group_concat(STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Negative test for showing builtin analytic functions. The result should
+# not contain non-analytic aggregate functions or scalar functions.
+show analytic functions in _impala_builtins;
+---- RESULTS: VERIFY_IS_NOT_IN
+'STRING','group_concat(STRING)'
+'STRING','upper(STRING)'
+---- TYPES
+STRING, STRING
+====
+---- QUERY
+# Positive test for showing builtin analytic functions.
+show analytic functions in _impala_builtins;
+---- RESULTS: VERIFY_IS_SUBSET
+'BIGINT','rank()'
+---- TYPES
+STRING, STRING
+====

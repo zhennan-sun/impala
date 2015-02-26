@@ -2,5 +2,9 @@
 
 build
 generated-sources/**/*
+<<<<<<< HEAD
 src/common/version.cc
+=======
+src/common/version.h
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 

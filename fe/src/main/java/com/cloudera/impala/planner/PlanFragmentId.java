@@ -18,6 +18,7 @@ import com.cloudera.impala.common.Id;
 import com.cloudera.impala.common.IdGenerator;
 
 public class PlanFragmentId extends Id<PlanFragmentId> {
+<<<<<<< HEAD
   public PlanFragmentId() {
     super();
   }
@@ -28,5 +29,24 @@ public class PlanFragmentId extends Id<PlanFragmentId> {
 
   public PlanFragmentId(IdGenerator<PlanFragmentId> idGenerator) {
     super(idGenerator.getNextId());
+=======
+  // Construction only allowed via an IdGenerator.
+  protected PlanFragmentId(int id) {
+    super(id);
+  }
+
+  public static IdGenerator<PlanFragmentId> createGenerator() {
+    return new IdGenerator<PlanFragmentId>() {
+      @Override
+      public PlanFragmentId getNextId() { return new PlanFragmentId(nextId_++); }
+      @Override
+      public PlanFragmentId getMaxId() { return new PlanFragmentId(nextId_ - 1); }
+    };
+  }
+
+  @Override
+  public String toString() {
+    return String.format("F%02d", id_);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 }

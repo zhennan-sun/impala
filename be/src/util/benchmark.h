@@ -16,16 +16,56 @@
 #ifndef IMPALA_UTIL_BENCHMARK_H
 #define IMPALA_UTIL_BENCHMARK_H
 
+<<<<<<< HEAD
 namespace impala {
 
 // Static utility class for microbenchmarks.
 class Benchmark {
  public:
+=======
+#include <string>
+#include <vector>
+
+namespace impala {
+
+// Utility class for microbenchmarks.
+// This can be utilized to create a benchmark suite.  For example:
+//  Benchmark suite("benchmark");
+//  suite.AddBenchmark("Implementation #1", Implementation1Fn, data);
+//  suite.AddBenchmark("Implementation #2", Implementation2Fn, data);
+//  ...
+//  string result = suite.Measure();
+class Benchmark {
+ public:
+  // Name of the microbenchmark.  This is outputted in the result.  
+  Benchmark(const std::string& name);
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Function to benchmark.  The function should run iters time (to minimize function
   // call overhead).  The second argument is opaque and is whatever data the test 
   // function needs to execute.
   typedef void (*BenchmarkFunction)(int iters, void*);
 
+<<<<<<< HEAD
+=======
+  // Add a benchmark with 'name' to the suite.  The first benchmark is assumed to
+  // be the baseline.  Reporting will be done relative to that.
+  // Returns a unique index for this benchmark.
+  // baseline_idx is the base function to compare this one against.
+  // Specify -1 to not have a baseline.
+  int AddBenchmark(const std::string& name, BenchmarkFunction fn, void* args,
+      int baseline_idx = 0);
+
+  // Runs all the benchmarks and returns the result in a formatted string.
+  std::string Measure();
+
+  // Output machine/build configuration as a string
+  static std::string GetMachineInfo();
+
+ private:
+  friend class BenchmarkTest;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Benchmarks the 'function' returning the result as invocations per ms.
   // args is an opaque argument passed as the second argument to the function.
   // max_time is the total time to benchmark the function, in ms.
@@ -34,6 +74,20 @@ class Benchmark {
   // will take *at least* initial_batch_size * function invocation time.
   static double Measure(BenchmarkFunction function, void* args,
       int max_time = 1000, int initial_batch_size = 1000);
+<<<<<<< HEAD
+=======
+
+  struct BenchmarkResult {
+    std::string name;
+    BenchmarkFunction fn; 
+    void* args;
+    double rate;
+    int baseline_idx;
+  };
+
+  std::string name_;
+  std::vector<BenchmarkResult> benchmarks_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
   
 }

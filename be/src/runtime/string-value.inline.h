@@ -17,6 +17,10 @@
 #define IMPALA_RUNTIME_STRING_VALUE_INLINE_H
 
 #include "runtime/string-value.h"
+<<<<<<< HEAD
+=======
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #include <cstring>
 #include "util/cpu-info.h"
 #ifdef __SSE4_2__
@@ -26,7 +30,11 @@
 namespace impala {
 
 // Compare two strings using sse4.2 intrinsics if they are available. This code assumes
+<<<<<<< HEAD
 // that the trivial cases are already handled (i.e. one string is empty). 
+=======
+// that the trivial cases are already handled (i.e. one string is empty).
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 // Returns:
 //   < 0 if s1 < s2
 //   0 if s1 == s2
@@ -42,7 +50,13 @@ static inline int StringCompare(const char* s1, int n1, const char* s2, int n2, 
     while (len >= SSEUtil::CHARS_PER_128_BIT_REGISTER) {
       __m128i xmm0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(s1));
       __m128i xmm1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(s2));
+<<<<<<< HEAD
       int chars_match = _mm_cmpistri(xmm0, xmm1, SSEUtil::STRCMP_MODE);
+=======
+      int chars_match = _mm_cmpestri(xmm0, SSEUtil::CHARS_PER_128_BIT_REGISTER,
+                                     xmm1, SSEUtil::CHARS_PER_128_BIT_REGISTER,
+                                     SSEUtil::STRCMP_MODE);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
       if (chars_match != SSEUtil::CHARS_PER_128_BIT_REGISTER) {
         return s1[chars_match] - s2[chars_match];
       }
@@ -50,6 +64,7 @@ static inline int StringCompare(const char* s1, int n1, const char* s2, int n2, 
       s1 += SSEUtil::CHARS_PER_128_BIT_REGISTER;
       s2 += SSEUtil::CHARS_PER_128_BIT_REGISTER;
     }
+<<<<<<< HEAD
     if (len >= SSEUtil::CHARS_PER_64_BIT_REGISTER) {
       // Load 64 bits at a time, the upper 64 bits of the xmm register is set to 0
       __m128i xmm0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(s1));
@@ -64,6 +79,8 @@ static inline int StringCompare(const char* s1, int n1, const char* s2, int n2, 
       s1 += SSEUtil::CHARS_PER_64_BIT_REGISTER;
       s2 += SSEUtil::CHARS_PER_64_BIT_REGISTER;
     } 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   }
 #endif
   // TODO: for some reason memcmp is way slower than strncmp (2.5x)  why?
@@ -74,9 +91,22 @@ static inline int StringCompare(const char* s1, int n1, const char* s2, int n2, 
 
 inline int StringValue::Compare(const StringValue& other) const {
   int l = std::min(len, other.len);
+<<<<<<< HEAD
   if (l == 0) return 0;
   if (len == 0) return -1;
   if (other.len == 0) return 1;
+=======
+  if (l == 0) {
+    if (len == other.len) {
+      return 0;
+    } else if (len == 0) {
+      return -1;
+    } else {
+      DCHECK_EQ(other.len, 0);
+      return 1;
+    }
+  }
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   return StringCompare(this->ptr, this->len, other.ptr, other.len, l);
 }
 
@@ -106,7 +136,49 @@ inline StringValue StringValue::Trim() const {
   return StringValue(ptr + begin, end - begin + 1);
 }
 
+<<<<<<< HEAD
 }
 
 #endif
 
+=======
+inline void StringValue::PadWithSpaces(char* cptr, int64_t cptr_len, int64_t num_chars) {
+  DCHECK(cptr != NULL);
+  DCHECK_GE(cptr_len, 1);
+  DCHECK_GE(cptr_len, num_chars);
+  memset(&cptr[num_chars], ' ', cptr_len - num_chars);
+}
+
+inline int64_t StringValue::UnpaddedCharLength(const char* cptr, int64_t len) {
+  DCHECK(cptr != NULL);
+  DCHECK_GE(len, 0);
+  int64_t last = len - 1;
+  while (last >= 0 && cptr[last] == ' ') --last;
+  return last + 1;
+}
+
+inline char* StringValue::CharSlotToPtr(void* slot, const ColumnType& type) {
+  DCHECK(type.type == TYPE_CHAR);
+  if (slot == NULL) return NULL;
+  if (type.IsVarLen()) {
+    StringValue* sv = reinterpret_cast<StringValue*>(slot);
+    DCHECK_EQ(sv->len, type.len);
+    return sv->ptr;
+  }
+  return reinterpret_cast<char*>(slot);
+}
+
+inline const char* StringValue::CharSlotToPtr(const void* slot, const ColumnType& type) {
+  DCHECK(type.type == TYPE_CHAR);
+  if (slot == NULL) return NULL;
+  if (type.IsVarLen()) {
+    const StringValue* sv = reinterpret_cast<const StringValue*>(slot);
+    DCHECK_EQ(sv->len, type.len);
+    return sv->ptr;
+  }
+  return reinterpret_cast<const char*>(slot);
+}
+
+}
+#endif
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

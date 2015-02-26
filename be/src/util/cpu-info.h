@@ -29,9 +29,16 @@ namespace impala {
 // /sys/devices)
 class CpuInfo {
  public:
+<<<<<<< HEAD
   static const int64_t SSE3    = (1 << 1);
   static const int64_t SSE4_1  = (1 << 2);
   static const int64_t SSE4_2  = (1 << 3);
+=======
+  static const int64_t SSSE3   = (1 << 1);
+  static const int64_t SSE4_1  = (1 << 2);
+  static const int64_t SSE4_2  = (1 << 3);
+  static const int64_t POPCNT  = (1 << 4);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Cache enums for L1 (data), L2 and L3 
   enum CacheLevel {
@@ -43,6 +50,13 @@ class CpuInfo {
   // Initialize CpuInfo.
   static void Init();
 
+<<<<<<< HEAD
+=======
+  // Determine if the CPU meets the minimum CPU requirements and if not, issue an error
+  // and terminate.
+  static void VerifyCpuRequirements();
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Returns all the flags for this cpu
   static int64_t hardware_flags() {
     DCHECK(initialized_);
@@ -77,6 +91,15 @@ class CpuInfo {
     return num_cores_; 
   }
 
+<<<<<<< HEAD
+=======
+  // Returns the model name of the cpu (e.g. Intel i7-2600)
+  static std::string model_name() { 
+    DCHECK(initialized_);
+    return model_name_;
+  }
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   static std::string DebugString();
 
  private:
@@ -86,6 +109,10 @@ class CpuInfo {
   static long cache_sizes_[L3_CACHE + 1];
   static int64_t cycles_per_ms_;
   static int num_cores_;
+<<<<<<< HEAD
+=======
+  static std::string model_name_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 };
 
 }

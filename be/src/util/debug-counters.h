@@ -44,8 +44,13 @@ class DebugRuntimeProfile {
   COUNTER_SCOPED_TIMER(DebugRuntimeProfile::profile().AddCounter(counter_name, \
     TCounterType::CPU_TICKS))
 
+<<<<<<< HEAD
 #define DEBUG_COUNTER_UPDATE(counter_name, v) \
   COUNTER_UPDATE(DebugRuntimeProfile::profile().AddCounter(counter_name, \
+=======
+#define DEBUG_COUNTER_ADD(counter_name, v) \
+  COUNTER_ADD(DebugRuntimeProfile::profile().AddCounter(counter_name, \
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
     TCounterType::UNIT), v)
 
 #define DEBUG_COUNTER_SET(counter_name, v) \
@@ -58,7 +63,11 @@ class DebugRuntimeProfile {
 #else
 
 #define DEBUG_SCOPED_TIMER(counter_name)
+<<<<<<< HEAD
 #define DEBUG_COUNTER_UPDATE(counter_name, v)
+=======
+#define DEBUG_COUNTER_ADD(counter_name, v)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 #define DEBUG_COUNTER_SET(counter_name, v)
 #define PRETTY_PRINT_DEBUG_COUNTERS(ostream_ptr)
 

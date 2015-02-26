@@ -22,17 +22,26 @@
 namespace impala {
 
 class DelimitedTextParser;
+<<<<<<< HEAD
 class ScanRangeContext;
 class HdfsFileDesc;
 
 // HdfsScanner implementation that understands text-formatted
 // records. Uses SSE instructions, if available, for performance.
+=======
+class ScannerContext;
+struct HdfsFileDesc;
+
+// HdfsScanner implementation that understands text-formatted records.
+// Uses SSE instructions, if available, for performance.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 class HdfsTextScanner : public HdfsScanner {
  public:
   HdfsTextScanner(HdfsScanNode* scan_node, RuntimeState* state);
   virtual ~HdfsTextScanner();
 
   // Implementation of HdfsScanner interface.
+<<<<<<< HEAD
   virtual Status Prepare();
   virtual Status GetNext(RowBatch* row_batch, bool* eosr);
   virtual Status ProcessScanRange(ScanRangeContext* context);
@@ -46,16 +55,60 @@ class HdfsTextScanner : public HdfsScanner {
 
   static const char* LLVM_CLASS_NAME;
 
+=======
+  virtual Status Prepare(ScannerContext* context);
+  virtual Status ProcessSplit();
+  virtual void Close();
+
+  // Issue io manager byte ranges for 'files'.
+  static Status IssueInitialRanges(HdfsScanNode* scan_node,
+                                   const std::vector<HdfsFileDesc*>& files);
+
+  // Codegen writing tuples and evaluating predicates.
+  static llvm::Function* Codegen(HdfsScanNode*,
+                                 const std::vector<ExprContext*>& conjunct_ctxs);
+
+  // Suffix for lzo index files.
+  const static std::string LZO_INDEX_SUFFIX;
+
+  static const char* LLVM_CLASS_NAME;
+
+ protected:
+  // Reset the scanner.  This clears any partial state that needs to
+  // be cleared when starting or when restarting after an error.
+  Status ResetScanner();
+
+  // Current position in byte buffer.
+  char* byte_buffer_ptr_;
+
+  // Ending position of HDFS buffer.
+  char* byte_buffer_end_;
+
+  // Actual bytes received from last file read.
+  int64_t byte_buffer_read_size_;
+
+  // True if we are parsing the header for this scanner.
+  bool only_parsing_header_;
+
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
  private:
   const static int NEXT_BLOCK_READ_SIZE = 1024; //bytes
 
   // Initializes this scanner for this context.  The context maps to a single
   // scan range.
+<<<<<<< HEAD
   void InitNewRange(ScanRangeContext* context);
 
   // Finds the start of the first tuple in this scan range and initializes 
   // byte_buffer_ptr to be the next character (the start of the first tuple).  If 
   // there are no tuples starts in the entire range, *tuple_found is set to false 
+=======
+  virtual Status InitNewRange();
+
+  // Finds the start of the first tuple in this scan range and initializes
+  // byte_buffer_ptr to be the next character (the start of the first tuple).  If
+  // there are no tuples starts in the entire range, *tuple_found is set to false
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // and no more processing neesd to be done in this range (i.e. there are really large
   // columns)
   Status FindFirstTuple(bool* tuple_found);
@@ -69,6 +122,7 @@ class HdfsTextScanner : public HdfsScanner {
 
   // Reads past the end of the scan range for the next tuple end.
   Status FinishScanRange();
+<<<<<<< HEAD
   
   // Fills the next byte buffer from the context.  This will block if there are
   // no bytes ready.  Updates byte_buffer_ptr, byte_buffer_end_ and 
@@ -76,6 +130,24 @@ class HdfsTextScanner : public HdfsScanner {
   // If num_bytes is 0, the scanner will read whatever is the io mgr buffer size,
   // otherwise it will just read num_bytes.
   Status FillByteBuffer(bool* eosr, int num_bytes = 0);
+=======
+
+  // Fills the next byte buffer from the context.  This will block if there are no bytes
+  // ready.  Updates byte_buffer_ptr_, byte_buffer_end_ and byte_buffer_read_size_.
+  // If num_bytes is 0, the scanner will read whatever is the io mgr buffer size,
+  // otherwise it will just read num_bytes.
+  virtual Status FillByteBuffer(bool* eosr, int num_bytes = 0);
+
+  // Fills the next byte buffer from the compressed data in stream_ by reading the entire
+  // file, decompressing it, and setting the byte_buffer_ptr_ to the decompressed buffer.
+  Status FillByteBufferCompressedFile(bool* eosr);
+
+  // Fills the next byte buffer from the gzip compressed data in stream_. Unlike
+  // FillByteBufferCompressedFile(), the entire file does not need to be read at once.
+  // Buffers from stream_ are decompressed as they are read and byte_buffer_ptr_ is set
+  // to available decompressed data.
+  Status FillByteBufferGzip(bool* eosr);
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Prepends field data that was from the previous file buffer (This field straddled two
   // file buffers).  'data' already contains the pointer/len from the current file buffer,
@@ -90,7 +162,11 @@ class HdfsTextScanner : public HdfsScanner {
   //  mempool: MemPool to allocate from for field data
   //  num_fields: Total number of fields contained in parsed_data_
   //  num_tuples: Number of tuples in parsed_data_. This includes the potential
+<<<<<<< HEAD
   //    partial tuple at the beginning of 'field_locations_'. 
+=======
+  //    partial tuple at the beginning of 'field_locations_'.
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Returns the number of tuples added to the row batch.
   int WriteFields(MemPool*, TupleRow* tuple_row_mem, int num_fields, int num_tuples);
 
@@ -101,10 +177,17 @@ class HdfsTextScanner : public HdfsScanner {
 
   // Appends the current file and line to the RuntimeState's error log.
   // row_idx is 0-based (in current batch) where the parse error occured.
+<<<<<<< HEAD
   virtual void LogRowParseError(std::stringstream*, int row_idx);
 
   // Memory pool for allocations into the boundary row / column
   boost::scoped_ptr<MemPool> boundary_mem_pool_;
+=======
+  virtual void LogRowParseError(int row_idx, std::stringstream*);
+
+  // Mem pool for boundary_row_ and boundary_column_.
+  boost::scoped_ptr<MemPool> boundary_pool_;
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 
   // Helper string for dealing with input rows that span file blocks.
   // We keep track of a whole line that spans file blocks to be able to report
@@ -127,26 +210,36 @@ class HdfsTextScanner : public HdfsScanner {
   // processed in the current batch.  Used to report row errors.
   std::vector<char*> row_end_locations_;
 
+<<<<<<< HEAD
   // Current position in byte buffer.
   char* byte_buffer_ptr_;
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Pointer into byte_buffer that is the start of the current batch being
   // processed.
   char* batch_start_ptr_;
 
+<<<<<<< HEAD
   // Ending position of HDFS buffer.
   char* byte_buffer_end_;
 
   // Actual bytes received from last file read.
   int byte_buffer_read_size_;
 
+=======
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // Whether or not there was a parse error in the current row. Used for counting the
   // number of errors per file.  Once the error log is full, error_in_row will still be
   // set, in order to be able to record the errors per file, even if the details are not
   // logged.
   bool error_in_row_;
 
+<<<<<<< HEAD
   // Memory to store partial tuples split across buffers.  Memory comes from 
+=======
+  // Memory to store partial tuples split across buffers.  Memory comes from
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   // boundary_pool_.  There is only one tuple allocated for this object and reused
   // for boundary tuples.
   Tuple* partial_tuple_;

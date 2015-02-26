@@ -19,11 +19,19 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/runtime")
 # where to put generated binaries
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/runtime")
 
+<<<<<<< HEAD
 add_library(Runtime STATIC
+=======
+add_library(Runtime
+  buffered-block-mgr.cc
+  buffered-tuple-stream.cc
+  buffered-tuple-stream-ir.cc
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   client-cache.cc
   coordinator.cc
   data-stream-mgr.cc
   data-stream-sender.cc
+<<<<<<< HEAD
   descriptors.cc
   disk-io-mgr.cc
   disk-io-mgr-stress.cc
@@ -68,3 +76,55 @@ add_test(data-stream-test ${BUILD_OUTPUT_ROOT_DIRECTORY}/runtime/data-stream-tes
 add_test(timestamp-test ${BUILD_OUTPUT_ROOT_DIRECTORY}/runtime/timestamp-test)
 add_test(disk-io-mgr-test ${BUILD_OUTPUT_ROOT_DIRECTORY}/runtime/disk-io-mgr-test)
 add_test(parallel-executor-test ${BUILD_OUTPUT_ROOT_DIRECTORY}/runtime/parallel-executor-test)
+=======
+  data-stream-recvr.cc
+  descriptors.cc
+  disk-io-mgr.cc
+  disk-io-mgr-reader-context.cc
+  disk-io-mgr-scan-range.cc
+  disk-io-mgr-stress.cc
+  exec-env.cc
+  hbase-table.cc
+  hbase-table-factory.cc
+  hdfs-fs-cache.cc
+  lib-cache.cc
+  mem-tracker.cc
+  mem-pool.cc
+  multi-precision.cc
+  parallel-executor.cc
+  plan-fragment-executor.cc
+  types.cc
+  raw-value.cc
+  row-batch.cc
+  runtime-state.cc
+  sorted-run-merger.cc
+  sorter.cc
+  string-value.cc
+  thread-resource-mgr.cc
+  timestamp-parse-util.cc
+  timestamp-value.cc
+  tuple.cc
+  tuple-row.cc
+  tmp-file-mgr.cc
+)
+
+# This test runs forever so should not be part of 'make test'
+add_executable(disk-io-mgr-stress-test disk-io-mgr-stress-test.cc)
+target_link_libraries(disk-io-mgr-stress-test ${IMPALA_TEST_LINK_LIBS})
+
+ADD_BE_TEST(mem-pool-test)
+ADD_BE_TEST(free-pool-test)
+ADD_BE_TEST(string-buffer-test)
+ADD_BE_TEST(data-stream-test)
+ADD_BE_TEST(timestamp-test)
+ADD_BE_TEST(disk-io-mgr-test)
+ADD_BE_TEST(buffered-block-mgr-test)
+ADD_BE_TEST(parallel-executor-test)
+ADD_BE_TEST(raw-value-test)
+ADD_BE_TEST(string-value-test)
+ADD_BE_TEST(thread-resource-mgr-test)
+ADD_BE_TEST(mem-tracker-test)
+ADD_BE_TEST(multi-precision-test)
+ADD_BE_TEST(decimal-test)
+ADD_BE_TEST(buffered-tuple-stream-test)
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa

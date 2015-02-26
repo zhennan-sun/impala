@@ -20,28 +20,42 @@ set(FE_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/fe/generated-sources/gen-java/com/cloudera
 
 # Set output files for dependency tracking
 set(CODE_GEN_OUTPUT
+<<<<<<< HEAD
   ${BE_OUTPUT_DIR}/opcode/functions.cc
   ${BE_OUTPUT_DIR}/opcode/functions.h
   ${BE_OUTPUT_DIR}/opcode/opcode-registry-init.cc
   ${FE_OUTPUT_DIR}/opcode/FunctionOperator.java
   ${FE_OUTPUT_DIR}/opcode/FunctionRegistry.java
   ${CMAKE_CURRENT_SOURCE_DIR}/../thrift/Opcodes.thrift
+=======
+  ${FE_OUTPUT_DIR}/builtins/ScalarBuiltins.java
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
 )
 
 # Source python files
 set(FUNCTION_REGISTRY_INPUT
+<<<<<<< HEAD
   gen_functions.py
   gen_opcodes.py
+=======
+  gen_builtins_catalog.py
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   impala_functions.py
 )
 
 # Run the python scripts
 add_custom_command(
   OUTPUT ${CODE_GEN_OUTPUT}
+<<<<<<< HEAD
   COMMAND ./gen_functions.py
   COMMAND ./gen_opcodes.py
   DEPENDS ${FUNCTION_REGISTRY_INPUT}
   COMMENT "Generating Opcode Registry files."
+=======
+  COMMAND ./gen_builtins_catalog.py
+  DEPENDS ${FUNCTION_REGISTRY_INPUT}
+  COMMENT "Generating files for builtins."
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
   VERBATIM
 )
 

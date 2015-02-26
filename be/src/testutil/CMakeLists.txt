@@ -21,6 +21,7 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/testutil")
 # where to put generated binaries
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}/testutil")
 
+<<<<<<< HEAD
 add_library(TestUtil STATIC
   query-executor-if.cc
   impalad-query-executor.cc  
@@ -31,3 +32,23 @@ add_library(TestUtil STATIC
 target_link_libraries(TestUtil
   ImpalaThrift
 )
+=======
+add_library(TestUtil
+  impalad-query-executor.cc
+  in-process-servers.cc
+  desc-tbl-builder.cc
+  test-udas.cc
+  test-udfs.cc
+)
+
+add_library(TestUdfs SHARED test-udfs.cc)
+COMPILE_TO_IR(test-udfs.cc)
+
+add_library(TestUdas SHARED test-udas.cc)
+
+add_executable(mini-impala-cluster
+  mini-impala-cluster.cc
+)
+
+target_link_libraries(mini-impala-cluster ${IMPALA_LINK_LIBS})
+>>>>>>> d520a9cdea2fc97e8d5da9fbb0244e60ee416bfa
